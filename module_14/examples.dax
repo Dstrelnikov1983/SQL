@@ -1,0 +1,310 @@
+// ============================================================
+// Модуль 14. Свёртывание и наборы группировки — Примеры DAX
+// DAX Studio / Power BI
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. SUMMARIZECOLUMNS + ROLLUPADDISSUBTOTAL
+//    (аналог GROUPING SETS / ROLLUP)
+// ============================================================
+
+// 1.1 Аналог GROUPING SETS: шахта + смена с подитогами
+// SQL: GROUP BY GROUPING SETS ((mine_name, shift_name), (mine_name), (shift_name), ())
+EVALUATE
+SUMMARIZECOLUMNS(
+    ROLLUPADDISSUBTOTAL(
+        dim_mine[mine_name], "IsMineTotal",
+        dim_shift[shift_name], "IsShiftTotal"
+    ),
+    FILTER(fact_production,
+        fact_production[date_id] >= 20240101
+        && fact_production[date_id] <= 20240131),
+    "TotalTons", ROUND(SUM(fact_production[tons_mined]), 0),
+    "TotalTrips", SUM(fact_production[trips_count]),
+    "EquipCount", DISTINCTCOUNT(fact_production[equipment_id])
+)
+ORDER BY [IsMineTotal], [IsShiftTotal], dim_mine[mine_name], dim_shift[shift_name]
+
+// Примечание: ROLLUPADDISSUBTOTAL автоматически создаёт строки подитогов,
+// помечая их булевыми столбцами (TRUE = подитог).
+// В SQL для этого используется функция GROUPING().
+
+// 1.2 ROLLUP по временной иерархии: год → квартал → месяц
+EVALUATE
+SUMMARIZECOLUMNS(
+    ROLLUPADDISSUBTOTAL(
+        dim_date[year], "IsYearTotal",
+        dim_date[quarter], "IsQuarterTotal",
+        dim_date[month_name], "IsMonthTotal"
+    ),
+    FILTER(fact_production,
+        fact_production[mine_id] = 1),
+    FILTER(dim_date, dim_date[year] = 2024),
+    "TotalTons", ROUND(SUM(fact_production[tons_mined]), 0),
+    "TotalTrips", SUM(fact_production[trips_count])
+)
+ORDER BY [IsYearTotal], dim_date[year], [IsQuarterTotal], dim_date[quarter], [IsMonthTotal]
+
+
+// ============================================================
+// 2. SUMMARIZE с ROLLUP — аналог ROLLUP в SQL
+// ============================================================
+
+// 2.1 SUMMARIZE с ROLLUPGROUP
+// SQL: GROUP BY ROLLUP(mine_name, shift_name)
+EVALUATE
+VAR BaseData =
+    SUMMARIZE(
+        FILTER(fact_production,
+            fact_production[date_id] >= 20240101
+            && fact_production[date_id] <= 20240131),
+        ROLLUPGROUP(dim_mine[mine_name], dim_shift[shift_name])
+    )
+RETURN
+ADDCOLUMNS(
+    BaseData,
+    "TotalTons",
+        ROUND(CALCULATE(SUM(fact_production[tons_mined])), 0),
+    "TotalTrips",
+        CALCULATE(SUM(fact_production[trips_count]))
+)
+
+// Примечание: ROLLUPGROUP внутри SUMMARIZE создаёт иерархические подитоги,
+// аналогично SQL ROLLUP. Пустые значения означают «все».
+
+
+// ============================================================
+// 3. CROSSJOIN — декартово произведение для CUBE
+// ============================================================
+
+// 3.1 Аналог CUBE: все комбинации шахт и типов оборудования
+// SQL: GROUP BY CUBE(mine_name, type_name)
+EVALUATE
+SUMMARIZECOLUMNS(
+    ROLLUPADDISSUBTOTAL(
+        dim_mine[mine_name], "IsMineTotal",
+        dim_equipment_type[type_name], "IsTypeTotal"
+    ),
+    FILTER(fact_production,
+        fact_production[date_id] >= 20240101
+        && fact_production[date_id] <= 20240331),
+    "TotalTons", ROUND(SUM(fact_production[tons_mined]), 0),
+    "AvgTons", ROUND(AVERAGE(fact_production[tons_mined]), 2),
+    "EquipCount", DISTINCTCOUNT(fact_production[equipment_id])
+)
+ORDER BY [IsMineTotal], [IsTypeTotal], dim_mine[mine_name], dim_equipment_type[type_name]
+
+// 3.2 CROSSJOIN для построения полной матрицы (включая пустые ячейки)
+// Если нужна полная матрица — все шахты x все типы, даже без данных
+EVALUATE
+VAR AllCombinations =
+    CROSSJOIN(
+        VALUES(dim_mine[mine_name]),
+        VALUES(dim_equipment_type[type_name])
+    )
+RETURN
+ADDCOLUMNS(
+    AllCombinations,
+    "TotalTons",
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        ),
+    "EquipCount",
+        CALCULATE(
+            DISTINCTCOUNT(fact_production[equipment_id]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        )
+)
+ORDER BY dim_mine[mine_name], dim_equipment_type[type_name]
+
+
+// ============================================================
+// 4. PIVOT — разворот таблицы
+// ============================================================
+
+// 4.1 Добыча по шахтам и месяцам (аналог условной агрегации)
+// SQL: SUM(CASE WHEN month = 1 THEN tons_mined END) AS "Январь"
+EVALUATE
+ADDCOLUMNS(
+    VALUES(dim_mine[mine_name]),
+    "Январь",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] = 1, dim_date[year] = 2024),
+    "Февраль",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] = 2, dim_date[year] = 2024),
+    "Март",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] = 3, dim_date[year] = 2024),
+    "Апрель",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] = 4, dim_date[year] = 2024),
+    "Май",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] = 5, dim_date[year] = 2024),
+    "Июнь",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] = 6, dim_date[year] = 2024),
+    "Итого H1",
+        CALCULATE(
+            ROUND(SUM(fact_production[tons_mined]), 0),
+            dim_date[month] >= 1, dim_date[month] <= 6,
+            dim_date[year] = 2024)
+)
+ORDER BY dim_mine[mine_name]
+
+// 4.2 Матрица простоев: оборудование x причина
+EVALUATE
+ADDCOLUMNS(
+    VALUES(dim_equipment[equipment_name]),
+    "Плановое ТО",
+        ROUND(DIVIDE(
+            CALCULATE(
+                SUM(fact_equipment_downtime[duration_min]),
+                dim_downtime_reason[reason_code] = "MAINT_PLAN",
+                fact_equipment_downtime[date_id] >= 20240101,
+                fact_equipment_downtime[date_id] <= 20240331
+            ), 60, 0
+        ), 1),
+    "Поломка",
+        ROUND(DIVIDE(
+            CALCULATE(
+                SUM(fact_equipment_downtime[duration_min]),
+                dim_downtime_reason[reason_code] = "BREAKDOWN",
+                fact_equipment_downtime[date_id] >= 20240101,
+                fact_equipment_downtime[date_id] <= 20240331
+            ), 60, 0
+        ), 1),
+    "Всего (ч)",
+        ROUND(DIVIDE(
+            CALCULATE(
+                SUM(fact_equipment_downtime[duration_min]),
+                fact_equipment_downtime[date_id] >= 20240101,
+                fact_equipment_downtime[date_id] <= 20240331
+            ), 60, 0
+        ), 1)
+)
+ORDER BY [Всего (ч)] DESC
+
+// Примечание: В Power BI PIVOT обычно не делается на уровне DAX-запроса.
+// Визуал «Матрица» (Matrix) автоматически разворачивает данные,
+// помещая одно измерение в строки, другое — в столбцы.
+
+
+// ============================================================
+// 5. UNPIVOT — обратное преобразование
+// ============================================================
+
+// 5.1 UNPIVOT через UNION
+// SQL: CROSS JOIN LATERAL (VALUES ...) — преобразование столбцов в строки
+EVALUATE
+VAR EquipData =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240131),
+            dim_equipment[equipment_name]
+        ),
+        "Tons", CALCULATE(SUM(fact_production[tons_mined])),
+        "Trips", CALCULATE(SUM(fact_production[trips_count])),
+        "Fuel", CALCULATE(SUM(fact_production[fuel_consumed_l])),
+        "Hours", CALCULATE(SUM(fact_production[operating_hours]))
+    )
+RETURN
+UNION(
+    SELECTCOLUMNS(EquipData,
+        "Оборудование", dim_equipment[equipment_name],
+        "Метрика", "Добыча (тонн)",
+        "Значение", [Tons]
+    ),
+    SELECTCOLUMNS(EquipData,
+        "Оборудование", dim_equipment[equipment_name],
+        "Метрика", "Рейсы",
+        "Значение", CONVERT([Trips], DOUBLE)
+    ),
+    SELECTCOLUMNS(EquipData,
+        "Оборудование", dim_equipment[equipment_name],
+        "Метрика", "Топливо (л)",
+        "Значение", [Fuel]
+    ),
+    SELECTCOLUMNS(EquipData,
+        "Оборудование", dim_equipment[equipment_name],
+        "Метрика", "Рабочие часы",
+        "Значение", [Hours]
+    )
+)
+ORDER BY [Оборудование], [Метрика]
+
+
+// ============================================================
+// 6. КОМПЛЕКСНЫЙ ПРИМЕР: МУЛЬТИМЕТРИЧЕСКИЙ ДАШБОРД
+// ============================================================
+
+// Аналог SQL: UNION ALL + ROLLUP — несколько метрик + подитоги
+EVALUATE
+VAR Q1Filter =
+    FILTER(ALL(fact_production[date_id]),
+        fact_production[date_id] >= 20240101
+        && fact_production[date_id] <= 20240331)
+
+VAR ProductionByMine =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Метрика", "Добыча (тонн)",
+        "Значение",
+            ROUND(CALCULATE(SUM(fact_production[tons_mined]), Q1Filter), 0)
+    )
+
+VAR DowntimeByMine =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Метрика", "Простои (часы)",
+        "Значение",
+            ROUND(DIVIDE(
+                CALCULATE(
+                    SUM(fact_equipment_downtime[duration_min]),
+                    fact_equipment_downtime[date_id] >= 20240101,
+                    fact_equipment_downtime[date_id] <= 20240331
+                ), 60, 0
+            ), 0)
+    )
+
+VAR QualityByMine =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Метрика", "Среднее Fe (%)",
+        "Значение",
+            ROUND(CALCULATE(
+                AVERAGE(fact_ore_quality[fe_content]),
+                fact_ore_quality[date_id] >= 20240101,
+                fact_ore_quality[date_id] <= 20240331
+            ), 2)
+    )
+
+RETURN
+UNION(ProductionByMine, DowntimeByMine, QualityByMine)
+ORDER BY dim_mine[mine_name], [Метрика]
+
+
+// ============================================================
+// СРАВНИТЕЛЬНАЯ ТАБЛИЦА: SQL vs DAX
+// ============================================================
+// SQL GROUPING SETS        → DAX SUMMARIZECOLUMNS + ROLLUPADDISSUBTOTAL
+// SQL ROLLUP               → DAX SUMMARIZE + ROLLUPGROUP
+// SQL CUBE                 → DAX ROLLUPADDISSUBTOTAL (по всем измерениям)
+// SQL GROUPING()           → DAX булевы столбцы IsMineTotal, IsShiftTotal
+// SQL PIVOT (CASE WHEN)    → DAX ADDCOLUMNS + CALCULATE с фильтром
+// SQL crosstab()           → DAX Matrix Visual в Power BI
+// SQL UNPIVOT (LATERAL)    → DAX UNION + SELECTCOLUMNS
+// SQL COALESCE для меток   → DAX IF(IsTotal, "Итого", [Value])

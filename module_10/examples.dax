@@ -1,0 +1,385 @@
+// ============================================================
+// Модуль 10. Использование подзапросов
+// Примеры на языке DAX (DAX Studio / Power BI)
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. СКАЛЯРНЫЙ ПОДЗАПРОС → VAR + CALCULATE
+// ============================================================
+
+// 1.1 Оборудование с добычей выше средней по предприятию
+// SQL: HAVING AVG(tons_mined) > (SELECT AVG(tons_mined) FROM fact_production)
+EVALUATE
+VAR OverallAvg = AVERAGE(fact_production[tons_mined])
+RETURN
+FILTER(
+    ADDCOLUMNS(
+        SUMMARIZE(
+            fact_production,
+            dim_equipment[equipment_name],
+            dim_equipment_type[type_name]
+        ),
+        "AvgTons", CALCULATE(AVERAGE(fact_production[tons_mined])),
+        "OverallAvg", OverallAvg
+    ),
+    [AvgTons] > OverallAvg
+)
+ORDER BY [AvgTons] DESC
+
+// 1.2 Отклонение от средней по предприятию
+// SQL: скалярный подзапрос (SELECT AVG(...)) в SELECT
+EVALUATE
+VAR OverallAvg = AVERAGE(fact_production[tons_mined])
+RETURN
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_equipment[equipment_name]),
+    "AvgTons", CALCULATE(AVERAGE(fact_production[tons_mined])),
+    "OverallAvg", OverallAvg,
+    "Deviation", CALCULATE(AVERAGE(fact_production[tons_mined])) - OverallAvg
+)
+ORDER BY [Deviation] DESC
+
+// 1.3 Доля каждой шахты в общей добыче
+// SQL: CROSS JOIN (SELECT SUM(...) ...) overall
+EVALUATE
+VAR TotalTons = CALCULATE(
+    SUM(fact_production[tons_mined]),
+    fact_production[date_id] >= 20240101,
+    fact_production[date_id] <= 20240331
+)
+RETURN
+ADDCOLUMNS(
+    VALUES(dim_mine[mine_name]),
+    "MineTons",
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        ),
+    "TotalTons", TotalTons,
+    "SharePct",
+        ROUND(
+            DIVIDE(
+                CALCULATE(
+                    SUM(fact_production[tons_mined]),
+                    fact_production[date_id] >= 20240101,
+                    fact_production[date_id] <= 20240331
+                ),
+                TotalTons,
+                0
+            ) * 100, 1
+        )
+)
+ORDER BY [MineTons] DESC
+
+
+// ============================================================
+// 2. МНОГОЗНАЧНЫЙ ПОДЗАПРОС (IN) → CALCULATETABLE + TREATAS
+// ============================================================
+
+// 2.1 Операторы, работавшие на ПДМ
+// SQL: WHERE equipment_id IN (SELECT ... WHERE type_code = 'LHD')
+EVALUATE
+VAR LHD_Equipment =
+    CALCULATETABLE(
+        VALUES(dim_equipment[equipment_id]),
+        dim_equipment_type[type_code] = "LHD"
+    )
+RETURN
+CALCULATETABLE(
+    SUMMARIZE(
+        fact_production,
+        dim_operator[last_name],
+        dim_operator[first_name],
+        dim_operator[position],
+        dim_operator[qualification]
+    ),
+    TREATAS(LHD_Equipment, dim_equipment[equipment_id])
+)
+ORDER BY dim_operator[last_name]
+
+// 2.2 NOT IN → EXCEPT / FILTER + NOT(... IN ...)
+// Шахты без внеплановых простоев
+EVALUATE
+VAR MinesWithDowntime =
+    CALCULATETABLE(
+        DISTINCT(SELECTCOLUMNS(
+            NATURALINNERJOIN(fact_equipment_downtime, dim_equipment),
+            "mine_id", dim_equipment[mine_id]
+        )),
+        fact_equipment_downtime[is_planned] = FALSE,
+        fact_equipment_downtime[date_id] >= 20240301,
+        fact_equipment_downtime[date_id] <= 20240331
+    )
+RETURN
+FILTER(
+    SELECTCOLUMNS(
+        FILTER(dim_mine, dim_mine[status] = "active"),
+        "mine_name", dim_mine[mine_name],
+        "mine_code", dim_mine[mine_code],
+        "mine_id", dim_mine[mine_id]
+    ),
+    NOT([mine_id] IN MinesWithDowntime)
+)
+
+
+// ============================================================
+// 3. КОРРЕЛИРОВАННЫЙ ПОДЗАПРОС → CALCULATE + ALLEXCEPT / контекст
+// ============================================================
+
+// 3.1 Для каждого оборудования — максимальная добыча
+// SQL: WHERE tons_mined = (SELECT MAX(...) WHERE equipment_id = fp.equipment_id)
+EVALUATE
+VAR ProductionWithMax =
+    ADDCOLUMNS(
+        fact_production,
+        "MaxTons",
+            CALCULATE(
+                MAX(fact_production[tons_mined]),
+                ALLEXCEPT(fact_production, fact_production[equipment_id])
+            )
+    )
+RETURN
+SELECTCOLUMNS(
+    FILTER(ProductionWithMax,
+        fact_production[tons_mined] = [MaxTons]
+    ),
+    "equipment_id", fact_production[equipment_id],
+    "date_id", fact_production[date_id],
+    "tons_mined", fact_production[tons_mined]
+)
+
+// 3.2 Смены с добычей выше средней для данного оборудования (×1.2)
+// SQL: WHERE tons_mined > (SELECT AVG(...) ... WHERE equipment_id = fp.equipment_id) * 1.2
+EVALUATE
+TOPN(15,
+    SELECTCOLUMNS(
+        FILTER(
+            ADDCOLUMNS(
+                fact_production,
+                "EquipAvg",
+                    CALCULATE(
+                        AVERAGE(fact_production[tons_mined]),
+                        ALLEXCEPT(fact_production, fact_production[equipment_id])
+                    )
+            ),
+            fact_production[tons_mined] > [EquipAvg] * 1.2
+        ),
+        "equipment_id", fact_production[equipment_id],
+        "date_id", fact_production[date_id],
+        "shift_id", fact_production[shift_id],
+        "tons_mined", fact_production[tons_mined],
+        "EquipAvg", [EquipAvg]
+    ),
+    [tons_mined], DESC
+)
+
+// 3.3 Подсчёт по шахтам (аналог коррелированных подзапросов в SELECT)
+// SQL: (SELECT COUNT(DISTINCT ...) FROM ... WHERE mine_id = m.mine_id)
+EVALUATE
+ADDCOLUMNS(
+    FILTER(VALUES(dim_mine[mine_name]), dim_mine[status] = "active"),
+    "Операторов",
+        CALCULATE(
+            DISTINCTCOUNT(fact_production[operator_id]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        ),
+    "Оборудования",
+        CALCULATE(
+            DISTINCTCOUNT(fact_production[equipment_id]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        ),
+    "Добыча тонн",
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        )
+)
+ORDER BY [Добыча тонн] DESC
+
+
+// ============================================================
+// 4. EXISTS → CALCULATETABLE + ISEMPTY / COUNTROWS
+// ============================================================
+
+// 4.1 EXISTS: оборудование с внеплановыми простоями
+// SQL: WHERE EXISTS (SELECT 1 FROM fact_equipment_downtime ...)
+EVALUATE
+FILTER(
+    ADDCOLUMNS(
+        CROSSJOIN(
+            VALUES(dim_equipment[equipment_name]),
+            VALUES(dim_equipment_type[type_name]),
+            VALUES(dim_mine[mine_name])
+        ),
+        "HasDowntime",
+            NOT(ISEMPTY(
+                CALCULATETABLE(
+                    fact_equipment_downtime,
+                    fact_equipment_downtime[date_id] >= 20240101,
+                    fact_equipment_downtime[date_id] <= 20240331,
+                    fact_equipment_downtime[is_planned] = FALSE
+                )
+            ))
+    ),
+    [HasDowntime]
+)
+ORDER BY dim_equipment[equipment_name]
+
+// 4.2 NOT EXISTS: операторы без внеплановых простоев
+// SQL: WHERE NOT EXISTS (...)
+EVALUATE
+FILTER(
+    ADDCOLUMNS(
+        FILTER(
+            SELECTCOLUMNS(
+                dim_operator,
+                "Оператор", dim_operator[last_name] & " " & LEFT(dim_operator[first_name], 1) & ".",
+                "Должность", dim_operator[position],
+                "operator_id", dim_operator[operator_id],
+                "status", dim_operator[status]
+            ),
+            [status] = "active"
+        ),
+        "DowntimeCount",
+            CALCULATE(
+                COUNTROWS(fact_equipment_downtime),
+                fact_equipment_downtime[date_id] >= 20240301,
+                fact_equipment_downtime[date_id] <= 20240331,
+                fact_equipment_downtime[is_planned] = FALSE
+            )
+    ),
+    [DowntimeCount] = 0
+)
+
+
+// ============================================================
+// 5. ПРОИЗВОДНАЯ ТАБЛИЦА (FROM subquery) → VAR таблица
+// ============================================================
+
+// 5.1 Топ-3 оператора по добыче в каждой шахте
+// SQL: SELECT ... FROM (SELECT ... ROW_NUMBER() OVER ...) WHERE rn <= 3
+EVALUATE
+VAR OperatorProduction =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240331),
+            dim_mine[mine_name],
+            dim_operator[last_name],
+            dim_operator[first_name]
+        ),
+        "TotalTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+VAR Ranked =
+    ADDCOLUMNS(
+        OperatorProduction,
+        "Rank",
+            RANKX(
+                FILTER(OperatorProduction,
+                    dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+                [TotalTons],
+                , DESC, DENSE
+            )
+    )
+RETURN
+FILTER(Ranked, [Rank] <= 3)
+ORDER BY dim_mine[mine_name], [Rank]
+
+// 5.2 Средняя дневная добыча по шахтам
+// SQL: SELECT AVG(daily_tons) FROM (SELECT SUM(tons_mined) ... GROUP BY date_id) ...
+EVALUATE
+VAR DailyProduction =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240331),
+            dim_mine[mine_name],
+            fact_production[date_id]
+        ),
+        "DailyTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+RETURN
+ADDCOLUMNS(
+    VALUES(dim_mine[mine_name]),
+    "AvgDailyTons",
+        AVERAGEX(
+            FILTER(DailyProduction, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [DailyTons]
+        ),
+    "MinDailyTons",
+        MINX(
+            FILTER(DailyProduction, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [DailyTons]
+        ),
+    "MaxDailyTons",
+        MAXX(
+            FILTER(DailyProduction, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [DailyTons]
+        )
+)
+ORDER BY [AvgDailyTons] DESC
+
+
+// ============================================================
+// 6. КОМПЛЕКСНЫЙ ПРИМЕР: OEE ЧЕРЕЗ «ПОДЗАПРОСЫ»
+// ============================================================
+
+// SQL: коррелированные подзапросы для доступности, производительности, качества
+EVALUATE
+VAR Q1_Start = 20240101
+VAR Q1_End = 20240331
+RETURN
+ADDCOLUMNS(
+    FILTER(
+        CROSSJOIN(
+            VALUES(dim_equipment[equipment_name]),
+            VALUES(dim_equipment_type[type_name])
+        ),
+        dim_equipment[status] = "active"
+    ),
+    "WorkHours",
+        ROUND(CALCULATE(
+            SUM(fact_production[operating_hours]),
+            fact_production[date_id] >= Q1_Start,
+            fact_production[date_id] <= Q1_End
+        ), 1),
+    "DowntimeHours",
+        ROUND(DIVIDE(
+            CALCULATE(
+                SUM(fact_equipment_downtime[duration_min]),
+                fact_equipment_downtime[date_id] >= Q1_Start,
+                fact_equipment_downtime[date_id] <= Q1_End
+            ), 60, 0
+        ), 1),
+    "Availability %",
+        ROUND(
+            DIVIDE(
+                CALCULATE(
+                    SUM(fact_production[operating_hours]),
+                    fact_production[date_id] >= Q1_Start,
+                    fact_production[date_id] <= Q1_End
+                ),
+                CALCULATE(
+                    SUM(fact_production[operating_hours]),
+                    fact_production[date_id] >= Q1_Start,
+                    fact_production[date_id] <= Q1_End
+                ) +
+                DIVIDE(
+                    CALCULATE(
+                        SUM(fact_equipment_downtime[duration_min]),
+                        fact_equipment_downtime[date_id] >= Q1_Start,
+                        fact_equipment_downtime[date_id] <= Q1_End
+                    ), 60, 0
+                ),
+                0
+            ) * 100, 1
+        )
+)
+ORDER BY [Availability %] DESC

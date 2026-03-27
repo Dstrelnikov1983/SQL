@@ -1,0 +1,76 @@
+/// Факт телеметрии оборудования
+table fact_equipment_telemetry
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567815
+
+	column telemetry_id
+		dataType: int64
+		lineageTag: col-ft-001
+		summarizeBy: none
+		sourceColumn: telemetry_id
+
+		annotation DisplayName = ID записи телеметрии
+
+	column date_id
+		dataType: int64
+		lineageTag: col-ft-002
+		summarizeBy: none
+		sourceColumn: date_id
+
+		annotation DisplayName = ID даты
+
+	column time_id
+		dataType: int64
+		lineageTag: col-ft-003
+		summarizeBy: none
+		sourceColumn: time_id
+
+		annotation DisplayName = ID времени
+
+	column sensor_id
+		dataType: int64
+		lineageTag: col-ft-004
+		summarizeBy: none
+		sourceColumn: sensor_id
+
+		annotation DisplayName = ID датчика
+
+	column equipment_id
+		dataType: int64
+		lineageTag: col-ft-005
+		summarizeBy: none
+		sourceColumn: equipment_id
+
+		annotation DisplayName = ID оборудования
+
+	column sensor_value
+		dataType: decimal
+		formatString: #,##0.00
+		lineageTag: col-ft-006
+		summarizeBy: none
+		sourceColumn: sensor_value
+
+		annotation DisplayName = Значение датчика
+
+	column is_alarm
+		dataType: boolean
+		lineageTag: col-ft-007
+		summarizeBy: none
+		sourceColumn: is_anomaly
+
+		annotation DisplayName = Аномалия
+
+	column quality_flag
+		dataType: string
+		lineageTag: col-ft-008
+		summarizeBy: none
+		sourceColumn: anomaly_description
+
+		annotation DisplayName = Описание аномалии
+
+	partition fact_equipment_telemetry = query
+		source
+			query = SELECT telemetry_id, date_id, time_id, sensor_id, equipment_id, sensor_value, is_alarm AS is_anomaly, quality_flag AS anomaly_description FROM public.fact_equipment_telemetry
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Телеметрия оборудования
+

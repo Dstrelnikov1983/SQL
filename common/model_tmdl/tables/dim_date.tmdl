@@ -1,0 +1,93 @@
+/// Измерение дат
+table dim_date
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567812
+
+	column date_id
+		dataType: int64
+		lineageTag: col-dd-001
+		summarizeBy: none
+		sourceColumn: date_id
+
+		annotation DisplayName = ID даты
+
+	column full_date
+		dataType: dateTime
+		isKey
+		formatString: dd.MM.yyyy
+		lineageTag: col-dd-002
+		summarizeBy: none
+		sourceColumn: full_date
+
+		annotation DisplayName = Дата
+
+	column day_of_week
+		dataType: int64
+		lineageTag: col-dd-003
+		summarizeBy: none
+		sourceColumn: day_of_week
+
+		annotation DisplayName = День недели (номер)
+
+	column day_of_week_name
+		dataType: string
+		lineageTag: col-dd-004
+		summarizeBy: none
+		sourceColumn: day_name
+
+		annotation DisplayName = День недели
+
+	column month
+		dataType: int64
+		lineageTag: col-dd-005
+		summarizeBy: none
+		sourceColumn: month_number
+
+		annotation DisplayName = Номер месяца
+
+	column month_name
+		dataType: string
+		lineageTag: col-dd-006
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation DisplayName = Название месяца
+
+	column quarter
+		dataType: int64
+		lineageTag: col-dd-007
+		summarizeBy: none
+		sourceColumn: quarter
+
+		annotation DisplayName = Квартал
+
+	column year
+		dataType: int64
+		lineageTag: col-dd-008
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation DisplayName = Год
+
+	column is_weekend
+		dataType: boolean
+		lineageTag: col-dd-009
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+		annotation DisplayName = Выходной
+
+	column is_holiday
+		dataType: boolean
+		lineageTag: col-dd-010
+		summarizeBy: none
+		sourceColumn: is_holiday
+
+		annotation DisplayName = Праздничный день
+
+	partition dim_date = query
+		source
+			query = SELECT date_id, full_date, day_of_week, day_of_week_name AS day_name, month AS month_number, month_name, quarter, year, is_weekend, is_holiday FROM public.dim_date
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Календарь
+

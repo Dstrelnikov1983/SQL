@@ -1,0 +1,176 @@
+/// Таблица мер - ключевые показатели эффективности предприятия Руда+
+table _Measures
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567818
+
+	/// Суммарный объем добытой руды в тоннах
+	measure 'Общий объем добычи' = SUM('fact_production'[tons_mined])
+		formatString: #,##0.00
+		lineageTag: msr-001
+
+		annotation Category = Производство
+
+	/// Средний объем добычи руды за одну смену (тонн)
+	measure 'Средняя добыча за смену' = AVERAGE('fact_production'[tons_mined])
+		formatString: #,##0.00
+		lineageTag: msr-002
+
+		annotation Category = Производство
+
+	/// Суммарное время простоев оборудования в минутах
+	measure 'Общее время простоя' = SUM('fact_equipment_downtime'[duration_min])
+		formatString: #,##0
+		lineageTag: msr-003
+
+		annotation Category = Простои
+
+	/// Суммарное время простоев оборудования в часах
+	measure 'Общее время простоя (часы)' = DIVIDE(SUM('fact_equipment_downtime'[duration_min]), 60)
+		formatString: #,##0.0
+		lineageTag: msr-004
+
+		annotation Category = Простои
+
+	/// Среднее содержание железа в пробах руды (%)
+	measure 'Среднее содержание Fe' = AVERAGE(fact_ore_quality[fe_content])
+		formatString: 0.00"%"
+		lineageTag: msr-005
+
+		annotation Category = Качество
+
+	/// Общее количество зафиксированных аномалий датчиков
+	measure 'Количество аномалий' = COUNTROWS(FILTER(fact_equipment_telemetry, 'fact_equipment_telemetry'[is_alarm] = TRUE()))
+		formatString: #,##0
+		lineageTag: msr-006
+
+		annotation Category = Телеметрия
+
+	/// Коэффициент технической готовности = (Общее время - Время незапланированных простоев) / Общее время. Рассчитывается на основе рабочих часов за смену (12ч = 720 мин) и незапланированных простоев.
+	measure КТГ =
+			VAR _TotalScheduledMinutes =
+			    CALCULATE(
+			        COUNTROWS(fact_production) * 720
+			    )
+			VAR _UnplannedDowntimeMinutes =
+			    CALCULATE(
+			        SUM('fact_equipment_downtime'[duration_min]),
+			        RELATEDTABLE(dim_downtime_reason),
+			        dim_downtime_reason[is_planned] = FALSE()
+			    )
+			RETURN
+			    DIVIDE(
+			        _TotalScheduledMinutes - _UnplannedDowntimeMinutes,
+			        _TotalScheduledMinutes
+			    )
+		formatString: 0.00%
+		lineageTag: msr-007
+
+		annotation Category = Эффективность
+
+		annotation FullName = Коэффициент технической готовности
+
+	/// Overall Equipment Effectiveness = Доступность x Производительность x Качество. Доступность: (Плановое время - Простои) / Плановое время. Производительность: Фактическая добыча / Нормативная добыча. Качество: Доля руды с содержанием Fe выше минимального порога.
+	measure OEE =
+			VAR _TotalScheduledMinutes =
+			    CALCULATE(
+			        COUNTROWS(fact_production) * 720
+			    )
+			VAR _TotalDowntimeMinutes =
+			    CALCULATE(
+			        SUM('fact_equipment_downtime'[duration_min])
+			    )
+			VAR _Availability =
+			    DIVIDE(
+			        _TotalScheduledMinutes - _TotalDowntimeMinutes,
+			        _TotalScheduledMinutes
+			    )
+			VAR _ActualProduction = SUM('fact_production'[tons_mined])
+			VAR _OperatingHours = SUM(fact_production[operating_hours])
+			VAR _NominalCapacityPerHour = 25
+			VAR _Performance =
+			    DIVIDE(
+			        _ActualProduction,
+			        _OperatingHours * _NominalCapacityPerHour
+			    )
+			VAR _TotalSamples = COUNTROWS(fact_ore_quality)
+			VAR _QualitySamples =
+			    CALCULATE(
+			        COUNTROWS(fact_ore_quality),
+			        fact_ore_quality[fe_content] >= 30
+			    )
+			VAR _Quality = DIVIDE(_QualitySamples, _TotalSamples)
+			RETURN
+			    _Availability * _Performance * _Quality
+		formatString: 0.00%
+		lineageTag: msr-008
+
+		annotation Category = Эффективность
+
+		annotation FullName = Overall Equipment Effectiveness
+
+	/// Суммарный расход топлива (литров)
+	measure 'Общий расход топлива' = SUM('fact_production'[fuel_consumed_l])
+		formatString: #,##0.00
+		lineageTag: msr-009
+
+		annotation Category = Производство
+
+	/// Расход топлива на тонну добытой руды (л/т)
+	measure 'Удельный расход топлива' = DIVIDE(SUM('fact_production'[fuel_consumed_l]), SUM('fact_production'[tons_mined]))
+		formatString: 0.00
+		lineageTag: msr-010
+
+		annotation Category = Производство
+
+	/// Суммарное количество рейсов техники
+	measure 'Общее количество рейсов' = SUM(fact_production[trips_count])
+		formatString: #,##0
+		lineageTag: msr-011
+
+		annotation Category = Производство
+
+	/// Средний объем руды на один рейс (тонн)
+	measure 'Средняя загрузка за рейс' = DIVIDE(SUM('fact_production'[tons_mined]), SUM(fact_production[trips_count]))
+		formatString: 0.00
+		lineageTag: msr-012
+
+		annotation Category = Производство
+
+	/// Доля плановых простоев от общего времени простоев
+	measure 'Доля плановых простоев' =
+			DIVIDE(
+			    CALCULATE(
+			        SUM('fact_equipment_downtime'[duration_min]),
+			        RELATEDTABLE(dim_downtime_reason),
+			        dim_downtime_reason[is_planned] = TRUE()
+			    ),
+			    SUM('fact_equipment_downtime'[duration_min])
+			)
+		formatString: 0.00%
+		lineageTag: msr-013
+
+		annotation Category = Простои
+
+	/// Среднее содержание кремнезема в пробах руды (%)
+	measure 'Среднее содержание SiO2' = AVERAGE(fact_ore_quality[sio2_content])
+		formatString: 0.00
+		lineageTag: msr-014
+
+		annotation Category = Качество
+
+	/// Средний процент влажности в пробах руды
+	measure 'Средняя влажность руды' = AVERAGE('fact_ore_quality'[moisture])
+		formatString: 0.00"%"
+		lineageTag: msr-015
+
+		annotation Category = Качество
+
+	column _MeasuresPlaceholder
+		isNameInferred
+		sourceColumn: [_MeasuresPlaceholder]
+
+	partition _Measures = calculated
+		mode: import
+		source = ROW("_MeasuresPlaceholder", 0)
+
+	annotation DisplayName = Показатели (KPI)
+

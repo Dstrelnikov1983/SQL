@@ -1,0 +1,5 @@
+database RudaPlus
+	compatibilityLevel: 1550
+	compatibilityMode: analysisServices
+	language: 1033
+

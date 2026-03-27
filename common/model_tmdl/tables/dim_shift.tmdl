@@ -1,0 +1,45 @@
+/// Справочник смен
+table dim_shift
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567809
+
+	column shift_id
+		dataType: int64
+		lineageTag: col-sf-001
+		summarizeBy: none
+		sourceColumn: shift_id
+
+		annotation DisplayName = ID смены
+
+	column shift_name
+		dataType: string
+		lineageTag: col-sf-002
+		summarizeBy: none
+		sourceColumn: shift_name
+
+		annotation DisplayName = Название смены
+
+	column start_time
+		dataType: dateTime
+		formatString: HH:mm
+		lineageTag: col-sf-003
+		summarizeBy: none
+		sourceColumn: start_time
+
+		annotation DisplayName = Время начала
+
+	column end_time
+		dataType: dateTime
+		formatString: HH:mm
+		lineageTag: col-sf-004
+		summarizeBy: none
+		sourceColumn: end_time
+
+		annotation DisplayName = Время окончания
+
+	partition dim_shift = query
+		source
+			query = SELECT shift_id, shift_name, start_time, end_time FROM public.dim_shift
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Смены
+

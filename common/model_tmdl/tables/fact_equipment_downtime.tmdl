@@ -1,0 +1,84 @@
+/// Факт простоев оборудования
+table fact_equipment_downtime
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567816
+
+	column downtime_id
+		dataType: int64
+		lineageTag: col-fd-001
+		summarizeBy: none
+		sourceColumn: downtime_id
+
+		annotation DisplayName = ID простоя
+
+	column equipment_id
+		dataType: int64
+		lineageTag: col-fd-002
+		summarizeBy: none
+		sourceColumn: equipment_id
+
+		annotation DisplayName = ID оборудования
+
+	column reason_id
+		dataType: int64
+		lineageTag: col-fd-003
+		summarizeBy: none
+		sourceColumn: reason_id
+
+		annotation DisplayName = ID причины
+
+	column start_date_id
+		dataType: int64
+		lineageTag: col-fd-004
+		summarizeBy: none
+		sourceColumn: start_date_id
+
+		annotation DisplayName = ID даты начала
+
+	column end_date_id
+		dataType: int64
+		lineageTag: col-fd-005
+		summarizeBy: none
+		sourceColumn: end_date_id
+
+		annotation DisplayName = ID даты окончания
+
+	column start_time_id
+		dataType: int64
+		lineageTag: col-fd-006
+		summarizeBy: none
+		sourceColumn: start_time_id
+
+		annotation DisplayName = ID времени начала
+
+	column end_time_id
+		dataType: int64
+		lineageTag: col-fd-007
+		summarizeBy: none
+		sourceColumn: end_time_id
+
+		annotation DisplayName = ID времени окончания
+
+	column duration_min
+		dataType: decimal
+		formatString: #,##0
+		lineageTag: col-fd-008
+		summarizeBy: sum
+		sourceColumn: duration_minutes
+
+		annotation DisplayName = Длительность (мин)
+
+	column comment
+		dataType: string
+		lineageTag: col-fd-009
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation DisplayName = Описание
+
+	partition fact_equipment_downtime = query
+		source
+			query = SELECT downtime_id, equipment_id, reason_id, date_id AS start_date_id, date_id AS end_date_id, EXTRACT(HOUR FROM start_time)::int * 60 + EXTRACT(MINUTE FROM start_time)::int AS start_time_id, EXTRACT(HOUR FROM end_time)::int * 60 + EXTRACT(MINUTE FROM end_time)::int AS end_time_id, duration_min AS duration_minutes, comment AS description FROM public.fact_equipment_downtime
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Простои оборудования
+

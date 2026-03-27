@@ -1,0 +1,2451 @@
+{
+  "name": "RudaPlus",
+  "compatibilityLevel": 1550,
+  "model": {
+    "culture": "ru-RU",
+    "dataSources": [
+      {
+        "name": "New Data Source",
+        "connectionString": "Provider=MSDASQL;Driver={PostgreSQL Unicode(x64)};Server=rc1a-3fapmhnjrbfd3ve5.mdb.yandexcloud.net;Port=6432;Database=db1;UID=user1;SSLmode=require",
+        "impersonationMode": "impersonateServiceAccount",
+        "annotations": [
+          {
+            "name": "ConnectionEditUISource",
+            "value": "Others"
+          }
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "name": "dim_equipment_type",
+        "description": "Справочник типов оборудования",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567801",
+        "columns": [
+          {
+            "name": "equipment_type_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_type_id",
+            "lineageTag": "col-et-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID типа оборудования"
+              }
+            ]
+          },
+          {
+            "name": "type_name",
+            "dataType": "string",
+            "sourceColumn": "type_name",
+            "lineageTag": "col-et-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Наименование типа"
+              }
+            ]
+          },
+          {
+            "name": "description",
+            "dataType": "string",
+            "sourceColumn": "type_description",
+            "lineageTag": "col-et-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Описание типа"
+              }
+            ]
+          },
+          {
+            "name": "max_payload_tons",
+            "dataType": "decimal",
+            "sourceColumn": "max_load_tons",
+            "formatString": "0.00",
+            "lineageTag": "col-et-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Макс. грузоподъемность (т)"
+              }
+            ]
+          },
+          {
+            "name": "engine_power_kw",
+            "dataType": "decimal",
+            "sourceColumn": "max_speed_kmh",
+            "formatString": "0.0",
+            "lineageTag": "col-et-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Макс. скорость (км/ч)"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_equipment_type",
+            "source": {
+              "type": "query",
+              "query": "SELECT equipment_type_id, type_name, description AS type_description, max_payload_tons AS max_load_tons, engine_power_kw AS max_speed_kmh FROM public.dim_equipment_type",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Типы оборудования"
+          }
+        ]
+      },
+      {
+        "name": "dim_mine",
+        "description": "Справочник шахт",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567802",
+        "columns": [
+          {
+            "name": "mine_id",
+            "dataType": "int64",
+            "sourceColumn": "mine_id",
+            "lineageTag": "col-mn-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID шахты"
+              }
+            ]
+          },
+          {
+            "name": "mine_name",
+            "dataType": "string",
+            "sourceColumn": "mine_name",
+            "lineageTag": "col-mn-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название шахты"
+              }
+            ]
+          },
+          {
+            "name": "region",
+            "dataType": "string",
+            "sourceColumn": "mine_location",
+            "lineageTag": "col-mn-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Расположение"
+              }
+            ]
+          },
+          {
+            "name": "max_depth_m",
+            "dataType": "decimal",
+            "sourceColumn": "mine_depth_m",
+            "formatString": "0",
+            "lineageTag": "col-mn-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Глубина шахты (м)"
+              }
+            ]
+          },
+          {
+            "name": "opened_year",
+            "dataType": "int64",
+            "sourceColumn": "opening_year",
+            "lineageTag": "col-mn-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Год открытия"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_mine",
+            "source": {
+              "type": "query",
+              "query": "SELECT mine_id, mine_name, region AS mine_location, max_depth_m AS mine_depth_m, EXTRACT(YEAR FROM opened_date)::int AS opening_year FROM public.dim_mine",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Шахты"
+          }
+        ]
+      },
+      {
+        "name": "dim_shaft",
+        "description": "Справочник стволов шахт",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567803",
+        "columns": [
+          {
+            "name": "shaft_id",
+            "dataType": "int64",
+            "sourceColumn": "shaft_id",
+            "lineageTag": "col-sh-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID ствола"
+              }
+            ]
+          },
+          {
+            "name": "shaft_name",
+            "dataType": "string",
+            "sourceColumn": "shaft_name",
+            "lineageTag": "col-sh-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название ствола"
+              }
+            ]
+          },
+          {
+            "name": "mine_id",
+            "dataType": "int64",
+            "sourceColumn": "mine_id",
+            "lineageTag": "col-sh-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID шахты"
+              }
+            ]
+          },
+          {
+            "name": "depth_m",
+            "dataType": "decimal",
+            "sourceColumn": "shaft_depth_m",
+            "formatString": "0",
+            "lineageTag": "col-sh-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Глубина ствола (м)"
+              }
+            ]
+          },
+          {
+            "name": "shaft_type",
+            "dataType": "string",
+            "sourceColumn": "shaft_type",
+            "lineageTag": "col-sh-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Тип ствола"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_shaft",
+            "source": {
+              "type": "query",
+              "query": "SELECT shaft_id, shaft_name, mine_id, depth_m AS shaft_depth_m, shaft_type FROM public.dim_shaft",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Стволы шахт"
+          }
+        ]
+      },
+      {
+        "name": "dim_location",
+        "description": "Справочник локаций (забоев, горизонтов)",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
+        "columns": [
+          {
+            "name": "location_id",
+            "dataType": "int64",
+            "sourceColumn": "location_id",
+            "lineageTag": "col-loc-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID локации"
+              }
+            ]
+          },
+          {
+            "name": "shaft_id",
+            "dataType": "int64",
+            "sourceColumn": "shaft_id",
+            "lineageTag": "col-loc-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID ствола"
+              }
+            ]
+          },
+          {
+            "name": "location_name",
+            "dataType": "string",
+            "sourceColumn": "location_name",
+            "lineageTag": "col-loc-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название локации"
+              }
+            ]
+          },
+          {
+            "name": "level_m",
+            "dataType": "int64",
+            "sourceColumn": "location_level",
+            "lineageTag": "col-loc-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Уровень (горизонт)"
+              }
+            ]
+          },
+          {
+            "name": "location_type",
+            "dataType": "string",
+            "sourceColumn": "location_type",
+            "lineageTag": "col-loc-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Тип локации"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_location",
+            "source": {
+              "type": "query",
+              "query": "SELECT location_id, shaft_id, location_name, level_m AS location_level, location_type FROM public.dim_location",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Локации"
+          }
+        ]
+      },
+      {
+        "name": "dim_equipment",
+        "description": "Справочник оборудования",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
+        "columns": [
+          {
+            "name": "equipment_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_id",
+            "lineageTag": "col-eq-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оборудования"
+              }
+            ]
+          },
+          {
+            "name": "equipment_name",
+            "dataType": "string",
+            "sourceColumn": "equipment_name",
+            "lineageTag": "col-eq-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Наименование оборудования"
+              }
+            ]
+          },
+          {
+            "name": "equipment_type_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_type_id",
+            "lineageTag": "col-eq-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID типа оборудования"
+              }
+            ]
+          },
+          {
+            "name": "mine_id",
+            "dataType": "int64",
+            "sourceColumn": "mine_id",
+            "lineageTag": "col-eq-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID шахты"
+              }
+            ]
+          },
+          {
+            "name": "inventory_number",
+            "dataType": "string",
+            "sourceColumn": "serial_number",
+            "lineageTag": "col-eq-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Серийный номер"
+              }
+            ]
+          },
+          {
+            "name": "year_manufactured",
+            "dataType": "int64",
+            "sourceColumn": "manufacture_year",
+            "lineageTag": "col-eq-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Год выпуска"
+              }
+            ]
+          },
+          {
+            "name": "commissioning_date",
+            "dataType": "dateTime",
+            "sourceColumn": "commissioning_date",
+            "formatString": "dd.MM.yyyy",
+            "lineageTag": "col-eq-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Дата ввода в эксплуатацию"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "col-eq-008",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Статус"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_equipment",
+            "source": {
+              "type": "query",
+              "query": "SELECT equipment_id, equipment_name, equipment_type_id, mine_id, inventory_number AS serial_number, year_manufactured AS manufacture_year, commissioning_date, status FROM public.dim_equipment",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Оборудование"
+          }
+        ]
+      },
+      {
+        "name": "dim_sensor_type",
+        "description": "Справочник типов датчиков",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
+        "columns": [
+          {
+            "name": "sensor_type_id",
+            "dataType": "int64",
+            "sourceColumn": "sensor_type_id",
+            "lineageTag": "col-st-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID типа датчика"
+              }
+            ]
+          },
+          {
+            "name": "type_name",
+            "dataType": "string",
+            "sourceColumn": "type_name",
+            "lineageTag": "col-st-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Наименование типа"
+              }
+            ]
+          },
+          {
+            "name": "unit_of_measure",
+            "dataType": "string",
+            "sourceColumn": "measurement_unit",
+            "lineageTag": "col-st-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Единица измерения"
+              }
+            ]
+          },
+          {
+            "name": "min_value",
+            "dataType": "decimal",
+            "sourceColumn": "min_value",
+            "lineageTag": "col-st-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Мин. значение"
+              }
+            ]
+          },
+          {
+            "name": "max_value",
+            "dataType": "decimal",
+            "sourceColumn": "max_value",
+            "lineageTag": "col-st-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Макс. значение"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_sensor_type",
+            "source": {
+              "type": "query",
+              "query": "SELECT sensor_type_id, type_name, unit_of_measure AS measurement_unit, min_value, max_value FROM public.dim_sensor_type",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Типы датчиков"
+          }
+        ]
+      },
+      {
+        "name": "dim_sensor",
+        "description": "Справочник датчиков",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
+        "columns": [
+          {
+            "name": "sensor_id",
+            "dataType": "int64",
+            "sourceColumn": "sensor_id",
+            "lineageTag": "col-sn-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID датчика"
+              }
+            ]
+          },
+          {
+            "name": "sensor_code",
+            "dataType": "string",
+            "sourceColumn": "sensor_name",
+            "lineageTag": "col-sn-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Наименование датчика"
+              }
+            ]
+          },
+          {
+            "name": "sensor_type_id",
+            "dataType": "int64",
+            "sourceColumn": "sensor_type_id",
+            "lineageTag": "col-sn-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID типа датчика"
+              }
+            ]
+          },
+          {
+            "name": "equipment_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_id",
+            "lineageTag": "col-sn-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оборудования"
+              }
+            ]
+          },
+          {
+            "name": "install_date",
+            "dataType": "dateTime",
+            "sourceColumn": "installation_date",
+            "formatString": "dd.MM.yyyy",
+            "lineageTag": "col-sn-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Дата установки"
+              }
+            ]
+          },
+          {
+            "name": "calibration_date",
+            "dataType": "dateTime",
+            "sourceColumn": "calibration_date",
+            "formatString": "dd.MM.yyyy",
+            "lineageTag": "col-sn-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Дата калибровки"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "col-sn-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Статус"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_sensor",
+            "source": {
+              "type": "query",
+              "query": "SELECT sensor_id, sensor_code AS sensor_name, sensor_type_id, equipment_id, install_date AS installation_date, calibration_date, status FROM public.dim_sensor",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Датчики"
+          }
+        ]
+      },
+      {
+        "name": "dim_operator",
+        "description": "Справочник операторов",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
+        "columns": [
+          {
+            "name": "operator_id",
+            "dataType": "int64",
+            "sourceColumn": "operator_id",
+            "lineageTag": "col-op-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оператора"
+              }
+            ]
+          },
+          {
+            "name": "full_name",
+            "dataType": "string",
+            "sourceColumn": "full_name",
+            "lineageTag": "col-op-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ФИО"
+              }
+            ]
+          },
+          {
+            "name": "tab_number",
+            "dataType": "string",
+            "sourceColumn": "tab_number",
+            "lineageTag": "col-op-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Табельный номер"
+              }
+            ]
+          },
+          {
+            "name": "position",
+            "dataType": "string",
+            "sourceColumn": "position",
+            "lineageTag": "col-op-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Должность"
+              }
+            ]
+          },
+          {
+            "name": "qualification",
+            "dataType": "int64",
+            "sourceColumn": "qualification_level",
+            "lineageTag": "col-op-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Квалификационный разряд"
+              }
+            ]
+          },
+          {
+            "name": "hire_date",
+            "dataType": "dateTime",
+            "sourceColumn": "hire_date",
+            "formatString": "dd.MM.yyyy",
+            "lineageTag": "col-op-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Дата приема на работу"
+              }
+            ]
+          },
+          {
+            "name": "mine_id",
+            "dataType": "int64",
+            "sourceColumn": "mine_id",
+            "lineageTag": "col-op-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID шахты"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_operator",
+            "source": {
+              "type": "query",
+              "query": "SELECT operator_id, last_name || ' ' || first_name || ' ' || COALESCE(middle_name, '') AS full_name, tab_number, position, CAST(REGEXP_REPLACE(qualification, '[^0-9]', '', 'g') AS INTEGER) AS qualification_level, hire_date, mine_id FROM public.dim_operator",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Операторы"
+          }
+        ]
+      },
+      {
+        "name": "dim_shift",
+        "description": "Справочник смен",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567809",
+        "columns": [
+          {
+            "name": "shift_id",
+            "dataType": "int64",
+            "sourceColumn": "shift_id",
+            "lineageTag": "col-sf-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID смены"
+              }
+            ]
+          },
+          {
+            "name": "shift_name",
+            "dataType": "string",
+            "sourceColumn": "shift_name",
+            "lineageTag": "col-sf-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название смены"
+              }
+            ]
+          },
+          {
+            "name": "start_time",
+            "dataType": "dateTime",
+            "sourceColumn": "start_time",
+            "formatString": "HH:mm",
+            "lineageTag": "col-sf-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Время начала"
+              }
+            ]
+          },
+          {
+            "name": "end_time",
+            "dataType": "dateTime",
+            "sourceColumn": "end_time",
+            "formatString": "HH:mm",
+            "lineageTag": "col-sf-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Время окончания"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_shift",
+            "source": {
+              "type": "query",
+              "query": "SELECT shift_id, shift_name, start_time, end_time FROM public.dim_shift",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Смены"
+          }
+        ]
+      },
+      {
+        "name": "dim_ore_grade",
+        "description": "Справочник сортов руды",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567810",
+        "columns": [
+          {
+            "name": "ore_grade_id",
+            "dataType": "int64",
+            "sourceColumn": "grade_id",
+            "lineageTag": "col-og-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID сорта"
+              }
+            ]
+          },
+          {
+            "name": "grade_name",
+            "dataType": "string",
+            "sourceColumn": "grade_name",
+            "lineageTag": "col-og-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название сорта"
+              }
+            ]
+          },
+          {
+            "name": "fe_content_min",
+            "dataType": "decimal",
+            "sourceColumn": "min_fe_content",
+            "formatString": "0.00",
+            "lineageTag": "col-og-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Мин. содержание Fe (%)"
+              }
+            ]
+          },
+          {
+            "name": "fe_content_max",
+            "dataType": "decimal",
+            "sourceColumn": "max_fe_content",
+            "formatString": "0.00",
+            "lineageTag": "col-og-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Макс. содержание Fe (%)"
+              }
+            ]
+          },
+          {
+            "name": "price_coefficient",
+            "dataType": "decimal",
+            "sourceColumn": "price_coefficient",
+            "formatString": "0.00",
+            "lineageTag": "col-og-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Ценовой коэффициент"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_ore_grade",
+            "source": {
+              "type": "query",
+              "query": "SELECT ore_grade_id AS grade_id, grade_name, fe_content_min AS min_fe_content, fe_content_max AS max_fe_content, 1.0 AS price_coefficient FROM public.dim_ore_grade",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Сорта руды"
+          }
+        ]
+      },
+      {
+        "name": "dim_downtime_reason",
+        "description": "Справочник причин простоев",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567811",
+        "columns": [
+          {
+            "name": "reason_id",
+            "dataType": "int64",
+            "sourceColumn": "reason_id",
+            "lineageTag": "col-dr-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID причины"
+              }
+            ]
+          },
+          {
+            "name": "reason_name",
+            "dataType": "string",
+            "sourceColumn": "reason_name",
+            "lineageTag": "col-dr-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название причины"
+              }
+            ]
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "reason_category",
+            "lineageTag": "col-dr-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Категория причины"
+              }
+            ]
+          },
+          {
+            "name": "is_planned",
+            "dataType": "boolean",
+            "sourceColumn": "is_planned",
+            "lineageTag": "col-dr-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Плановый простой"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_downtime_reason",
+            "source": {
+              "type": "query",
+              "query": "SELECT reason_id, reason_name, category AS reason_category, CASE WHEN category IN ('Плановое ТО', 'Регламентные работы') THEN true ELSE false END AS is_planned FROM public.dim_downtime_reason",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Причины простоев"
+          }
+        ]
+      },
+      {
+        "name": "dim_date",
+        "description": "Измерение дат",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567812",
+        "columns": [
+          {
+            "name": "date_id",
+            "dataType": "int64",
+            "sourceColumn": "date_id",
+            "lineageTag": "col-dd-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID даты"
+              }
+            ]
+          },
+          {
+            "name": "full_date",
+            "dataType": "dateTime",
+            "isKey": true,
+            "sourceColumn": "full_date",
+            "formatString": "dd.MM.yyyy",
+            "lineageTag": "col-dd-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Дата"
+              }
+            ]
+          },
+          {
+            "name": "day_of_week",
+            "dataType": "int64",
+            "sourceColumn": "day_of_week",
+            "lineageTag": "col-dd-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "День недели (номер)"
+              }
+            ]
+          },
+          {
+            "name": "day_of_week_name",
+            "dataType": "string",
+            "sourceColumn": "day_name",
+            "lineageTag": "col-dd-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "День недели"
+              }
+            ]
+          },
+          {
+            "name": "month",
+            "dataType": "int64",
+            "sourceColumn": "month_number",
+            "lineageTag": "col-dd-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Номер месяца"
+              }
+            ]
+          },
+          {
+            "name": "month_name",
+            "dataType": "string",
+            "sourceColumn": "month_name",
+            "lineageTag": "col-dd-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Название месяца"
+              }
+            ]
+          },
+          {
+            "name": "quarter",
+            "dataType": "int64",
+            "sourceColumn": "quarter",
+            "lineageTag": "col-dd-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Квартал"
+              }
+            ]
+          },
+          {
+            "name": "year",
+            "dataType": "int64",
+            "sourceColumn": "year",
+            "lineageTag": "col-dd-008",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Год"
+              }
+            ]
+          },
+          {
+            "name": "is_weekend",
+            "dataType": "boolean",
+            "sourceColumn": "is_weekend",
+            "lineageTag": "col-dd-009",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Выходной"
+              }
+            ]
+          },
+          {
+            "name": "is_holiday",
+            "dataType": "boolean",
+            "sourceColumn": "is_holiday",
+            "lineageTag": "col-dd-010",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Праздничный день"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_date",
+            "source": {
+              "type": "query",
+              "query": "SELECT date_id, full_date, day_of_week, day_of_week_name AS day_name, month AS month_number, month_name, quarter, year, is_weekend, is_holiday FROM public.dim_date",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Календарь"
+          }
+        ]
+      },
+      {
+        "name": "dim_time",
+        "description": "Измерение времени",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567813",
+        "columns": [
+          {
+            "name": "time_id",
+            "dataType": "int64",
+            "sourceColumn": "time_id",
+            "lineageTag": "col-dt-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID времени"
+              }
+            ]
+          },
+          {
+            "name": "full_time",
+            "dataType": "dateTime",
+            "sourceColumn": "full_time",
+            "formatString": "HH:mm:ss",
+            "lineageTag": "col-dt-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Время"
+              }
+            ]
+          },
+          {
+            "name": "hour",
+            "dataType": "int64",
+            "sourceColumn": "hour",
+            "lineageTag": "col-dt-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Час"
+              }
+            ]
+          },
+          {
+            "name": "minute",
+            "dataType": "int64",
+            "sourceColumn": "minute",
+            "lineageTag": "col-dt-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Минута"
+              }
+            ]
+          },
+          {
+            "name": "period",
+            "dataType": "string",
+            "sourceColumn": "period_of_day",
+            "lineageTag": "col-dt-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Период суток"
+              }
+            ]
+          },
+          {
+            "name": "shift_code",
+            "dataType": "string",
+            "sourceColumn": "shift_code",
+            "lineageTag": "col-dt-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Код смены"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_time",
+            "source": {
+              "type": "query",
+              "query": "SELECT time_id, full_time, hour, minute, period AS period_of_day, shift_code FROM public.dim_time",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Время"
+          }
+        ]
+      },
+      {
+        "name": "fact_production",
+        "description": "Факт добычи руды",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567814",
+        "columns": [
+          {
+            "name": "production_id",
+            "dataType": "int64",
+            "sourceColumn": "production_id",
+            "lineageTag": "col-fp-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID записи добычи"
+              }
+            ]
+          },
+          {
+            "name": "date_id",
+            "dataType": "int64",
+            "sourceColumn": "date_id",
+            "lineageTag": "col-fp-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID даты"
+              }
+            ]
+          },
+          {
+            "name": "shift_id",
+            "dataType": "int64",
+            "sourceColumn": "shift_id",
+            "lineageTag": "col-fp-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID смены"
+              }
+            ]
+          },
+          {
+            "name": "equipment_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_id",
+            "lineageTag": "col-fp-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оборудования"
+              }
+            ]
+          },
+          {
+            "name": "operator_id",
+            "dataType": "int64",
+            "sourceColumn": "operator_id",
+            "lineageTag": "col-fp-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оператора"
+              }
+            ]
+          },
+          {
+            "name": "location_id",
+            "dataType": "int64",
+            "sourceColumn": "location_id",
+            "lineageTag": "col-fp-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID локации"
+              }
+            ]
+          },
+          {
+            "name": "tons_mined",
+            "dataType": "decimal",
+            "sourceColumn": "ore_mined_tons",
+            "formatString": "#,##0.00",
+            "lineageTag": "col-fp-007",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Добыто руды (т)"
+              }
+            ]
+          },
+          {
+            "name": "tons_transported",
+            "dataType": "decimal",
+            "sourceColumn": "overburden_tons",
+            "formatString": "#,##0.00",
+            "lineageTag": "col-fp-008",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Вскрыша (т)"
+              }
+            ]
+          },
+          {
+            "name": "operating_hours",
+            "dataType": "decimal",
+            "sourceColumn": "operating_hours",
+            "formatString": "#,##0.00",
+            "lineageTag": "col-fp-009",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Часы работы"
+              }
+            ]
+          },
+          {
+            "name": "fuel_consumed_l",
+            "dataType": "decimal",
+            "sourceColumn": "fuel_consumed_liters",
+            "formatString": "#,##0.00",
+            "lineageTag": "col-fp-010",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Расход топлива (л)"
+              }
+            ]
+          },
+          {
+            "name": "trips_count",
+            "dataType": "int64",
+            "sourceColumn": "trips_count",
+            "lineageTag": "col-fp-011",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Количество рейсов"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_production",
+            "source": {
+              "type": "query",
+              "query": "SELECT production_id, date_id, shift_id, equipment_id, operator_id, location_id, tons_mined AS ore_mined_tons, tons_transported AS overburden_tons, operating_hours, fuel_consumed_l AS fuel_consumed_liters, trips_count FROM public.fact_production",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Факт добычи"
+          }
+        ]
+      },
+      {
+        "name": "fact_equipment_telemetry",
+        "description": "Факт телеметрии оборудования",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567815",
+        "columns": [
+          {
+            "name": "telemetry_id",
+            "dataType": "int64",
+            "sourceColumn": "telemetry_id",
+            "lineageTag": "col-ft-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID записи телеметрии"
+              }
+            ]
+          },
+          {
+            "name": "date_id",
+            "dataType": "int64",
+            "sourceColumn": "date_id",
+            "lineageTag": "col-ft-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID даты"
+              }
+            ]
+          },
+          {
+            "name": "time_id",
+            "dataType": "int64",
+            "sourceColumn": "time_id",
+            "lineageTag": "col-ft-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID времени"
+              }
+            ]
+          },
+          {
+            "name": "sensor_id",
+            "dataType": "int64",
+            "sourceColumn": "sensor_id",
+            "lineageTag": "col-ft-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID датчика"
+              }
+            ]
+          },
+          {
+            "name": "equipment_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_id",
+            "lineageTag": "col-ft-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оборудования"
+              }
+            ]
+          },
+          {
+            "name": "sensor_value",
+            "dataType": "decimal",
+            "sourceColumn": "sensor_value",
+            "formatString": "#,##0.00",
+            "lineageTag": "col-ft-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Значение датчика"
+              }
+            ]
+          },
+          {
+            "name": "is_alarm",
+            "dataType": "boolean",
+            "sourceColumn": "is_anomaly",
+            "lineageTag": "col-ft-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Аномалия"
+              }
+            ]
+          },
+          {
+            "name": "quality_flag",
+            "dataType": "string",
+            "sourceColumn": "anomaly_description",
+            "lineageTag": "col-ft-008",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Описание аномалии"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_equipment_telemetry",
+            "source": {
+              "type": "query",
+              "query": "SELECT telemetry_id, date_id, time_id, sensor_id, equipment_id, sensor_value, is_alarm AS is_anomaly, quality_flag AS anomaly_description FROM public.fact_equipment_telemetry",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Телеметрия оборудования"
+          }
+        ]
+      },
+      {
+        "name": "fact_equipment_downtime",
+        "description": "Факт простоев оборудования",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567816",
+        "columns": [
+          {
+            "name": "downtime_id",
+            "dataType": "int64",
+            "sourceColumn": "downtime_id",
+            "lineageTag": "col-fd-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID простоя"
+              }
+            ]
+          },
+          {
+            "name": "equipment_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_id",
+            "lineageTag": "col-fd-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оборудования"
+              }
+            ]
+          },
+          {
+            "name": "reason_id",
+            "dataType": "int64",
+            "sourceColumn": "reason_id",
+            "lineageTag": "col-fd-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID причины"
+              }
+            ]
+          },
+          {
+            "name": "start_date_id",
+            "dataType": "int64",
+            "sourceColumn": "start_date_id",
+            "lineageTag": "col-fd-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID даты начала"
+              }
+            ]
+          },
+          {
+            "name": "end_date_id",
+            "dataType": "int64",
+            "sourceColumn": "end_date_id",
+            "lineageTag": "col-fd-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID даты окончания"
+              }
+            ]
+          },
+          {
+            "name": "start_time_id",
+            "dataType": "int64",
+            "sourceColumn": "start_time_id",
+            "lineageTag": "col-fd-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID времени начала"
+              }
+            ]
+          },
+          {
+            "name": "end_time_id",
+            "dataType": "int64",
+            "sourceColumn": "end_time_id",
+            "lineageTag": "col-fd-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID времени окончания"
+              }
+            ]
+          },
+          {
+            "name": "duration_min",
+            "dataType": "decimal",
+            "sourceColumn": "duration_minutes",
+            "formatString": "#,##0",
+            "lineageTag": "col-fd-008",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Длительность (мин)"
+              }
+            ]
+          },
+          {
+            "name": "comment",
+            "dataType": "string",
+            "sourceColumn": "description",
+            "lineageTag": "col-fd-009",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Описание"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_equipment_downtime",
+            "source": {
+              "type": "query",
+              "query": "SELECT downtime_id, equipment_id, reason_id, date_id AS start_date_id, date_id AS end_date_id, EXTRACT(HOUR FROM start_time)::int * 60 + EXTRACT(MINUTE FROM start_time)::int AS start_time_id, EXTRACT(HOUR FROM end_time)::int * 60 + EXTRACT(MINUTE FROM end_time)::int AS end_time_id, duration_min AS duration_minutes, comment AS description FROM public.fact_equipment_downtime",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Простои оборудования"
+          }
+        ]
+      },
+      {
+        "name": "fact_ore_quality",
+        "description": "Факт качества руды",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567817",
+        "columns": [
+          {
+            "name": "quality_id",
+            "dataType": "int64",
+            "sourceColumn": "quality_id",
+            "lineageTag": "col-fq-001",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID пробы"
+              }
+            ]
+          },
+          {
+            "name": "date_id",
+            "dataType": "int64",
+            "sourceColumn": "date_id",
+            "lineageTag": "col-fq-002",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID даты"
+              }
+            ]
+          },
+          {
+            "name": "shift_id",
+            "dataType": "int64",
+            "sourceColumn": "shift_id",
+            "lineageTag": "col-fq-003",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID смены"
+              }
+            ]
+          },
+          {
+            "name": "equipment_id",
+            "dataType": "int64",
+            "sourceColumn": "equipment_id",
+            "lineageTag": "col-fq-004",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID оборудования"
+              }
+            ]
+          },
+          {
+            "name": "location_id",
+            "dataType": "int64",
+            "sourceColumn": "location_id",
+            "lineageTag": "col-fq-005",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID локации"
+              }
+            ]
+          },
+          {
+            "name": "ore_grade_id",
+            "dataType": "int64",
+            "sourceColumn": "grade_id",
+            "lineageTag": "col-fq-006",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "ID сорта"
+              }
+            ]
+          },
+          {
+            "name": "sample_number",
+            "dataType": "string",
+            "sourceColumn": "sample_number",
+            "lineageTag": "col-fq-007",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Номер пробы"
+              }
+            ]
+          },
+          {
+            "name": "fe_content",
+            "dataType": "decimal",
+            "sourceColumn": "fe_content",
+            "formatString": "0.00",
+            "lineageTag": "col-fq-008",
+            "summarizeBy": "average",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Содержание Fe (%)"
+              }
+            ]
+          },
+          {
+            "name": "sio2_content",
+            "dataType": "decimal",
+            "sourceColumn": "sio2_content",
+            "formatString": "0.00",
+            "lineageTag": "col-fq-009",
+            "summarizeBy": "average",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Содержание SiO2 (%)"
+              }
+            ]
+          },
+          {
+            "name": "al2o3_content",
+            "dataType": "decimal",
+            "sourceColumn": "al2o3_content",
+            "formatString": "0.00",
+            "lineageTag": "col-fq-010",
+            "summarizeBy": "average",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Содержание Al2O3 (%)"
+              }
+            ]
+          },
+          {
+            "name": "moisture",
+            "dataType": "decimal",
+            "sourceColumn": "moisture_percent",
+            "formatString": "0.00",
+            "lineageTag": "col-fq-011",
+            "summarizeBy": "average",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Влажность (%)"
+              }
+            ]
+          },
+          {
+            "name": "sample_weight_kg",
+            "dataType": "decimal",
+            "sourceColumn": "sample_weight_kg",
+            "formatString": "0.000",
+            "lineageTag": "col-fq-012",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "DisplayName",
+                "value": "Масса пробы (кг)"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_ore_quality",
+            "source": {
+              "type": "query",
+              "query": "SELECT quality_id, date_id, shift_id, 1 AS equipment_id, location_id, ore_grade_id AS grade_id, sample_number, fe_content, sio2_content, al2o3_content, moisture AS moisture_percent, sample_weight_kg FROM public.fact_ore_quality",
+              "dataSource": "New Data Source"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Качество руды"
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "description": "Таблица мер - ключевые показатели эффективности предприятия Руда+",
+        "lineageTag": "a1b2c3d4-e5f6-7890-abcd-ef1234567818",
+        "columns": [
+          {
+            "type": "calculatedTableColumn",
+            "name": "_MeasuresPlaceholder",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[_MeasuresPlaceholder]"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "_Measures",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "ROW(\"_MeasuresPlaceholder\", 0)"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Общий объем добычи",
+            "description": "Суммарный объем добытой руды в тоннах",
+            "expression": "SUM('fact_production'[tons_mined])",
+            "formatString": "#,##0.00",
+            "lineageTag": "msr-001",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Производство"
+              }
+            ]
+          },
+          {
+            "name": "Средняя добыча за смену",
+            "description": "Средний объем добычи руды за одну смену (тонн)",
+            "expression": "AVERAGE('fact_production'[tons_mined])",
+            "formatString": "#,##0.00",
+            "lineageTag": "msr-002",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Производство"
+              }
+            ]
+          },
+          {
+            "name": "Общее время простоя",
+            "description": "Суммарное время простоев оборудования в минутах",
+            "expression": "SUM('fact_equipment_downtime'[duration_min])",
+            "formatString": "#,##0",
+            "lineageTag": "msr-003",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Простои"
+              }
+            ]
+          },
+          {
+            "name": "Общее время простоя (часы)",
+            "description": "Суммарное время простоев оборудования в часах",
+            "expression": "DIVIDE(SUM('fact_equipment_downtime'[duration_min]), 60)",
+            "formatString": "#,##0.0",
+            "lineageTag": "msr-004",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Простои"
+              }
+            ]
+          },
+          {
+            "name": "Среднее содержание Fe",
+            "description": "Среднее содержание железа в пробах руды (%)",
+            "expression": "AVERAGE(fact_ore_quality[fe_content])",
+            "formatString": "0.00\"%\"",
+            "lineageTag": "msr-005",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Качество"
+              }
+            ]
+          },
+          {
+            "name": "Количество аномалий",
+            "description": "Общее количество зафиксированных аномалий датчиков",
+            "expression": "COUNTROWS(FILTER(fact_equipment_telemetry, 'fact_equipment_telemetry'[is_alarm] = TRUE()))",
+            "formatString": "#,##0",
+            "lineageTag": "msr-006",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Телеметрия"
+              }
+            ]
+          },
+          {
+            "name": "КТГ",
+            "description": "Коэффициент технической готовности = (Общее время - Время незапланированных простоев) / Общее время. Рассчитывается на основе рабочих часов за смену (12ч = 720 мин) и незапланированных простоев.",
+            "expression": [
+              "VAR _TotalScheduledMinutes =",
+              "    CALCULATE(",
+              "        COUNTROWS(fact_production) * 720",
+              "    )",
+              "VAR _UnplannedDowntimeMinutes =",
+              "    CALCULATE(",
+              "        SUM('fact_equipment_downtime'[duration_min]),",
+              "        RELATEDTABLE(dim_downtime_reason),",
+              "        dim_downtime_reason[is_planned] = FALSE()",
+              "    )",
+              "RETURN",
+              "    DIVIDE(",
+              "        _TotalScheduledMinutes - _UnplannedDowntimeMinutes,",
+              "        _TotalScheduledMinutes",
+              "    )"
+            ],
+            "formatString": "0.00%",
+            "lineageTag": "msr-007",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Эффективность"
+              },
+              {
+                "name": "FullName",
+                "value": "Коэффициент технической готовности"
+              }
+            ]
+          },
+          {
+            "name": "OEE",
+            "description": "Overall Equipment Effectiveness = Доступность x Производительность x Качество. Доступность: (Плановое время - Простои) / Плановое время. Производительность: Фактическая добыча / Нормативная добыча. Качество: Доля руды с содержанием Fe выше минимального порога.",
+            "expression": [
+              "VAR _TotalScheduledMinutes =",
+              "    CALCULATE(",
+              "        COUNTROWS(fact_production) * 720",
+              "    )",
+              "VAR _TotalDowntimeMinutes =",
+              "    CALCULATE(",
+              "        SUM('fact_equipment_downtime'[duration_min])",
+              "    )",
+              "VAR _Availability =",
+              "    DIVIDE(",
+              "        _TotalScheduledMinutes - _TotalDowntimeMinutes,",
+              "        _TotalScheduledMinutes",
+              "    )",
+              "VAR _ActualProduction = SUM('fact_production'[tons_mined])",
+              "VAR _OperatingHours = SUM(fact_production[operating_hours])",
+              "VAR _NominalCapacityPerHour = 25",
+              "VAR _Performance =",
+              "    DIVIDE(",
+              "        _ActualProduction,",
+              "        _OperatingHours * _NominalCapacityPerHour",
+              "    )",
+              "VAR _TotalSamples = COUNTROWS(fact_ore_quality)",
+              "VAR _QualitySamples =",
+              "    CALCULATE(",
+              "        COUNTROWS(fact_ore_quality),",
+              "        fact_ore_quality[fe_content] >= 30",
+              "    )",
+              "VAR _Quality = DIVIDE(_QualitySamples, _TotalSamples)",
+              "RETURN",
+              "    _Availability * _Performance * _Quality"
+            ],
+            "formatString": "0.00%",
+            "lineageTag": "msr-008",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Эффективность"
+              },
+              {
+                "name": "FullName",
+                "value": "Overall Equipment Effectiveness"
+              }
+            ]
+          },
+          {
+            "name": "Общий расход топлива",
+            "description": "Суммарный расход топлива (литров)",
+            "expression": "SUM('fact_production'[fuel_consumed_l])",
+            "formatString": "#,##0.00",
+            "lineageTag": "msr-009",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Производство"
+              }
+            ]
+          },
+          {
+            "name": "Удельный расход топлива",
+            "description": "Расход топлива на тонну добытой руды (л/т)",
+            "expression": "DIVIDE(SUM('fact_production'[fuel_consumed_l]), SUM('fact_production'[tons_mined]))",
+            "formatString": "0.00",
+            "lineageTag": "msr-010",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Производство"
+              }
+            ]
+          },
+          {
+            "name": "Общее количество рейсов",
+            "description": "Суммарное количество рейсов техники",
+            "expression": "SUM(fact_production[trips_count])",
+            "formatString": "#,##0",
+            "lineageTag": "msr-011",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Производство"
+              }
+            ]
+          },
+          {
+            "name": "Средняя загрузка за рейс",
+            "description": "Средний объем руды на один рейс (тонн)",
+            "expression": "DIVIDE(SUM('fact_production'[tons_mined]), SUM(fact_production[trips_count]))",
+            "formatString": "0.00",
+            "lineageTag": "msr-012",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Производство"
+              }
+            ]
+          },
+          {
+            "name": "Доля плановых простоев",
+            "description": "Доля плановых простоев от общего времени простоев",
+            "expression": [
+              "DIVIDE(",
+              "    CALCULATE(",
+              "        SUM('fact_equipment_downtime'[duration_min]),",
+              "        RELATEDTABLE(dim_downtime_reason),",
+              "        dim_downtime_reason[is_planned] = TRUE()",
+              "    ),",
+              "    SUM('fact_equipment_downtime'[duration_min])",
+              ")"
+            ],
+            "formatString": "0.00%",
+            "lineageTag": "msr-013",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Простои"
+              }
+            ]
+          },
+          {
+            "name": "Среднее содержание SiO2",
+            "description": "Среднее содержание кремнезема в пробах руды (%)",
+            "expression": "AVERAGE(fact_ore_quality[sio2_content])",
+            "formatString": "0.00",
+            "lineageTag": "msr-014",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Качество"
+              }
+            ]
+          },
+          {
+            "name": "Средняя влажность руды",
+            "description": "Средний процент влажности в пробах руды",
+            "expression": "AVERAGE('fact_ore_quality'[moisture])",
+            "formatString": "0.00\"%\"",
+            "lineageTag": "msr-015",
+            "annotations": [
+              {
+                "name": "Category",
+                "value": "Качество"
+              }
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "name": "DisplayName",
+            "value": "Показатели (KPI)"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "rel_fact_production_dim_date",
+        "fromTable": "fact_production",
+        "fromColumn": "date_id",
+        "toTable": "dim_date",
+        "toColumn": "date_id"
+      },
+      {
+        "name": "rel_fact_production_dim_shift",
+        "fromTable": "fact_production",
+        "fromColumn": "shift_id",
+        "toTable": "dim_shift",
+        "toColumn": "shift_id"
+      },
+      {
+        "name": "rel_fact_production_dim_equipment",
+        "fromTable": "fact_production",
+        "fromColumn": "equipment_id",
+        "toTable": "dim_equipment",
+        "toColumn": "equipment_id"
+      },
+      {
+        "name": "rel_fact_production_dim_operator",
+        "fromTable": "fact_production",
+        "fromColumn": "operator_id",
+        "toTable": "dim_operator",
+        "toColumn": "operator_id"
+      },
+      {
+        "name": "rel_fact_production_dim_location",
+        "fromTable": "fact_production",
+        "fromColumn": "location_id",
+        "toTable": "dim_location",
+        "toColumn": "location_id"
+      },
+      {
+        "name": "rel_fact_telemetry_dim_date",
+        "fromTable": "fact_equipment_telemetry",
+        "fromColumn": "date_id",
+        "toTable": "dim_date",
+        "toColumn": "date_id"
+      },
+      {
+        "name": "rel_fact_telemetry_dim_time",
+        "fromTable": "fact_equipment_telemetry",
+        "fromColumn": "time_id",
+        "toTable": "dim_time",
+        "toColumn": "time_id"
+      },
+      {
+        "name": "rel_fact_telemetry_dim_sensor",
+        "fromTable": "fact_equipment_telemetry",
+        "fromColumn": "sensor_id",
+        "toTable": "dim_sensor",
+        "toColumn": "sensor_id"
+      },
+      {
+        "name": "rel_fact_telemetry_dim_equipment",
+        "fromTable": "fact_equipment_telemetry",
+        "fromColumn": "equipment_id",
+        "toTable": "dim_equipment",
+        "toColumn": "equipment_id",
+        "isActive": false
+      },
+      {
+        "name": "rel_fact_downtime_dim_equipment",
+        "fromTable": "fact_equipment_downtime",
+        "fromColumn": "equipment_id",
+        "toTable": "dim_equipment",
+        "toColumn": "equipment_id"
+      },
+      {
+        "name": "rel_fact_downtime_dim_reason",
+        "fromTable": "fact_equipment_downtime",
+        "fromColumn": "reason_id",
+        "toTable": "dim_downtime_reason",
+        "toColumn": "reason_id"
+      },
+      {
+        "name": "rel_fact_downtime_dim_date_start",
+        "fromTable": "fact_equipment_downtime",
+        "fromColumn": "start_date_id",
+        "toTable": "dim_date",
+        "toColumn": "date_id"
+      },
+      {
+        "name": "rel_fact_downtime_dim_date_end",
+        "fromTable": "fact_equipment_downtime",
+        "fromColumn": "end_date_id",
+        "toTable": "dim_date",
+        "toColumn": "date_id",
+        "isActive": false
+      },
+      {
+        "name": "rel_fact_downtime_dim_time_start",
+        "fromTable": "fact_equipment_downtime",
+        "fromColumn": "start_time_id",
+        "toTable": "dim_time",
+        "toColumn": "time_id"
+      },
+      {
+        "name": "rel_fact_downtime_dim_time_end",
+        "fromTable": "fact_equipment_downtime",
+        "fromColumn": "end_time_id",
+        "toTable": "dim_time",
+        "toColumn": "time_id",
+        "isActive": false
+      },
+      {
+        "name": "rel_fact_quality_dim_date",
+        "fromTable": "fact_ore_quality",
+        "fromColumn": "date_id",
+        "toTable": "dim_date",
+        "toColumn": "date_id"
+      },
+      {
+        "name": "rel_fact_quality_dim_shift",
+        "fromTable": "fact_ore_quality",
+        "fromColumn": "shift_id",
+        "toTable": "dim_shift",
+        "toColumn": "shift_id"
+      },
+      {
+        "name": "rel_fact_quality_dim_equipment",
+        "fromTable": "fact_ore_quality",
+        "fromColumn": "equipment_id",
+        "toTable": "dim_equipment",
+        "toColumn": "equipment_id",
+        "isActive": false
+      },
+      {
+        "name": "rel_fact_quality_dim_location",
+        "fromTable": "fact_ore_quality",
+        "fromColumn": "location_id",
+        "toTable": "dim_location",
+        "toColumn": "location_id"
+      },
+      {
+        "name": "rel_fact_quality_dim_grade",
+        "fromTable": "fact_ore_quality",
+        "fromColumn": "ore_grade_id",
+        "toTable": "dim_ore_grade",
+        "toColumn": "ore_grade_id"
+      },
+      {
+        "name": "rel_dim_equipment_dim_type",
+        "fromTable": "dim_equipment",
+        "fromColumn": "equipment_type_id",
+        "toTable": "dim_equipment_type",
+        "toColumn": "equipment_type_id"
+      },
+      {
+        "name": "rel_dim_equipment_dim_mine",
+        "fromTable": "dim_equipment",
+        "fromColumn": "mine_id",
+        "toTable": "dim_mine",
+        "toColumn": "mine_id"
+      },
+      {
+        "name": "rel_dim_shaft_dim_mine",
+        "fromTable": "dim_shaft",
+        "fromColumn": "mine_id",
+        "toTable": "dim_mine",
+        "toColumn": "mine_id",
+        "isActive": false
+      },
+      {
+        "name": "rel_dim_location_dim_shaft",
+        "fromTable": "dim_location",
+        "fromColumn": "shaft_id",
+        "toTable": "dim_shaft",
+        "toColumn": "shaft_id"
+      },
+      {
+        "name": "rel_dim_sensor_dim_type",
+        "fromTable": "dim_sensor",
+        "fromColumn": "sensor_type_id",
+        "toTable": "dim_sensor_type",
+        "toColumn": "sensor_type_id"
+      },
+      {
+        "name": "rel_dim_sensor_dim_equipment",
+        "fromTable": "dim_sensor",
+        "fromColumn": "equipment_id",
+        "toTable": "dim_equipment",
+        "toColumn": "equipment_id"
+      },
+      {
+        "name": "rel_dim_operator_dim_mine",
+        "fromTable": "dim_operator",
+        "fromColumn": "mine_id",
+        "toTable": "dim_mine",
+        "toColumn": "mine_id",
+        "isActive": false
+      }
+    ],
+    "annotations": [
+      {
+        "name": "ModelDescription",
+        "value": "Аналитическая модель данных предприятия 'Руда+' для MES-системы. Схема снежинка. Содержит данные о добыче руды, телеметрии оборудования, простоях и качестве продукции."
+      },
+      {
+        "name": "ClientCompatibilityLevel",
+        "value": "700"
+      },
+      {
+        "name": "__TEdtr",
+        "value": "1"
+      }
+    ]
+  }
+}

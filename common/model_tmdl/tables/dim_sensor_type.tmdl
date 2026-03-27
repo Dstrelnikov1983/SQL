@@ -1,0 +1,51 @@
+/// Справочник типов датчиков
+table dim_sensor_type
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567806
+
+	column sensor_type_id
+		dataType: int64
+		lineageTag: col-st-001
+		summarizeBy: none
+		sourceColumn: sensor_type_id
+
+		annotation DisplayName = ID типа датчика
+
+	column type_name
+		dataType: string
+		lineageTag: col-st-002
+		summarizeBy: none
+		sourceColumn: type_name
+
+		annotation DisplayName = Наименование типа
+
+	column unit_of_measure
+		dataType: string
+		lineageTag: col-st-003
+		summarizeBy: none
+		sourceColumn: measurement_unit
+
+		annotation DisplayName = Единица измерения
+
+	column min_value
+		dataType: decimal
+		lineageTag: col-st-004
+		summarizeBy: none
+		sourceColumn: min_value
+
+		annotation DisplayName = Мин. значение
+
+	column max_value
+		dataType: decimal
+		lineageTag: col-st-005
+		summarizeBy: none
+		sourceColumn: max_value
+
+		annotation DisplayName = Макс. значение
+
+	partition dim_sensor_type = query
+		source
+			query = SELECT sensor_type_id, type_name, unit_of_measure AS measurement_unit, min_value, max_value FROM public.dim_sensor_type
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Типы датчиков
+

@@ -1,0 +1,375 @@
+// ============================================================
+// Модуль 15. Хранимые процедуры и функции — Примеры DAX
+// DAX Studio / Power BI
+// Предприятие «Руда+»
+// ============================================================
+
+// ВАЖНО: В DAX нет хранимых процедур и функций в привычном понимании.
+// Аналогами являются:
+// - Меры (Measures)         — аналог скалярных функций
+// - Вычисляемые таблицы     — аналог табличных функций
+// - Параметры What-If       — аналог параметров процедур
+// - Вычисляемые столбцы     — аналог computed columns
+
+// ============================================================
+// 1. МЕРЫ — АНАЛОГ СКАЛЯРНЫХ ФУНКЦИЙ
+// ============================================================
+
+// 1.1 Мера: классификация руды (аналог classify_ore_quality)
+// В Power BI это создаётся как мера в таблице:
+//
+// OreQualityClass =
+// SWITCH(
+//     TRUE(),
+//     SELECTEDVALUE(fact_ore_quality[fe_content]) >= 65, "Высший сорт (богатая руда)",
+//     SELECTEDVALUE(fact_ore_quality[fe_content]) >= 55, "Первый сорт",
+//     SELECTEDVALUE(fact_ore_quality[fe_content]) >= 45, "Второй сорт",
+//     SELECTEDVALUE(fact_ore_quality[fe_content]) >= 30, "Третий сорт (бедная руда)",
+//     "Отходы (пустая порода)"
+// )
+
+// Демонстрация в DAX Studio:
+EVALUATE
+ADDCOLUMNS(
+    TOPN(20,
+        FILTER(fact_ore_quality,
+            fact_ore_quality[date_id] >= 20240101
+            && fact_ore_quality[date_id] <= 20240131),
+        fact_ore_quality[fe_content], DESC
+    ),
+    "QualityClass",
+        SWITCH(
+            TRUE(),
+            fact_ore_quality[fe_content] >= 65, "Высший сорт (богатая руда)",
+            fact_ore_quality[fe_content] >= 55, "Первый сорт",
+            fact_ore_quality[fe_content] >= 45, "Второй сорт",
+            fact_ore_quality[fe_content] >= 30, "Третий сорт (бедная руда)",
+            "Отходы (пустая порода)"
+        )
+)
+
+// 1.2 Мера: расчёт OEE (аналог calc_oee)
+// В Power BI:
+//
+// OEE =
+// VAR OperatingHours = SUM(fact_production[operating_hours])
+// VAR PlannedHours = [PlannedHoursTarget]  // из таблицы целей или What-If параметра
+// VAR ActualTons = SUM(fact_production[tons_mined])
+// VAR TargetTons = [ProductionTarget]
+// RETURN
+// IF(
+//     PlannedHours = 0 || TargetTons = 0,
+//     BLANK(),
+//     ROUND(
+//         DIVIDE(OperatingHours, PlannedHours)
+//         * DIVIDE(ActualTons, TargetTons)
+//         * 100, 1
+//     )
+// )
+
+// 1.3 Мера: классификация простоев (аналог classify_downtime)
+EVALUATE
+ADDCOLUMNS(
+    FILTER(fact_equipment_downtime,
+        fact_equipment_downtime[date_id] >= 20240101
+        && fact_equipment_downtime[date_id] <= 20240131),
+    "DowntimeCategory",
+        SWITCH(
+            TRUE(),
+            fact_equipment_downtime[duration_min] < 15, "Микропростой",
+            fact_equipment_downtime[duration_min] <= 60, "Краткий простой",
+            fact_equipment_downtime[duration_min] <= 240, "Средний простой",
+            fact_equipment_downtime[duration_min] <= 480, "Длительный простой",
+            "Критический простой"
+        )
+)
+
+
+// ============================================================
+// 2. ВЫЧИСЛЯЕМЫЕ ТАБЛИЦЫ — АНАЛОГ ТАБЛИЧНЫХ ФУНКЦИЙ
+// ============================================================
+
+// 2.1 Аналог get_production_report()
+// SQL: SELECT * FROM get_production_report(20240101, 20240131)
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        FILTER(fact_production,
+            fact_production[date_id] >= 20240101
+            && fact_production[date_id] <= 20240131),
+        dim_mine[mine_name],
+        dim_shift[shift_name]
+    ),
+    "TotalTons",
+        CALCULATE(SUM(fact_production[tons_mined])),
+    "TotalTrips",
+        CALCULATE(SUM(fact_production[trips_count])),
+    "AvgTonsPerTrip",
+        DIVIDE(
+            CALCULATE(SUM(fact_production[tons_mined])),
+            CALCULATE(SUM(fact_production[trips_count])),
+            0
+        ),
+    "EquipmentCount",
+        CALCULATE(DISTINCTCOUNT(fact_production[equipment_id]))
+)
+ORDER BY dim_mine[mine_name], dim_shift[shift_name]
+
+// 2.2 Аналог get_production_report() с фильтром по шахте
+// SQL: SELECT * FROM get_production_report(20240101, 20240131, 2)
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        FILTER(fact_production,
+            fact_production[date_id] >= 20240101
+            && fact_production[date_id] <= 20240131
+            && fact_production[mine_id] = 2),
+        dim_mine[mine_name],
+        dim_shift[shift_name]
+    ),
+    "TotalTons",
+        CALCULATE(SUM(fact_production[tons_mined])),
+    "TotalTrips",
+        CALCULATE(SUM(fact_production[trips_count])),
+    "AvgTonsPerTrip",
+        DIVIDE(
+            CALCULATE(SUM(fact_production[tons_mined])),
+            CALCULATE(SUM(fact_production[trips_count])),
+            0
+        ),
+    "EquipmentCount",
+        CALCULATE(DISTINCTCOUNT(fact_production[equipment_id]))
+)
+ORDER BY [TotalTons] DESC
+
+
+// ============================================================
+// 3. ПАРАМЕТРИЗАЦИЯ В DAX
+// ============================================================
+
+// В DAX параметризация реализуется несколькими способами:
+
+// 3.1 What-If параметры (создаются в Power BI Desktop)
+// Power BI Desktop → Моделирование → Новый параметр
+// Это создаёт:
+// - Таблицу с диапазоном значений
+// - Слайсер для пользователя
+// - Меру SELECTEDVALUE для использования в расчётах
+
+// Пример: параметр «Целевая добыча» (от 50 до 200 тонн, шаг 10)
+// Автоматически создаётся:
+// TargetTons = GENERATESERIES(50, 200, 10)
+// TargetTons Value = SELECTEDVALUE('TargetTons'[TargetTons], 100)
+
+// Использование в мере:
+// PlanCompletion =
+// DIVIDE(
+//     SUM(fact_production[tons_mined]),
+//     [TargetTons Value],
+//     0
+// ) * 100
+
+// 3.2 Параметризация через переменные (VAR)
+// Аналог параметров функции — но значения задаются в коде
+EVALUATE
+VAR DateFrom = 20240101
+VAR DateTo = 20240131
+VAR MinTons = 100  // фильтр: минимальная добыча
+RETURN
+FILTER(
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= DateFrom
+                && fact_production[date_id] <= DateTo),
+            dim_mine[mine_name],
+            dim_shift[shift_name]
+        ),
+        "TotalTons", CALCULATE(SUM(fact_production[tons_mined])),
+        "TotalTrips", CALCULATE(SUM(fact_production[trips_count]))
+    ),
+    [TotalTons] >= MinTons
+)
+ORDER BY [TotalTons] DESC
+
+// 3.3 Параметрические запросы в DAX Studio
+// DAX Studio поддерживает внешние параметры через XML/A:
+// (Применимо при интеграции с внешними приложениями)
+
+
+// ============================================================
+// 4. АНАЛОГ ДИНАМИЧЕСКОГО SQL — SWITCH + CALCULATE
+// ============================================================
+
+// В DAX нет динамического SQL, но можно использовать SWITCH
+// для выбора разной логики на основе параметра
+
+// 4.1 Аналог production_by_dimension()
+// SQL: SELECT * FROM production_by_dimension('mine', 20240101, 20240131)
+
+// Мера для Power BI (выбор измерения через слайсер):
+//
+// DimensionTable = DATATABLE(
+//     "DimensionName", STRING,
+//     {{"mine"}, {"shift"}, {"operator"}, {"equipment_type"}}
+// )
+//
+// ProductionByDimension =
+// VAR SelectedDim = SELECTEDVALUE(DimensionTable[DimensionName], "mine")
+// RETURN
+// SWITCH(
+//     SelectedDim,
+//     "mine", CALCULATE(SUM(fact_production[tons_mined])),
+//     "shift", CALCULATE(SUM(fact_production[tons_mined])),
+//     "operator", CALCULATE(SUM(fact_production[tons_mined])),
+//     "equipment_type", CALCULATE(SUM(fact_production[tons_mined])),
+//     BLANK()
+// )
+// Примечание: в DAX само значение агрегата одинаково,
+// но визуал показывает разную группировку в зависимости от оси
+
+// Демонстрация: несколько группировок в одном DAX-запросе
+EVALUATE
+VAR ByMine =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Dimension", "Шахта",
+        "DimensionValue", dim_mine[mine_name],
+        "TotalTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[date_id] >= 20240101,
+                fact_production[date_id] <= 20240131
+            )
+    )
+VAR ByShift =
+    ADDCOLUMNS(
+        VALUES(dim_shift[shift_name]),
+        "Dimension", "Смена",
+        "DimensionValue", dim_shift[shift_name],
+        "TotalTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[date_id] >= 20240101,
+                fact_production[date_id] <= 20240131
+            )
+    )
+VAR ByEquipType =
+    ADDCOLUMNS(
+        VALUES(dim_equipment_type[type_name]),
+        "Dimension", "Тип оборудования",
+        "DimensionValue", dim_equipment_type[type_name],
+        "TotalTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[date_id] >= 20240101,
+                fact_production[date_id] <= 20240131
+            )
+    )
+RETURN
+UNION(
+    SELECTCOLUMNS(ByMine, "Измерение", [Dimension], "Значение", [DimensionValue], "Добыча", [TotalTons]),
+    SELECTCOLUMNS(ByShift, "Измерение", [Dimension], "Значение", [DimensionValue], "Добыча", [TotalTons]),
+    SELECTCOLUMNS(ByEquipType, "Измерение", [Dimension], "Значение", [DimensionValue], "Добыча", [TotalTons])
+)
+ORDER BY [Измерение], [Добыча] DESC
+
+
+// ============================================================
+// 5. АНАЛОГ ПРОЦЕДУР — МЕРЫ С ПОБОЧНЫМИ ЭФФЕКТАМИ
+// ============================================================
+
+// DAX — декларативный язык. Процедуры с побочными эффектами
+// (INSERT, UPDATE, DELETE, COMMIT) НЕ поддерживаются.
+//
+// Для ETL в экосистеме Power BI используются:
+// - Power Query (M-язык) — для загрузки и трансформации данных
+// - Dataflows — для серверной обработки
+// - XMLA endpoint + Tabular Editor — для программного управления моделью
+//
+// SQL-процедуры остаются на стороне СУБД (PostgreSQL).
+// Power BI подключается к результатам, а не к процессу.
+
+
+// ============================================================
+// 6. ВЫЧИСЛЯЕМЫЕ СТОЛБЦЫ — АНАЛОГ COMPUTED COLUMNS
+// ============================================================
+
+// Вычисляемые столбцы создаются в Power BI Desktop:
+//
+// В таблице fact_ore_quality:
+// OreQualityClass =
+// SWITCH(
+//     TRUE(),
+//     fact_ore_quality[fe_content] >= 65, "Высший сорт",
+//     fact_ore_quality[fe_content] >= 55, "Первый сорт",
+//     fact_ore_quality[fe_content] >= 45, "Второй сорт",
+//     fact_ore_quality[fe_content] >= 30, "Третий сорт",
+//     "Отходы"
+// )
+//
+// В таблице fact_equipment_downtime:
+// DowntimeCategory =
+// SWITCH(
+//     TRUE(),
+//     fact_equipment_downtime[duration_min] < 15, "Микропростой",
+//     fact_equipment_downtime[duration_min] <= 60, "Краткий",
+//     fact_equipment_downtime[duration_min] <= 240, "Средний",
+//     fact_equipment_downtime[duration_min] <= 480, "Длительный",
+//     "Критический"
+// )
+
+// Демонстрация: статистика по категориям простоев
+EVALUATE
+VAR CategorizedDowntime =
+    ADDCOLUMNS(
+        FILTER(fact_equipment_downtime,
+            fact_equipment_downtime[date_id] >= 20240101
+            && fact_equipment_downtime[date_id] <= 20240131),
+        "Category",
+            SWITCH(
+                TRUE(),
+                fact_equipment_downtime[duration_min] < 15, "1. Микропростой",
+                fact_equipment_downtime[duration_min] <= 60, "2. Краткий",
+                fact_equipment_downtime[duration_min] <= 240, "3. Средний",
+                fact_equipment_downtime[duration_min] <= 480, "4. Длительный",
+                "5. Критический"
+            )
+    )
+VAR TotalCount = COUNTROWS(CategorizedDowntime)
+RETURN
+ADDCOLUMNS(
+    SUMMARIZE(CategorizedDowntime, [Category]),
+    "Count",
+        COUNTROWS(FILTER(CategorizedDowntime, [Category] = EARLIER([Category]))),
+    "AvgDuration",
+        ROUND(
+            AVERAGEX(
+                FILTER(CategorizedDowntime, [Category] = EARLIER([Category])),
+                fact_equipment_downtime[duration_min]
+            ), 0
+        ),
+    "Pct",
+        ROUND(
+            DIVIDE(
+                COUNTROWS(FILTER(CategorizedDowntime, [Category] = EARLIER([Category]))),
+                TotalCount
+            ) * 100, 1
+        )
+)
+ORDER BY [Category]
+
+
+// ============================================================
+// СРАВНИТЕЛЬНАЯ ТАБЛИЦА: SQL vs DAX
+// ============================================================
+// SQL CREATE FUNCTION (скалярная) → DAX Мера (Measure)
+// SQL CREATE FUNCTION (табличная) → DAX Вычисляемая таблица / EVALUATE-запрос
+// SQL CREATE PROCEDURE            → DAX НЕТ АНАЛОГА (используйте Power Query / SQL)
+// SQL IN/OUT/INOUT параметры      → DAX What-If параметры / слайсеры
+// SQL EXECUTE (динамический SQL)  → DAX SWITCH + CALCULATE
+// SQL format('%I', ...)           → DAX (не применимо — нет динамических запросов)
+// SQL COMMIT / ROLLBACK           → DAX НЕТ АНАЛОГА (декларативный язык)
+// SQL Перегрузка функций          → DAX SWITCH внутри одной меры
+// SQL IMMUTABLE / STABLE          → DAX (все вычисления автоматически кэшируются)
+// SQL Вычисляемый столбец         → DAX Вычисляемый столбец (Calculated Column)

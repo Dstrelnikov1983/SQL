@@ -1,0 +1,53 @@
+/// Справочник типов оборудования
+table dim_equipment_type
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567801
+
+	column equipment_type_id
+		dataType: int64
+		lineageTag: col-et-001
+		summarizeBy: none
+		sourceColumn: equipment_type_id
+
+		annotation DisplayName = ID типа оборудования
+
+	column type_name
+		dataType: string
+		lineageTag: col-et-002
+		summarizeBy: none
+		sourceColumn: type_name
+
+		annotation DisplayName = Наименование типа
+
+	column description
+		dataType: string
+		lineageTag: col-et-003
+		summarizeBy: none
+		sourceColumn: type_description
+
+		annotation DisplayName = Описание типа
+
+	column max_payload_tons
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-et-004
+		summarizeBy: none
+		sourceColumn: max_load_tons
+
+		annotation DisplayName = Макс. грузоподъемность (т)
+
+	column engine_power_kw
+		dataType: decimal
+		formatString: 0.0
+		lineageTag: col-et-005
+		summarizeBy: none
+		sourceColumn: max_speed_kmh
+
+		annotation DisplayName = Макс. скорость (км/ч)
+
+	partition dim_equipment_type = query
+		source
+			query = SELECT equipment_type_id, type_name, description AS type_description, max_payload_tons AS max_load_tons, engine_power_kw AS max_speed_kmh FROM public.dim_equipment_type
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Типы оборудования
+

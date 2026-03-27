@@ -1,0 +1,43 @@
+/// Справочник причин простоев
+table dim_downtime_reason
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567811
+
+	column reason_id
+		dataType: int64
+		lineageTag: col-dr-001
+		summarizeBy: none
+		sourceColumn: reason_id
+
+		annotation DisplayName = ID причины
+
+	column reason_name
+		dataType: string
+		lineageTag: col-dr-002
+		summarizeBy: none
+		sourceColumn: reason_name
+
+		annotation DisplayName = Название причины
+
+	column category
+		dataType: string
+		lineageTag: col-dr-003
+		summarizeBy: none
+		sourceColumn: reason_category
+
+		annotation DisplayName = Категория причины
+
+	column is_planned
+		dataType: boolean
+		lineageTag: col-dr-004
+		summarizeBy: none
+		sourceColumn: is_planned
+
+		annotation DisplayName = Плановый простой
+
+	partition dim_downtime_reason = query
+		source
+			query = SELECT reason_id, reason_name, category AS reason_category, CASE WHEN category IN ('Плановое ТО', 'Регламентные работы') THEN true ELSE false END AS is_planned FROM public.dim_downtime_reason
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Причины простоев
+

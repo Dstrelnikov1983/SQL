@@ -1,0 +1,647 @@
+// ============================================================
+// Модуль 13. Оконные функции — Примеры на DAX
+// DAX Studio / Power BI
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. АНАЛОГИ PARTITION BY — контекст фильтра
+// ============================================================
+
+// 1.1 Процент от общей суммы (аналог SUM() OVER())
+// SQL: SUM(tons_mined) OVER() AS grand_total
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        FILTER(fact_production,
+            fact_production[date_id] = 20240115
+            && fact_production[shift_id] = 1),
+        dim_equipment[equipment_name]
+    ),
+    "TonsMined",
+        CALCULATE(SUM(fact_production[tons_mined])),
+    "GrandTotal",
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            ALL(dim_equipment)
+        ),
+    "PctOfTotal",
+        ROUND(
+            DIVIDE(
+                CALCULATE(SUM(fact_production[tons_mined])),
+                CALCULATE(SUM(fact_production[tons_mined]), ALL(dim_equipment))
+            ) * 100, 2
+        )
+)
+ORDER BY [TonsMined] DESC
+
+// 1.2 Процент от группы (аналог SUM() OVER(PARTITION BY mine_id))
+// SQL: SUM(tons_mined) OVER(PARTITION BY mine_id) AS mine_total
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        FILTER(fact_production,
+            fact_production[date_id] = 20240115
+            && fact_production[shift_id] = 1),
+        dim_mine[mine_name],
+        dim_equipment[equipment_name]
+    ),
+    "TonsMined",
+        CALCULATE(SUM(fact_production[tons_mined])),
+    "MineTotalTons",
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            ALLEXCEPT(fact_production, dim_mine[mine_name])
+        ),
+    "PctOfMine",
+        ROUND(
+            DIVIDE(
+                CALCULATE(SUM(fact_production[tons_mined])),
+                CALCULATE(
+                    SUM(fact_production[tons_mined]),
+                    ALLEXCEPT(fact_production, dim_mine[mine_name])
+                )
+            ) * 100, 1
+        )
+)
+ORDER BY dim_mine[mine_name], [TonsMined] DESC
+
+
+// ============================================================
+// 2. РАНЖИРОВАНИЕ — RANKX
+// ============================================================
+
+// 2.1 RANKX — аналог RANK / DENSE_RANK
+// SQL: RANK() OVER(ORDER BY SUM(tons_mined) DESC)
+EVALUATE
+VAR OperatorData =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240131),
+            dim_operator[last_name]
+        ),
+        "TotalTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+RETURN
+ADDCOLUMNS(
+    OperatorData,
+    "RankSkip",
+        RANKX(OperatorData, [TotalTons], , DESC, SKIP),
+    "RankDense",
+        RANKX(OperatorData, [TotalTons], , DESC, DENSE)
+)
+ORDER BY [TotalTons] DESC
+
+// Примечание: В DAX нет прямого аналога ROW_NUMBER.
+// RANKX(,,, DESC, SKIP) — аналог RANK()
+// RANKX(,,, DESC, DENSE) — аналог DENSE_RANK()
+// Для ROW_NUMBER используйте RANKX по уникальному ключу
+
+// 2.2 RANKX с PARTITION BY — ранг внутри группы
+// SQL: RANK() OVER(PARTITION BY equipment_type_id ORDER BY SUM(tons_mined) DESC)
+EVALUATE
+VAR BaseData =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240131),
+            dim_equipment_type[type_name],
+            dim_operator[last_name]
+        ),
+        "TotalTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+RETURN
+ADDCOLUMNS(
+    BaseData,
+    "RankInType",
+        VAR CurrentType = dim_equipment_type[type_name]
+        VAR TypeData = FILTER(BaseData, dim_equipment_type[type_name] = CurrentType)
+        RETURN
+        RANKX(TypeData, [TotalTons], , DESC, DENSE)
+)
+ORDER BY dim_equipment_type[type_name], [TotalTons] DESC
+
+// 2.3 Топ-3 дня для каждого оборудования (аналог ROW_NUMBER + фильтр)
+// SQL: ROW_NUMBER() OVER(PARTITION BY equipment_id ORDER BY daily_tons DESC)
+EVALUATE
+VAR DailyByEquip =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production, LEFT(FORMAT(fact_production[date_id], "0"), 4) = "2024"),
+            dim_equipment[equipment_name],
+            dim_date[full_date]
+        ),
+        "DailyTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+RETURN
+GENERATE(
+    VALUES(dim_equipment[equipment_name]),
+    TOPN(3,
+        FILTER(DailyByEquip,
+            dim_equipment[equipment_name] = EARLIER(dim_equipment[equipment_name])),
+        [DailyTons], DESC
+    )
+)
+ORDER BY dim_equipment[equipment_name], [DailyTons] DESC
+
+
+// ============================================================
+// 3. НАРАСТАЮЩИЙ ИТОГ (RUNNING TOTAL)
+// ============================================================
+
+// 3.1 Нарастающий итог — CALCULATE + FILTER + EARLIER
+// SQL: SUM(SUM(tons_mined)) OVER(ORDER BY full_date)
+EVALUATE
+VAR DailyProduction =
+    ADDCOLUMNS(
+        FILTER(VALUES(dim_date[full_date]),
+            dim_date[year] = 2024 && dim_date[month] = 1),
+        "DailyTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[mine_id] = 1
+            )
+    )
+RETURN
+ADDCOLUMNS(
+    DailyProduction,
+    "RunningTotal",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        SUMX(
+            FILTER(DailyProduction, dim_date[full_date] <= CurrentDate),
+            [DailyTons]
+        )
+)
+ORDER BY dim_date[full_date]
+
+// 3.2 Нарастающий итог с разбивкой (аналог PARTITION BY mine_id)
+EVALUATE
+VAR MonthlyByMine =
+    ADDCOLUMNS(
+        CROSSJOIN(
+            VALUES(dim_mine[mine_name]),
+            FILTER(VALUES(dim_date[year_month]), dim_date[year] = 2024)
+        ),
+        "MonthTons",
+            CALCULATE(SUM(fact_production[tons_mined]))
+    )
+RETURN
+ADDCOLUMNS(
+    MonthlyByMine,
+    "CumulativeTons",
+        VAR CurrentMine = dim_mine[mine_name]
+        VAR CurrentMonth = dim_date[year_month]
+        RETURN
+        SUMX(
+            FILTER(MonthlyByMine,
+                dim_mine[mine_name] = CurrentMine
+                && dim_date[year_month] <= CurrentMonth),
+            [MonthTons]
+        )
+)
+ORDER BY dim_mine[mine_name], dim_date[year_month]
+
+// 3.3 Кумулятивный процент (Парето)
+// SQL: SUM(SUM(tons)) OVER(ORDER BY SUM(tons) DESC) / SUM(SUM(tons)) OVER()
+EVALUATE
+VAR OperatorTons =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240131),
+            dim_operator[last_name]
+        ),
+        "TotalTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+VAR GrandTotal = SUMX(OperatorTons, [TotalTons])
+RETURN
+ADDCOLUMNS(
+    OperatorTons,
+    "PctTotal",
+        ROUND(DIVIDE([TotalTons], GrandTotal) * 100, 1),
+    "CumulativePct",
+        VAR CurrentTons = [TotalTons]
+        RETURN
+        ROUND(
+            DIVIDE(
+                SUMX(
+                    FILTER(OperatorTons, [TotalTons] >= CurrentTons),
+                    [TotalTons]
+                ),
+                GrandTotal
+            ) * 100, 1
+        )
+)
+ORDER BY [TotalTons] DESC
+
+
+// ============================================================
+// 4. СКОЛЬЗЯЩИЕ СРЕДНИЕ
+// ============================================================
+
+// 4.1 Скользящее среднее за 7 дней
+// SQL: AVG(SUM(tons)) OVER(ORDER BY full_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)
+EVALUATE
+VAR DailyData =
+    ADDCOLUMNS(
+        FILTER(VALUES(dim_date[full_date]),
+            dim_date[year] = 2024 && dim_date[quarter] = 1),
+        "DailyTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[mine_id] = 1
+            )
+    )
+RETURN
+ADDCOLUMNS(
+    DailyData,
+    "MA_7d",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        ROUND(
+            AVERAGEX(
+                FILTER(DailyData,
+                    dim_date[full_date] >= CurrentDate - 6
+                    && dim_date[full_date] <= CurrentDate),
+                [DailyTons]
+            ), 2
+        ),
+    "MA_15d",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        ROUND(
+            AVERAGEX(
+                FILTER(DailyData,
+                    dim_date[full_date] >= CurrentDate - 14
+                    && dim_date[full_date] <= CurrentDate),
+                [DailyTons]
+            ), 2
+        )
+)
+ORDER BY dim_date[full_date]
+
+// 4.2 Скользящий min/max (аналог MIN/MAX OVER ROWS BETWEEN)
+EVALUATE
+VAR DailyData =
+    ADDCOLUMNS(
+        FILTER(VALUES(dim_date[full_date]),
+            dim_date[year] = 2024 && dim_date[month] <= 2),
+        "DailyTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[mine_id] = 1
+            )
+    )
+RETURN
+ADDCOLUMNS(
+    DailyData,
+    "Min_7d",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        MINX(
+            FILTER(DailyData,
+                dim_date[full_date] >= CurrentDate - 6
+                && dim_date[full_date] <= CurrentDate),
+            [DailyTons]
+        ),
+    "Max_7d",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        MAXX(
+            FILTER(DailyData,
+                dim_date[full_date] >= CurrentDate - 6
+                && dim_date[full_date] <= CurrentDate),
+            [DailyTons]
+        )
+)
+ORDER BY dim_date[full_date]
+
+
+// ============================================================
+// 5. LAG / LEAD — ФУНКЦИИ СМЕЩЕНИЯ
+// ============================================================
+
+// 5.1 Аналог LAG — сравнение с предыдущим днём
+// SQL: LAG(SUM(tons_mined), 1) OVER(ORDER BY full_date)
+EVALUATE
+VAR DailyData =
+    ADDCOLUMNS(
+        FILTER(VALUES(dim_date[full_date]),
+            dim_date[year] = 2024 && dim_date[month] = 1),
+        "TodayTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[mine_id] = 1
+            )
+    )
+RETURN
+ADDCOLUMNS(
+    DailyData,
+    "YesterdayTons",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        MAXX(
+            FILTER(DailyData, dim_date[full_date] = CurrentDate - 1),
+            [TodayTons]
+        ),
+    "WeekAgoTons",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        MAXX(
+            FILTER(DailyData, dim_date[full_date] = CurrentDate - 7),
+            [TodayTons]
+        ),
+    "DayOverDayPct",
+        VAR CurrentDate = dim_date[full_date]
+        VAR Today = [TodayTons]
+        VAR Yesterday =
+            MAXX(
+                FILTER(DailyData, dim_date[full_date] = CurrentDate - 1),
+                [TodayTons]
+            )
+        RETURN
+        ROUND(DIVIDE(Today - Yesterday, Yesterday) * 100, 1)
+)
+ORDER BY dim_date[full_date]
+
+// Примечание: в новых версиях Power BI (2022+) доступна функция OFFSET,
+// которая является прямым аналогом LAG/LEAD:
+//
+// OFFSET(-1, ORDERBY(dim_date[full_date], ASC), PARTITIONBY(...))
+//
+// Также доступна функция WINDOW для определения диапазонов строк:
+// WINDOW(-6, REL, 0, REL, ORDERBY(dim_date[full_date]))
+
+
+// ============================================================
+// 6. OFFSET и WINDOW (DAX 2022+, новые функции)
+// ============================================================
+
+// 6.1 OFFSET — прямой аналог LAG/LEAD
+// Доступно начиная с Power BI Desktop март 2022+
+// Требует определение окна через ORDERBY и PARTITIONBY
+
+// Мера для использования в визуалах Power BI:
+// PrevDayTons :=
+// CALCULATE(
+//     SUM(fact_production[tons_mined]),
+//     OFFSET(
+//         -1,
+//         ALLSELECTED(dim_date[full_date]),
+//         ORDERBY(dim_date[full_date], ASC)
+//     )
+// )
+
+// 6.2 WINDOW — определение рамки (аналог ROWS BETWEEN)
+// MovingAvg7d :=
+// VAR Result =
+//     CALCULATE(
+//         AVERAGE(fact_production[tons_mined]),
+//         WINDOW(
+//             -6, REL,
+//              0, REL,
+//             ALLSELECTED(dim_date[full_date]),
+//             ORDERBY(dim_date[full_date], ASC)
+//         )
+//     )
+// RETURN Result
+
+// 6.3 INDEX — доступ к строке по номеру
+// Аналог NTH_VALUE в SQL:
+// ThirdBestDay :=
+// CALCULATE(
+//     SUM(fact_production[tons_mined]),
+//     INDEX(
+//         3,
+//         ALLSELECTED(dim_date[full_date]),
+//         ORDERBY(CALCULATE(SUM(fact_production[tons_mined])), DESC)
+//     )
+// )
+
+
+// ============================================================
+// 7. FIRST_VALUE / LAST_VALUE
+// ============================================================
+
+// 7.1 Первое значение в группе (аналог FIRST_VALUE)
+// SQL: FIRST_VALUE(SUM(tons)) OVER(PARTITION BY month ORDER BY full_date)
+EVALUATE
+VAR DailyData =
+    ADDCOLUMNS(
+        FILTER(VALUES(dim_date[full_date]),
+            dim_date[year] = 2024 && dim_date[month] <= 3),
+        "DailyTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[mine_id] = 1
+            )
+    )
+RETURN
+ADDCOLUMNS(
+    DailyData,
+    "FirstDayTons",
+        VAR CurrentMonth = MONTH(dim_date[full_date])
+        VAR MonthStart =
+            MINX(
+                FILTER(DailyData, MONTH(dim_date[full_date]) = CurrentMonth),
+                dim_date[full_date]
+            )
+        RETURN
+        MAXX(
+            FILTER(DailyData, dim_date[full_date] = MonthStart),
+            [DailyTons]
+        ),
+    "BestDayTons",
+        VAR CurrentMonth = MONTH(dim_date[full_date])
+        RETURN
+        MAXX(
+            FILTER(DailyData, MONTH(dim_date[full_date]) = CurrentMonth),
+            [DailyTons]
+        )
+)
+ORDER BY dim_date[full_date]
+
+
+// ============================================================
+// 8. PERCENTILE — статистические функции
+// ============================================================
+
+// 8.1 Медиана и квартили (аналог PERCENTILE_CONT)
+// SQL: PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fe_content)
+EVALUATE
+ADDCOLUMNS(
+    VALUES(dim_mine[mine_name]),
+    "SamplesCount",
+        CALCULATE(
+            COUNTROWS(fact_ore_quality),
+            fact_ore_quality[date_id] >= 20240101,
+            fact_ore_quality[date_id] <= 20240630
+        ),
+    "AvgFe",
+        ROUND(
+            CALCULATE(
+                AVERAGE(fact_ore_quality[fe_content]),
+                fact_ore_quality[date_id] >= 20240101,
+                fact_ore_quality[date_id] <= 20240630
+            ), 2
+        ),
+    "Q1",
+        ROUND(
+            CALCULATE(
+                PERCENTILE.INC(fact_ore_quality[fe_content], 0.25),
+                fact_ore_quality[date_id] >= 20240101,
+                fact_ore_quality[date_id] <= 20240630
+            ), 2
+        ),
+    "Median",
+        ROUND(
+            CALCULATE(
+                MEDIAN(fact_ore_quality[fe_content]),
+                fact_ore_quality[date_id] >= 20240101,
+                fact_ore_quality[date_id] <= 20240630
+            ), 2
+        ),
+    "Q3",
+        ROUND(
+            CALCULATE(
+                PERCENTILE.INC(fact_ore_quality[fe_content], 0.75),
+                fact_ore_quality[date_id] >= 20240101,
+                fact_ore_quality[date_id] <= 20240630
+            ), 2
+        ),
+    "P90",
+        ROUND(
+            CALCULATE(
+                PERCENTILE.INC(fact_ore_quality[fe_content], 0.90),
+                fact_ore_quality[date_id] >= 20240101,
+                fact_ore_quality[date_id] <= 20240630
+            ), 2
+        )
+)
+
+// 8.2 PERCENTILEX.INC — процентиль по выражению
+// Используется когда нужно вычислить процентиль не по столбцу, а по выражению
+EVALUATE
+ADDCOLUMNS(
+    VALUES(dim_mine[mine_name]),
+    "MedianProductivity",
+        CALCULATE(
+            PERCENTILEX.INC(
+                fact_production,
+                DIVIDE(fact_production[tons_mined], fact_production[operating_hours], 0),
+                0.5
+            ),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240630
+        )
+)
+
+
+// ============================================================
+// 9. КОМПЛЕКСНЫЙ ПРИМЕР: ПРОИЗВОДСТВЕННЫЙ ДАШБОРД
+// ============================================================
+
+// Сводный анализ: ранжирование + нарастающий итог + сравнение с прошлым
+EVALUATE
+VAR DailyStats =
+    ADDCOLUMNS(
+        FILTER(VALUES(dim_date[full_date]),
+            dim_date[year] = 2024 && dim_date[month] = 1),
+        "DailyTons",
+            CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[mine_id] = 1
+            )
+    )
+VAR GrandTotal = SUMX(DailyStats, [DailyTons])
+RETURN
+ADDCOLUMNS(
+    DailyStats,
+    // Ранг за месяц
+    "DailyRank",
+        RANKX(DailyStats, [DailyTons], , DESC, DENSE),
+    // Нарастающий итог
+    "RunningTotal",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        SUMX(
+            FILTER(DailyStats, dim_date[full_date] <= CurrentDate),
+            [DailyTons]
+        ),
+    // Сравнение с прошлым днём
+    "PrevDayTons",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        MAXX(
+            FILTER(DailyStats, dim_date[full_date] = CurrentDate - 1),
+            [DailyTons]
+        ),
+    // Тренд
+    "Trend",
+        VAR CurrentDate = dim_date[full_date]
+        VAR Today = [DailyTons]
+        VAR Yesterday =
+            MAXX(
+                FILTER(DailyStats, dim_date[full_date] = CurrentDate - 1),
+                [DailyTons]
+            )
+        VAR ChangePct = DIVIDE(Today - Yesterday, Yesterday, 0) * 100
+        RETURN
+        IF(
+            ISBLANK(Yesterday), "—",
+            IF(ABS(ChangePct) < 5, "стабильно",
+                IF(ChangePct > 0, "рост", "снижение")
+            )
+        ),
+    // Скользящее среднее 7 дней
+    "MA_7d",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        ROUND(
+            AVERAGEX(
+                FILTER(DailyStats,
+                    dim_date[full_date] >= CurrentDate - 6
+                    && dim_date[full_date] <= CurrentDate),
+                [DailyTons]
+            ), 2
+        ),
+    // Кумулятивный процент
+    "CumPctOfMonth",
+        VAR CurrentDate = dim_date[full_date]
+        RETURN
+        ROUND(
+            DIVIDE(
+                SUMX(
+                    FILTER(DailyStats, dim_date[full_date] <= CurrentDate),
+                    [DailyTons]
+                ),
+                GrandTotal
+            ) * 100, 1
+        )
+)
+ORDER BY dim_date[full_date]
+
+
+// ============================================================
+// СРАВНИТЕЛЬНАЯ ТАБЛИЦА: SQL vs DAX
+// ============================================================
+// SQL OVER()                → DAX CALCULATE + ALL/ALLEXCEPT
+// SQL PARTITION BY          → DAX контекст фильтра + ALLEXCEPT
+// SQL ORDER BY в окне       → DAX VAR + FILTER + <=/>= по дате
+// SQL ROWS BETWEEN          → DAX WINDOW() (2022+) или ручной FILTER
+// SQL ROW_NUMBER            → DAX RANKX (по уникальному ключу)
+// SQL RANK                  → DAX RANKX(..., DESC, SKIP)
+// SQL DENSE_RANK            → DAX RANKX(..., DESC, DENSE)
+// SQL NTILE                  → Нет прямого аналога (ручной расчёт)
+// SQL LAG/LEAD              → DAX OFFSET() (2022+) или FILTER по дате
+// SQL FIRST_VALUE           → DAX MINX/MAXX + FILTER
+// SQL LAST_VALUE            → DAX MINX/MAXX + FILTER
+// SQL PERCENTILE_CONT       → DAX PERCENTILE.INC / PERCENTILEX.INC
+// SQL PERCENT_RANK          → Нет прямого аналога (ручной расчёт)
+// SQL CUME_DIST             → Нет прямого аналога (ручной расчёт)
+// SQL WINDOW (именованные)  → DAX переменные VAR

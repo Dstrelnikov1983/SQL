@@ -1,0 +1,68 @@
+/// Справочник операторов
+table dim_operator
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567808
+
+	column operator_id
+		dataType: int64
+		lineageTag: col-op-001
+		summarizeBy: none
+		sourceColumn: operator_id
+
+		annotation DisplayName = ID оператора
+
+	column full_name
+		dataType: string
+		lineageTag: col-op-002
+		summarizeBy: none
+		sourceColumn: full_name
+
+		annotation DisplayName = ФИО
+
+	column tab_number
+		dataType: string
+		lineageTag: col-op-003
+		summarizeBy: none
+		sourceColumn: tab_number
+
+		annotation DisplayName = Табельный номер
+
+	column position
+		dataType: string
+		lineageTag: col-op-004
+		summarizeBy: none
+		sourceColumn: position
+
+		annotation DisplayName = Должность
+
+	column qualification
+		dataType: int64
+		lineageTag: col-op-005
+		summarizeBy: none
+		sourceColumn: qualification_level
+
+		annotation DisplayName = Квалификационный разряд
+
+	column hire_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: col-op-006
+		summarizeBy: none
+		sourceColumn: hire_date
+
+		annotation DisplayName = Дата приема на работу
+
+	column mine_id
+		dataType: int64
+		lineageTag: col-op-007
+		summarizeBy: none
+		sourceColumn: mine_id
+
+		annotation DisplayName = ID шахты
+
+	partition dim_operator = query
+		source
+			query = SELECT operator_id, last_name || ' ' || first_name || ' ' || COALESCE(middle_name, '') AS full_name, tab_number, position, CAST(REGEXP_REPLACE(qualification, '[^0-9]', '', 'g') AS INTEGER) AS qualification_level, hire_date, mine_id FROM public.dim_operator
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Операторы
+

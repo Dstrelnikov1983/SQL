@@ -1,0 +1,469 @@
+// ============================================================
+// Модуль 3. Сравнение простейших запросов SQL и DAX
+// Примеры на языке DAX (DAX Studio / Power BI)
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. ПРОСТОЙ EVALUATE (аналог SELECT)
+// ============================================================
+
+// 1.1 Выбрать все столбцы из таблицы оборудования
+EVALUATE
+dim_equipment
+
+// 1.2 Выбрать определённые столбцы (SELECTCOLUMNS)
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Название",       dim_equipment[equipment_name],
+    "Серийный номер", dim_equipment[inventory_number],
+    "Тип",            RELATED(dim_equipment_type[type_name]),
+    "Статус",         dim_equipment[status]
+)
+
+// 1.3 Выбрать уникальные типы оборудования (DISTINCT + VALUES)
+EVALUATE
+DISTINCT(dim_equipment_type[type_name])
+
+// 1.4 Выбрать уникальные комбинации тип + статус
+EVALUATE
+DISTINCT(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Тип",    RELATED(dim_equipment_type[type_name]),
+        "Статус", dim_equipment[status]
+    )
+)
+
+// 1.5 Подсчитать количество единиц оборудования
+EVALUATE
+ROW(
+    "Всего оборудования", COUNTROWS(dim_equipment)
+)
+
+// ============================================================
+// 2. ФИЛЬТРАЦИЯ (FILTER / CALCULATETABLE)
+// ============================================================
+
+// 2.1 Оборудование шахты «Северная» (mine_id = 1) — через FILTER
+EVALUATE
+FILTER(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",        dim_equipment[equipment_name],
+        "Серийный номер",  dim_equipment[inventory_number],
+        "Тип",             RELATED(dim_equipment_type[type_name]),
+        "Статус",          dim_equipment[status],
+        "mine_id",         dim_equipment[mine_id]
+    ),
+    [mine_id] = 1
+)
+
+// 2.1a Оборудование шахты «Северная» — через CALCULATETABLE
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",        dim_equipment[equipment_name],
+        "Серийный номер",  dim_equipment[inventory_number],
+        "Тип",             RELATED(dim_equipment_type[type_name]),
+        "Статус",          dim_equipment[status]
+    ),
+    dim_equipment[mine_id] = 1
+)
+
+// 2.2 Активное оборудование
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",        dim_equipment[equipment_name],
+        "Тип",             RELATED(dim_equipment_type[type_name]),
+        "Год выпуска",     dim_equipment[year_manufactured]
+    ),
+    dim_equipment[status] = "active"
+)
+
+// 2.3 ПДМ (equipment_type_id = 1) на шахте «Северная»
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",         dim_equipment[equipment_name],
+        "Тип",              RELATED(dim_equipment_type[type_name]),
+        "Год выпуска",      dim_equipment[year_manufactured]
+    ),
+    dim_equipment[equipment_type_id] = 1,
+    dim_equipment[mine_id] = 1
+)
+
+// 2.4 Оборудование выпуска после 2020 года
+EVALUATE
+FILTER(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",      dim_equipment[equipment_name],
+        "Тип",           RELATED(dim_equipment_type[type_name]),
+        "Год выпуска",   dim_equipment[year_manufactured]
+    ),
+    [Год выпуска] > 2020
+)
+
+// 2.5 Оборудование определённого типа (аналог примера с видеорегистратором)
+// Примечание: столбец has_video_recorder отсутствует в модели,
+// используем фильтр по типу оборудования
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",      dim_equipment[equipment_name],
+        "Тип",           RELATED(dim_equipment_type[type_name]),
+        "Статус",        dim_equipment[status]
+    ),
+    dim_equipment[equipment_type_id] = 1
+)
+
+// 2.6 Добыча более 100 тонн за смену
+EVALUATE
+FILTER(
+    SELECTCOLUMNS(
+        fact_production,
+        "production_id",  fact_production[production_id],
+        "date_id",        fact_production[date_id],
+        "equipment_id",   fact_production[equipment_id],
+        "operator_id",    fact_production[operator_id],
+        "Добыто, т",      fact_production[tons_mined],
+        "Перевезено, т",  fact_production[tons_transported]
+    ),
+    [Добыто, т] > 100
+)
+
+// 2.7 Добыча за январь 2024 (аналог BETWEEN)
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        fact_production,
+        "date_id",       fact_production[date_id],
+        "equipment_id",  fact_production[equipment_id],
+        "operator_id",   fact_production[operator_id],
+        "Добыто, т",     fact_production[tons_mined],
+        "Рейсов",        fact_production[trips_count]
+    ),
+    fact_production[date_id] >= 20240101,
+    fact_production[date_id] <= 20240131
+)
+
+// 2.8 Оборудование определённых типов (аналог IN)
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",      dim_equipment[equipment_name],
+        "Тип",           RELATED(dim_equipment_type[type_name]),
+        "Статус",        dim_equipment[status]
+    ),
+    dim_equipment[equipment_type_id] IN {1, 2}
+)
+
+// 2.9 Поиск по названию (аналог LIKE) — через CONTAINSSTRING
+EVALUATE
+FILTER(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",        dim_equipment[equipment_name],
+        "Серийный номер",  dim_equipment[inventory_number]
+    ),
+    CONTAINSSTRING([Название], "ПДМ")
+)
+
+// ============================================================
+// 3. СОРТИРОВКА (ORDER BY)
+// ============================================================
+
+// 3.1 Оборудование, отсортированное по году выпуска (от нового к старому)
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Название",      dim_equipment[equipment_name],
+    "Тип",           RELATED(dim_equipment_type[type_name]),
+    "Год выпуска",   dim_equipment[year_manufactured]
+)
+ORDER BY [Год выпуска] DESC
+
+// 3.2 Добыча за январь 2024, сортировка по объёму (убывание)
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        fact_production,
+        "date_id",      fact_production[date_id],
+        "equipment_id", fact_production[equipment_id],
+        "operator_id",  fact_production[operator_id],
+        "Добыто, т",    fact_production[tons_mined],
+        "Рейсов",       fact_production[trips_count]
+    ),
+    fact_production[date_id] >= 20240101,
+    fact_production[date_id] <= 20240131
+)
+ORDER BY [Добыто, т] DESC
+
+// 3.3 Топ-5 записей добычи по объёму (TOPN)
+EVALUATE
+TOPN(
+    5,
+    SELECTCOLUMNS(
+        fact_production,
+        "date_id",      fact_production[date_id],
+        "equipment_id", fact_production[equipment_id],
+        "operator_id",  fact_production[operator_id],
+        "Добыто, т",    fact_production[tons_mined],
+        "Рейсов",       fact_production[trips_count]
+    ),
+    [Добыто, т], DESC
+)
+
+// 3.4 Сортировка по нескольким столбцам
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Название",      dim_equipment[equipment_name],
+    "Тип",           RELATED(dim_equipment_type[type_name]),
+    "Год выпуска",   dim_equipment[year_manufactured]
+)
+ORDER BY [Тип] ASC, [Год выпуска] DESC
+
+// ============================================================
+// 4. СОЕДИНЕНИЕ ТАБЛИЦ (RELATED / RELATEDTABLE / NATURALLEFTOUTERJOIN)
+// ============================================================
+
+// Примечание: в DAX соединения таблиц реализуются через
+// модель данных (связи). Функция RELATED работает по
+// существующим связям «многие к одному».
+
+// 4.1 Оборудование с названием типа и названием шахты
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Название",     dim_equipment[equipment_name],
+    "Тип",          RELATED(dim_equipment_type[type_name]),
+    "Шахта",        RELATED(dim_mine[mine_name])
+)
+
+// 4.2 Оборудование шахты «Северная» с типом
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",      dim_equipment[equipment_name],
+        "Тип",           RELATED(dim_equipment_type[type_name]),
+        "Год выпуска",   dim_equipment[year_manufactured],
+        "Статус",        dim_equipment[status]
+    ),
+    RELATED(dim_mine[mine_name]) = "Шахта ""Северная"""
+)
+
+// Альтернативный вариант — фильтр по связанной таблице
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название",      dim_equipment[equipment_name],
+        "Тип",           RELATED(dim_equipment_type[type_name]),
+        "Год выпуска",   dim_equipment[year_manufactured],
+        "Статус",        dim_equipment[status]
+    ),
+    dim_mine[mine_name] = "Шахта ""Северная"""
+)
+
+// 4.3 Добыча с расшифровкой оборудования, оператора и смены
+// (за конкретную дату, аналог JOIN нескольких таблиц)
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        fact_production,
+        "Дата",       RELATED(dim_date[full_date]),
+        "Смена",      RELATED(dim_shift[shift_name]),
+        "Оборудование", RELATED(dim_equipment[equipment_name]),
+        "Оператор",   RELATED(dim_operator[full_name]),
+        "Добыто, т",  fact_production[tons_mined],
+        "Рейсов",     fact_production[trips_count]
+    ),
+    dim_date[full_date] = DATE(2024, 1, 15)
+)
+ORDER BY [Добыто, т] DESC
+
+// 4.4 Простои с причинами и названием оборудования
+EVALUATE
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        fact_equipment_downtime,
+        "Оборудование",      RELATED(dim_equipment[equipment_name]),
+        "Причина",            RELATED(dim_downtime_reason[reason_name]),
+        "Категория",          RELATED(dim_downtime_reason[category]),
+        "Длительность, мин",  fact_equipment_downtime[duration_min],
+        "Описание",           fact_equipment_downtime[comment]
+    ),
+    fact_equipment_downtime[start_date_id] >= 20240101,
+    fact_equipment_downtime[start_date_id] <= 20240131
+)
+ORDER BY [Длительность, мин] DESC
+
+// 4.5 Использование NATURALLEFTOUTERJOIN для «ручного» соединения
+// (когда нет прямой связи в модели)
+EVALUATE
+NATURALLEFTOUTERJOIN(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "equipment_type_id", dim_equipment[equipment_type_id],
+        "Название",          dim_equipment[equipment_name],
+        "Серийный номер",    dim_equipment[inventory_number]
+    ),
+    SELECTCOLUMNS(
+        dim_equipment_type,
+        "equipment_type_id", dim_equipment_type[equipment_type_id],
+        "Тип оборудования",  dim_equipment_type[type_name]
+    )
+)
+
+// ============================================================
+// 5. ГРУППИРОВКА И АГРЕГИРОВАНИЕ (SUMMARIZE / SUMMARIZECOLUMNS)
+// ============================================================
+
+// 5.1 Общая добыча по каждой шахте (SUMMARIZECOLUMNS)
+EVALUATE
+SUMMARIZECOLUMNS(
+    dim_mine[mine_name],
+    "Всего тонн",           SUM(fact_production[tons_mined]),
+    "Среднее за смену",     AVERAGE(fact_production[tons_mined]),
+    "Количество смен",      COUNTROWS(fact_production)
+)
+
+// 5.1a Альтернатива — SUMMARIZE + ADDCOLUMNS
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_mine[mine_name]),
+    "Всего тонн",       CALCULATE(SUM(fact_production[tons_mined])),
+    "Среднее за смену",  CALCULATE(AVERAGE(fact_production[tons_mined])),
+    "Количество смен",   CALCULATE(COUNTROWS(fact_production))
+)
+
+// 5.2 Добыча по месяцам за 2024 год
+EVALUATE
+CALCULATETABLE(
+    SUMMARIZECOLUMNS(
+        dim_date[month],
+        dim_date[month_name],
+        "Всего тонн",      SUM(fact_production[tons_mined]),
+        "Среднее",          AVERAGE(fact_production[tons_mined]),
+        "Кол-во смен",     COUNTROWS(fact_production)
+    ),
+    dim_date[year] = 2024
+)
+ORDER BY [month]
+
+// 5.3 Топ-5 операторов по общему объёму добычи
+EVALUATE
+TOPN(
+    5,
+    ADDCOLUMNS(
+        SUMMARIZE(
+            fact_production,
+            dim_operator[full_name],
+            dim_operator[position]
+        ),
+        "Всего тонн",      CALCULATE(SUM(fact_production[tons_mined])),
+        "Среднее",          CALCULATE(AVERAGE(fact_production[tons_mined])),
+        "Кол-во смен",     CALCULATE(COUNTROWS(fact_production))
+    ),
+    [Всего тонн], DESC
+)
+
+// 5.4 Анализ простоев по категориям причин
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_equipment_downtime,
+        dim_downtime_reason[category],
+        dim_downtime_reason[reason_name]
+    ),
+    "Кол-во простоев",     CALCULATE(COUNTROWS(fact_equipment_downtime)),
+    "Всего минут",         CALCULATE(SUM(fact_equipment_downtime[duration_min])),
+    "Среднее, мин",        CALCULATE(AVERAGE(fact_equipment_downtime[duration_min]))
+)
+ORDER BY [Всего минут] DESC
+
+// 5.5 Среднее содержание Fe по сортам руды
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_ore_quality, dim_ore_grade[grade_name]),
+    "Кол-во проб",   CALCULATE(COUNTROWS(fact_ore_quality)),
+    "Среднее Fe, %",  CALCULATE(AVERAGE(fact_ore_quality[fe_content])),
+    "Мин Fe, %",      CALCULATE(MIN(fact_ore_quality[fe_content])),
+    "Макс Fe, %",     CALCULATE(MAX(fact_ore_quality[fe_content]))
+)
+ORDER BY [grade_name]
+
+// 5.6 Добыча по сменам и типам оборудования
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_shift[shift_name],
+        dim_equipment_type[type_name]
+    ),
+    "Всего тонн",   CALCULATE(SUM(fact_production[tons_mined])),
+    "Среднее, т",    CALCULATE(AVERAGE(fact_production[tons_mined])),
+    "Всего рейсов",  CALCULATE(SUM(fact_production[trips_count]))
+)
+ORDER BY [shift_name], [Всего тонн] DESC
+
+// 5.7 Фильтрация агрегатов (аналог HAVING):
+// шахты с общей добычей более 50 000 тонн
+EVALUATE
+FILTER(
+    ADDCOLUMNS(
+        SUMMARIZE(fact_production, dim_mine[mine_name]),
+        "Всего тонн", CALCULATE(SUM(fact_production[tons_mined]))
+    ),
+    [Всего тонн] > 50000
+)
+ORDER BY [Всего тонн] DESC
+
+// ============================================================
+// 6. КЕЙС: Анализ эффективности смен
+// ============================================================
+
+// 6.1 Сравнение дневной и ночной смены по добыче
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_shift[shift_name]),
+    "Рабочих дней",          CALCULATE(DISTINCTCOUNT(fact_production[date_id])),
+    "Всего записей",         CALCULATE(COUNTROWS(fact_production)),
+    "Всего тонн",            CALCULATE(SUM(fact_production[tons_mined])),
+    "Среднее на запись, т",   CALCULATE(AVERAGE(fact_production[tons_mined])),
+    "Всего топлива, л",      CALCULATE(SUM(fact_production[fuel_consumed_l])),
+    "Топливо на тонну, л",   DIVIDE(
+                                CALCULATE(SUM(fact_production[fuel_consumed_l])),
+                                CALCULATE(SUM(fact_production[tons_mined])),
+                                0
+                            )
+)
+
+// 6.2 Эффективность операторов по сменам
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_operator[full_name],
+        dim_shift[shift_name]
+    ),
+    "Кол-во смен",       CALCULATE(COUNTROWS(fact_production)),
+    "Среднее, т",         CALCULATE(AVERAGE(fact_production[tons_mined])),
+    "Средн. часов",       CALCULATE(AVERAGE(fact_production[operating_hours])),
+    "Тонн в час",         DIVIDE(
+                            CALCULATE(AVERAGE(fact_production[tons_mined])),
+                            CALCULATE(AVERAGE(fact_production[operating_hours])),
+                            0
+                        )
+)
+ORDER BY [Тонн в час] DESC

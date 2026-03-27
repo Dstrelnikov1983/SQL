@@ -1,0 +1,19 @@
+equipment_id;equipment_name;inventory_number;type_name;type_code;mine_name;manufacturer;model;year_manufactured;commissioning_date;status;has_video_recorder;has_navigation
+1;ПДМ-001;INV-LHD-001;Погрузочно-доставочная машина;LHD;Шахта "Северная";Sandvik;LH514;2019;2019-08-15;active;TRUE;TRUE
+2;ПДМ-002;INV-LHD-002;Погрузочно-доставочная машина;LHD;Шахта "Северная";Sandvik;LH514;2020;2020-03-10;active;TRUE;TRUE
+3;ПДМ-003;INV-LHD-003;Погрузочно-доставочная машина;LHD;Шахта "Северная";Caterpillar;R1700;2018;2018-11-20;active;TRUE;TRUE
+4;ПДМ-004;INV-LHD-004;Погрузочно-доставочная машина;LHD;Шахта "Южная";Sandvik;LH517i;2021;2021-05-01;active;TRUE;TRUE
+5;ПДМ-005;INV-LHD-005;Погрузочно-доставочная машина;LHD;Шахта "Южная";Caterpillar;R1700;2017;2017-09-12;maintenance;TRUE;TRUE
+6;ПДМ-006;INV-LHD-006;Погрузочно-доставочная машина;LHD;Шахта "Южная";Epiroc;ST14;2022;2022-01-20;active;TRUE;TRUE
+7;Самосвал-001;INV-TRK-001;Шахтный самосвал;TRUCK;Шахта "Северная";Sandvik;TH663i;2020;2020-06-01;active;TRUE;TRUE
+8;Самосвал-002;INV-TRK-002;Шахтный самосвал;TRUCK;Шахта "Северная";Sandvik;TH663i;2020;2020-06-01;active;TRUE;TRUE
+9;Самосвал-003;INV-TRK-003;Шахтный самосвал;TRUCK;Шахта "Северная";Caterpillar;AD30;2019;2019-04-15;active;TRUE;TRUE
+10;Самосвал-004;INV-TRK-004;Шахтный самосвал;TRUCK;Шахта "Южная";Sandvik;TH551i;2021;2021-08-10;active;TRUE;TRUE
+11;Самосвал-005;INV-TRK-005;Шахтный самосвал;TRUCK;Шахта "Южная";Caterpillar;AD30;2018;2018-12-01;active;FALSE;TRUE
+12;Вагонетка-001;INV-CRT-001;Вагонетка;CART;Шахта "Северная";НКМЗ;ВГ-5.0;2016;2016-03-20;active;FALSE;FALSE
+13;Вагонетка-002;INV-CRT-002;Вагонетка;CART;Шахта "Северная";НКМЗ;ВГ-5.0;2016;2016-03-20;active;FALSE;FALSE
+14;Вагонетка-003;INV-CRT-003;Вагонетка;CART;Шахта "Южная";НКМЗ;ВГ-5.0;2017;2017-07-01;active;FALSE;FALSE
+15;Вагонетка-004;INV-CRT-004;Вагонетка;CART;Шахта "Южная";НКМЗ;ВГ-5.0;2017;2017-07-01;active;FALSE;FALSE
+16;Скип-001;INV-SKP-001;Скиповой подъёмник;SKIP;Шахта "Северная";НКМЗ;СН-20;2010;2010-09-01;active;TRUE;FALSE
+17;Скип-002;INV-SKP-002;Скиповой подъёмник;SKIP;Шахта "Северная";Siemag Tecberg;BMR-20;2015;2015-04-10;active;TRUE;FALSE
+18;Скип-003;INV-SKP-003;Скиповой подъёмник;SKIP;Шахта "Южная";НКМЗ;СН-20;2012;2012-11-15;active;TRUE;FALSE

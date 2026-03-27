@@ -1,0 +1,60 @@
+/// Измерение времени
+table dim_time
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567813
+
+	column time_id
+		dataType: int64
+		lineageTag: col-dt-001
+		summarizeBy: none
+		sourceColumn: time_id
+
+		annotation DisplayName = ID времени
+
+	column full_time
+		dataType: dateTime
+		formatString: HH:mm:ss
+		lineageTag: col-dt-002
+		summarizeBy: none
+		sourceColumn: full_time
+
+		annotation DisplayName = Время
+
+	column hour
+		dataType: int64
+		lineageTag: col-dt-003
+		summarizeBy: none
+		sourceColumn: hour
+
+		annotation DisplayName = Час
+
+	column minute
+		dataType: int64
+		lineageTag: col-dt-004
+		summarizeBy: none
+		sourceColumn: minute
+
+		annotation DisplayName = Минута
+
+	column period
+		dataType: string
+		lineageTag: col-dt-005
+		summarizeBy: none
+		sourceColumn: period_of_day
+
+		annotation DisplayName = Период суток
+
+	column shift_code
+		dataType: string
+		lineageTag: col-dt-006
+		summarizeBy: none
+		sourceColumn: shift_code
+
+		annotation DisplayName = Код смены
+
+	partition dim_time = query
+		source
+			query = SELECT time_id, full_time, hour, minute, period AS period_of_day, shift_code FROM public.dim_time
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Время
+

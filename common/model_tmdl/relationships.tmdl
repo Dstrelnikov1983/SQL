@@ -1,0 +1,114 @@
+relationship rel_fact_production_dim_date
+	fromColumn: fact_production.date_id
+	toColumn: dim_date.date_id
+
+relationship rel_fact_production_dim_shift
+	fromColumn: fact_production.shift_id
+	toColumn: dim_shift.shift_id
+
+relationship rel_fact_production_dim_equipment
+	fromColumn: fact_production.equipment_id
+	toColumn: dim_equipment.equipment_id
+
+relationship rel_fact_production_dim_operator
+	fromColumn: fact_production.operator_id
+	toColumn: dim_operator.operator_id
+
+relationship rel_fact_production_dim_location
+	fromColumn: fact_production.location_id
+	toColumn: dim_location.location_id
+
+relationship rel_fact_telemetry_dim_date
+	fromColumn: fact_equipment_telemetry.date_id
+	toColumn: dim_date.date_id
+
+relationship rel_fact_telemetry_dim_time
+	fromColumn: fact_equipment_telemetry.time_id
+	toColumn: dim_time.time_id
+
+relationship rel_fact_telemetry_dim_sensor
+	fromColumn: fact_equipment_telemetry.sensor_id
+	toColumn: dim_sensor.sensor_id
+
+relationship rel_fact_telemetry_dim_equipment
+	isActive: false
+	fromColumn: fact_equipment_telemetry.equipment_id
+	toColumn: dim_equipment.equipment_id
+
+relationship rel_fact_downtime_dim_equipment
+	fromColumn: fact_equipment_downtime.equipment_id
+	toColumn: dim_equipment.equipment_id
+
+relationship rel_fact_downtime_dim_reason
+	fromColumn: fact_equipment_downtime.reason_id
+	toColumn: dim_downtime_reason.reason_id
+
+relationship rel_fact_downtime_dim_date_start
+	fromColumn: fact_equipment_downtime.start_date_id
+	toColumn: dim_date.date_id
+
+relationship rel_fact_downtime_dim_date_end
+	isActive: false
+	fromColumn: fact_equipment_downtime.end_date_id
+	toColumn: dim_date.date_id
+
+relationship rel_fact_downtime_dim_time_start
+	fromColumn: fact_equipment_downtime.start_time_id
+	toColumn: dim_time.time_id
+
+relationship rel_fact_downtime_dim_time_end
+	isActive: false
+	fromColumn: fact_equipment_downtime.end_time_id
+	toColumn: dim_time.time_id
+
+relationship rel_fact_quality_dim_date
+	fromColumn: fact_ore_quality.date_id
+	toColumn: dim_date.date_id
+
+relationship rel_fact_quality_dim_shift
+	fromColumn: fact_ore_quality.shift_id
+	toColumn: dim_shift.shift_id
+
+relationship rel_fact_quality_dim_equipment
+	isActive: false
+	fromColumn: fact_ore_quality.equipment_id
+	toColumn: dim_equipment.equipment_id
+
+relationship rel_fact_quality_dim_location
+	fromColumn: fact_ore_quality.location_id
+	toColumn: dim_location.location_id
+
+relationship rel_fact_quality_dim_grade
+	fromColumn: fact_ore_quality.ore_grade_id
+	toColumn: dim_ore_grade.ore_grade_id
+
+relationship rel_dim_equipment_dim_type
+	fromColumn: dim_equipment.equipment_type_id
+	toColumn: dim_equipment_type.equipment_type_id
+
+relationship rel_dim_equipment_dim_mine
+	fromColumn: dim_equipment.mine_id
+	toColumn: dim_mine.mine_id
+
+relationship rel_dim_shaft_dim_mine
+	isActive: false
+	fromColumn: dim_shaft.mine_id
+	toColumn: dim_mine.mine_id
+
+relationship rel_dim_location_dim_shaft
+	fromColumn: dim_location.shaft_id
+	toColumn: dim_shaft.shaft_id
+
+relationship rel_dim_sensor_dim_type
+	fromColumn: dim_sensor.sensor_type_id
+	toColumn: dim_sensor_type.sensor_type_id
+
+relationship rel_dim_sensor_dim_equipment
+	fromColumn: dim_sensor.equipment_id
+	toColumn: dim_equipment.equipment_id
+
+relationship rel_dim_operator_dim_mine
+	isActive: false
+	fromColumn: dim_operator.mine_id
+	toColumn: dim_mine.mine_id
+

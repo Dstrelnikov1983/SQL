@@ -1,0 +1,54 @@
+/// Справочник сортов руды
+table dim_ore_grade
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567810
+
+	column ore_grade_id
+		dataType: int64
+		lineageTag: col-og-001
+		summarizeBy: none
+		sourceColumn: grade_id
+
+		annotation DisplayName = ID сорта
+
+	column grade_name
+		dataType: string
+		lineageTag: col-og-002
+		summarizeBy: none
+		sourceColumn: grade_name
+
+		annotation DisplayName = Название сорта
+
+	column fe_content_min
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-og-003
+		summarizeBy: none
+		sourceColumn: min_fe_content
+
+		annotation DisplayName = Мин. содержание Fe (%)
+
+	column fe_content_max
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-og-004
+		summarizeBy: none
+		sourceColumn: max_fe_content
+
+		annotation DisplayName = Макс. содержание Fe (%)
+
+	column price_coefficient
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-og-005
+		summarizeBy: none
+		sourceColumn: price_coefficient
+
+		annotation DisplayName = Ценовой коэффициент
+
+	partition dim_ore_grade = query
+		source
+			query = SELECT ore_grade_id AS grade_id, grade_name, fe_content_min AS min_fe_content, fe_content_max AS max_fe_content, 1.0 AS price_coefficient FROM public.dim_ore_grade
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Сорта руды
+

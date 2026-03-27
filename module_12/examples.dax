@@ -1,0 +1,357 @@
+// ============================================================
+// Модуль 12. Использование операторов набора
+// Примеры на языке DAX (DAX Studio / Power BI)
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. UNION — объединение таблиц
+// ============================================================
+
+// 1.1 UNION — журнал событий: добыча + простои
+// SQL: SELECT ... FROM fact_production UNION ALL SELECT ... FROM fact_equipment_downtime
+EVALUATE
+VAR ProductionEvents =
+    SELECTCOLUMNS(
+        FILTER(fact_production, fact_production[date_id] = 20240315),
+        "EventType", "Добыча",
+        "equipment_id", fact_production[equipment_id],
+        "MetricValue", fact_production[tons_mined],
+        "Unit", "тонн"
+    )
+VAR DowntimeEvents =
+    SELECTCOLUMNS(
+        FILTER(fact_equipment_downtime, fact_equipment_downtime[date_id] = 20240315),
+        "EventType", "Простой",
+        "equipment_id", fact_equipment_downtime[equipment_id],
+        "MetricValue", fact_equipment_downtime[duration_min],
+        "Unit", "мин."
+    )
+RETURN
+UNION(ProductionEvents, DowntimeEvents)
+ORDER BY [equipment_id], [EventType]
+
+// Примечание: DAX UNION работает как SQL UNION ALL — дубликаты НЕ удаляются!
+// Для удаления дубликатов оберните в DISTINCT():
+// DISTINCT(UNION(Table1, Table2))
+
+// 1.2 Сводный KPI-отчёт по шахтам
+EVALUATE
+VAR ProductionKPI =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "KPI", "Добыча (тонн)",
+        "Value",
+            ROUND(CALCULATE(
+                SUM(fact_production[tons_mined]),
+                fact_production[date_id] >= 20240301,
+                fact_production[date_id] <= 20240331
+            ), 0)
+    )
+VAR DowntimeKPI =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "KPI", "Простои (часы)",
+        "Value",
+            ROUND(DIVIDE(
+                CALCULATE(
+                    SUM(fact_equipment_downtime[duration_min]),
+                    fact_equipment_downtime[date_id] >= 20240301,
+                    fact_equipment_downtime[date_id] <= 20240331
+                ), 60, 0
+            ), 0)
+    )
+VAR QualityKPI =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "KPI", "Среднее Fe (%)",
+        "Value",
+            ROUND(CALCULATE(
+                AVERAGE(fact_ore_quality[fe_content]),
+                fact_ore_quality[date_id] >= 20240301,
+                fact_ore_quality[date_id] <= 20240331
+            ), 2)
+    )
+RETURN
+UNION(ProductionKPI, DowntimeKPI, QualityKPI)
+ORDER BY dim_mine[mine_name], [KPI]
+
+
+// ============================================================
+// 2. EXCEPT — разность наборов
+// ============================================================
+
+// 2.1 Оборудование с добычей, но без простоев
+// SQL: SELECT equipment_id FROM fact_production EXCEPT SELECT equipment_id FROM fact_equipment_downtime
+EVALUATE
+VAR ProdEquip =
+    CALCULATETABLE(
+        VALUES(fact_production[equipment_id]),
+        fact_production[date_id] >= 20240301,
+        fact_production[date_id] <= 20240331
+    )
+VAR DowntimeEquip =
+    CALCULATETABLE(
+        VALUES(fact_equipment_downtime[equipment_id]),
+        fact_equipment_downtime[date_id] >= 20240301,
+        fact_equipment_downtime[date_id] <= 20240331
+    )
+RETURN
+EXCEPT(ProdEquip, DowntimeEquip)
+
+// 2.2 С расшифровкой через TREATAS
+EVALUATE
+VAR NoProblemEquip =
+    EXCEPT(
+        CALCULATETABLE(
+            VALUES(fact_production[equipment_id]),
+            fact_production[date_id] >= 20240301,
+            fact_production[date_id] <= 20240331
+        ),
+        CALCULATETABLE(
+            VALUES(fact_equipment_downtime[equipment_id]),
+            fact_equipment_downtime[date_id] >= 20240301,
+            fact_equipment_downtime[date_id] <= 20240331
+        )
+    )
+RETURN
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Оборудование", dim_equipment[equipment_name],
+        "Тип", RELATED(dim_equipment_type[type_name]),
+        "Шахта", RELATED(dim_mine[mine_name])
+    ),
+    TREATAS(NoProblemEquip, dim_equipment[equipment_id])
+)
+
+
+// ============================================================
+// 3. INTERSECT — пересечение наборов
+// ============================================================
+
+// 3.1 Оборудование с добычей И простоями
+// SQL: SELECT equipment_id FROM fact_production INTERSECT SELECT equipment_id FROM fact_equipment_downtime
+EVALUATE
+VAR ProdEquip =
+    CALCULATETABLE(
+        VALUES(fact_production[equipment_id]),
+        fact_production[date_id] >= 20240301,
+        fact_production[date_id] <= 20240331
+    )
+VAR DowntimeEquip =
+    CALCULATETABLE(
+        VALUES(fact_equipment_downtime[equipment_id]),
+        fact_equipment_downtime[date_id] >= 20240301,
+        fact_equipment_downtime[date_id] <= 20240331
+    )
+RETURN
+INTERSECT(ProdEquip, DowntimeEquip)
+
+// 3.2 Операторы-универсалы: ПДМ и самосвалы
+EVALUATE
+VAR LHD_Operators =
+    CALCULATETABLE(
+        VALUES(fact_production[operator_id]),
+        dim_equipment_type[type_code] = "LHD"
+    )
+VAR Truck_Operators =
+    CALCULATETABLE(
+        VALUES(fact_production[operator_id]),
+        dim_equipment_type[type_code] = "TRUCK"
+    )
+VAR UniversalOps = INTERSECT(LHD_Operators, Truck_Operators)
+RETURN
+CALCULATETABLE(
+    SELECTCOLUMNS(
+        dim_operator,
+        "Оператор", dim_operator[last_name] & " " & LEFT(dim_operator[first_name], 1) & ".",
+        "Должность", dim_operator[position],
+        "Квалификация", dim_operator[qualification]
+    ),
+    TREATAS(UniversalOps, dim_operator[operator_id])
+)
+
+// 3.3 Диаграмма Венна: ПДМ vs Самосвалы
+EVALUATE
+VAR LHD_Ops =
+    CALCULATETABLE(VALUES(fact_production[operator_id]), dim_equipment_type[type_code] = "LHD")
+VAR Truck_Ops =
+    CALCULATETABLE(VALUES(fact_production[operator_id]), dim_equipment_type[type_code] = "TRUCK")
+VAR BothTypes = INTERSECT(LHD_Ops, Truck_Ops)
+VAR OnlyLHD = EXCEPT(LHD_Ops, Truck_Ops)
+VAR OnlyTruck = EXCEPT(Truck_Ops, LHD_Ops)
+RETURN
+UNION(
+    ROW("Категория", "Оба типа",        "Количество", COUNTROWS(BothTypes)),
+    ROW("Категория", "Только ПДМ",      "Количество", COUNTROWS(OnlyLHD)),
+    ROW("Категория", "Только самосвал", "Количество", COUNTROWS(OnlyTruck))
+)
+
+
+// ============================================================
+// 4. CROSSJOIN — декартово произведение
+// ============================================================
+
+// SQL CROSS JOIN → DAX CROSSJOIN
+// Все комбинации шахт и смен
+EVALUATE
+CROSSJOIN(
+    VALUES(dim_mine[mine_name]),
+    VALUES(dim_shift[shift_name])
+)
+ORDER BY dim_mine[mine_name], dim_shift[shift_name]
+
+
+// ============================================================
+// 5. GENERATE / GENERATEALL — аналог LATERAL / CROSS APPLY
+// ============================================================
+
+// 5.1 GENERATE — топ-3 записи добычи для каждой шахты
+// SQL: CROSS JOIN LATERAL (SELECT ... ORDER BY ... LIMIT 3) ...
+EVALUATE
+VAR Top3ByMine =
+    GENERATE(
+        FILTER(VALUES(dim_mine[mine_name]), dim_mine[status] = "active"),
+        TOPN(3,
+            ADDCOLUMNS(
+                SUMMARIZE(
+                    FILTER(fact_production,
+                        fact_production[date_id] >= 20240101
+                        && fact_production[date_id] <= 20240331),
+                    dim_date[full_date],
+                    dim_equipment[equipment_name]
+                ),
+                "TonsMined", CALCULATE(MAX(fact_production[tons_mined]))
+            ),
+            [TonsMined], DESC
+        )
+    )
+RETURN
+Top3ByMine
+ORDER BY dim_mine[mine_name], [TonsMined] DESC
+
+// 5.2 GENERATEALL — включая шахты без данных (аналог LEFT JOIN LATERAL / OUTER APPLY)
+// GENERATEALL сохраняет строки из первой таблицы, даже если вторая пуста
+EVALUATE
+GENERATEALL(
+    VALUES(dim_mine[mine_name]),
+    VAR CurrentMine = dim_mine[mine_name]
+    RETURN
+    TOPN(3,
+        ADDCOLUMNS(
+            SUMMARIZE(
+                FILTER(fact_production,
+                    fact_production[date_id] >= 20240101
+                    && fact_production[date_id] <= 20240331),
+                dim_date[full_date],
+                dim_equipment[equipment_name]
+            ),
+            "TonsMined", CALCULATE(MAX(fact_production[tons_mined]))
+        ),
+        [TonsMined], DESC
+    )
+)
+ORDER BY dim_mine[mine_name], [TonsMined] DESC
+
+// 5.3 GENERATE для развёртки: статусы оборудования
+EVALUATE
+VAR Statuses =
+    DATATABLE(
+        "StatusName", STRING,
+        {{"active"}, {"maintenance"}, {"decommissioned"}}
+    )
+RETURN
+ADDCOLUMNS(
+    Statuses,
+    "EquipmentCount",
+        CALCULATE(
+            COUNTROWS(dim_equipment),
+            dim_equipment[status] = [StatusName]
+        )
+)
+
+
+// ============================================================
+// 6. NATURALINNERJOIN / NATURALLEFTOUTERJOIN — аналоги JOIN
+// ============================================================
+
+// В DAX нет привычного JOIN, но есть NATURALINNERJOIN и NATURALLEFTOUTERJOIN
+// Они соединяют таблицы по одноимённым столбцам
+
+// 6.1 NATURALINNERJOIN — оборудование с типом
+// (Работает, если таблицы связаны в модели)
+// EVALUATE
+// NATURALINNERJOIN(
+//     dim_equipment,
+//     dim_equipment_type
+// )
+
+
+// ============================================================
+// 7. КОМПЛЕКСНЫЙ ПРИМЕР: СВОДНАЯ АНАЛИТИКА
+// ============================================================
+
+// Аналог SQL-запроса с UNION ALL + LATERAL + INTERSECT:
+// KPI по шахтам с детализацией
+EVALUATE
+VAR Q1_Start = 20240101
+VAR Q1_End = 20240331
+
+VAR ProductionData =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Добыча тонн",
+            CALCULATE(SUM(fact_production[tons_mined]),
+                fact_production[date_id] >= Q1_Start,
+                fact_production[date_id] <= Q1_End),
+        "Рабочие часы",
+            CALCULATE(SUM(fact_production[operating_hours]),
+                fact_production[date_id] >= Q1_Start,
+                fact_production[date_id] <= Q1_End),
+        "Ед. оборудования",
+            CALCULATE(DISTINCTCOUNT(fact_production[equipment_id]),
+                fact_production[date_id] >= Q1_Start,
+                fact_production[date_id] <= Q1_End)
+    )
+
+VAR DowntimeData =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Простои часы",
+            DIVIDE(
+                CALCULATE(SUM(fact_equipment_downtime[duration_min]),
+                    fact_equipment_downtime[date_id] >= Q1_Start,
+                    fact_equipment_downtime[date_id] <= Q1_End),
+                60, 0),
+        "Вн. простои часы",
+            DIVIDE(
+                CALCULATE(SUM(fact_equipment_downtime[duration_min]),
+                    fact_equipment_downtime[date_id] >= Q1_Start,
+                    fact_equipment_downtime[date_id] <= Q1_End,
+                    fact_equipment_downtime[is_planned] = FALSE),
+                60, 0)
+    )
+
+RETURN
+ADDCOLUMNS(
+    ProductionData,
+    "Простои",
+        MAXX(
+            FILTER(DowntimeData, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [Простои часы]
+        ),
+    "Доступность %",
+        ROUND(
+            DIVIDE(
+                [Рабочие часы],
+                [Рабочие часы] +
+                    MAXX(
+                        FILTER(DowntimeData, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+                        [Простои часы]
+                    ),
+                0
+            ) * 100, 1
+        )
+)
+ORDER BY [Добыча тонн] DESC

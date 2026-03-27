@@ -1,0 +1,103 @@
+/// Факт добычи руды
+table fact_production
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567814
+
+	column production_id
+		dataType: int64
+		lineageTag: col-fp-001
+		summarizeBy: none
+		sourceColumn: production_id
+
+		annotation DisplayName = ID записи добычи
+
+	column date_id
+		dataType: int64
+		lineageTag: col-fp-002
+		summarizeBy: none
+		sourceColumn: date_id
+
+		annotation DisplayName = ID даты
+
+	column shift_id
+		dataType: int64
+		lineageTag: col-fp-003
+		summarizeBy: none
+		sourceColumn: shift_id
+
+		annotation DisplayName = ID смены
+
+	column equipment_id
+		dataType: int64
+		lineageTag: col-fp-004
+		summarizeBy: none
+		sourceColumn: equipment_id
+
+		annotation DisplayName = ID оборудования
+
+	column operator_id
+		dataType: int64
+		lineageTag: col-fp-005
+		summarizeBy: none
+		sourceColumn: operator_id
+
+		annotation DisplayName = ID оператора
+
+	column location_id
+		dataType: int64
+		lineageTag: col-fp-006
+		summarizeBy: none
+		sourceColumn: location_id
+
+		annotation DisplayName = ID локации
+
+	column tons_mined
+		dataType: decimal
+		formatString: #,##0.00
+		lineageTag: col-fp-007
+		summarizeBy: sum
+		sourceColumn: ore_mined_tons
+
+		annotation DisplayName = Добыто руды (т)
+
+	column tons_transported
+		dataType: decimal
+		formatString: #,##0.00
+		lineageTag: col-fp-008
+		summarizeBy: sum
+		sourceColumn: overburden_tons
+
+		annotation DisplayName = Вскрыша (т)
+
+	column operating_hours
+		dataType: decimal
+		formatString: #,##0.00
+		lineageTag: col-fp-009
+		summarizeBy: sum
+		sourceColumn: operating_hours
+
+		annotation DisplayName = Часы работы
+
+	column fuel_consumed_l
+		dataType: decimal
+		formatString: #,##0.00
+		lineageTag: col-fp-010
+		summarizeBy: sum
+		sourceColumn: fuel_consumed_liters
+
+		annotation DisplayName = Расход топлива (л)
+
+	column trips_count
+		dataType: int64
+		lineageTag: col-fp-011
+		summarizeBy: sum
+		sourceColumn: trips_count
+
+		annotation DisplayName = Количество рейсов
+
+	partition fact_production = query
+		source
+			query = SELECT production_id, date_id, shift_id, equipment_id, operator_id, location_id, tons_mined AS ore_mined_tons, tons_transported AS overburden_tons, operating_hours, fuel_consumed_l AS fuel_consumed_liters, trips_count FROM public.fact_production
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Факт добычи
+

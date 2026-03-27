@@ -1,0 +1,112 @@
+/// Факт качества руды
+table fact_ore_quality
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567817
+
+	column quality_id
+		dataType: int64
+		lineageTag: col-fq-001
+		summarizeBy: none
+		sourceColumn: quality_id
+
+		annotation DisplayName = ID пробы
+
+	column date_id
+		dataType: int64
+		lineageTag: col-fq-002
+		summarizeBy: none
+		sourceColumn: date_id
+
+		annotation DisplayName = ID даты
+
+	column shift_id
+		dataType: int64
+		lineageTag: col-fq-003
+		summarizeBy: none
+		sourceColumn: shift_id
+
+		annotation DisplayName = ID смены
+
+	column equipment_id
+		dataType: int64
+		lineageTag: col-fq-004
+		summarizeBy: none
+		sourceColumn: equipment_id
+
+		annotation DisplayName = ID оборудования
+
+	column location_id
+		dataType: int64
+		lineageTag: col-fq-005
+		summarizeBy: none
+		sourceColumn: location_id
+
+		annotation DisplayName = ID локации
+
+	column ore_grade_id
+		dataType: int64
+		lineageTag: col-fq-006
+		summarizeBy: none
+		sourceColumn: grade_id
+
+		annotation DisplayName = ID сорта
+
+	column sample_number
+		dataType: string
+		lineageTag: col-fq-007
+		summarizeBy: none
+		sourceColumn: sample_number
+
+		annotation DisplayName = Номер пробы
+
+	column fe_content
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-fq-008
+		summarizeBy: average
+		sourceColumn: fe_content
+
+		annotation DisplayName = Содержание Fe (%)
+
+	column sio2_content
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-fq-009
+		summarizeBy: average
+		sourceColumn: sio2_content
+
+		annotation DisplayName = Содержание SiO2 (%)
+
+	column al2o3_content
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-fq-010
+		summarizeBy: average
+		sourceColumn: al2o3_content
+
+		annotation DisplayName = Содержание Al2O3 (%)
+
+	column moisture
+		dataType: decimal
+		formatString: 0.00
+		lineageTag: col-fq-011
+		summarizeBy: average
+		sourceColumn: moisture_percent
+
+		annotation DisplayName = Влажность (%)
+
+	column sample_weight_kg
+		dataType: decimal
+		formatString: 0.000
+		lineageTag: col-fq-012
+		summarizeBy: sum
+		sourceColumn: sample_weight_kg
+
+		annotation DisplayName = Масса пробы (кг)
+
+	partition fact_ore_quality = query
+		source
+			query = SELECT quality_id, date_id, shift_id, 1 AS equipment_id, location_id, ore_grade_id AS grade_id, sample_number, fe_content, sio2_content, al2o3_content, moisture AS moisture_percent, sample_weight_kg FROM public.fact_ore_quality
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Качество руды
+

@@ -1,0 +1,296 @@
+// ============================================================
+// Модуль 4. Работа с типами данных PostgreSQL
+// Примеры на языке DAX (DAX Studio / Power BI)
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. СТРОКОВЫЕ ФУНКЦИИ
+// ============================================================
+
+// 1.1 Длина строки (LEN — аналог LENGTH)
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Название", dim_equipment[equipment_name],
+    "Длина названия", LEN(dim_equipment[equipment_name]),
+    "Длина серийного номера", LEN(dim_equipment[inventory_number])
+)
+
+// 1.2 Верхний и нижний регистр (UPPER / LOWER)
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Название", dim_equipment[equipment_name],
+    "ВЕРХНИЙ", UPPER(dim_equipment[equipment_name]),
+    "нижний", LOWER(dim_equipment[equipment_name])
+)
+
+// 1.3 Конкатенация (CONCATENATE и оператор &)
+// В SSAS-модели уже есть full_name, но покажем принцип
+EVALUATE
+SELECTCOLUMNS(
+    dim_operator,
+    "Полное имя", dim_operator[full_name],
+    "С должностью",
+        dim_operator[full_name] & " (" & dim_operator[position] & ")"
+)
+
+// 1.4 Краткое представление оператора
+EVALUATE
+SELECTCOLUMNS(
+    dim_operator,
+    "Оператор", dim_operator[full_name],
+    "Должность", dim_operator[position],
+    "Таб. номер", dim_operator[tab_number]
+)
+
+// 1.5 Подстрока (LEFT, RIGHT, MID — аналоги LEFT, RIGHT, SUBSTRING)
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Серийный номер", dim_equipment[inventory_number],
+    "Первые 3", LEFT(dim_equipment[inventory_number], 3),
+    "Последние 3", RIGHT(dim_equipment[inventory_number], 3),
+    "Символы 5-7", MID(dim_equipment[inventory_number], 5, 3)
+)
+
+// 1.6 Поиск подстроки (SEARCH — аналог POSITION)
+// SEARCH возвращает позицию (начиная с 1), ошибка если не найден
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Серийный номер", dim_equipment[inventory_number],
+    "Позиция первого '-'",
+        SEARCH("-", dim_equipment[inventory_number], 1, 0)
+)
+
+// 1.7 Замена (SUBSTITUTE — аналог REPLACE)
+EVALUATE
+SELECTCOLUMNS(
+    dim_equipment,
+    "Серийный номер", dim_equipment[inventory_number],
+    "С заменой",
+        SUBSTITUTE(dim_equipment[inventory_number], "INV", "EQ")
+)
+
+// 1.8 Удаление пробелов (TRIM)
+EVALUATE
+ROW(
+    "Обрезанная строка", TRIM("   Руда+   ")
+)
+
+// 1.9 Повтор строки (REPT — аналог REPEAT)
+EVALUATE
+ROW(
+    "Разделитель", REPT("=-", 20)
+)
+
+// 1.10 Агрегация строк (CONCATENATEX — аналог STRING_AGG)
+EVALUATE
+SELECTCOLUMNS(
+    dim_mine,
+    "Шахта", dim_mine[mine_name],
+    "Оборудование",
+        CONCATENATEX(
+            RELATEDTABLE(dim_equipment),
+            dim_equipment[equipment_name],
+            ", ",
+            dim_equipment[equipment_name], ASC
+        )
+)
+
+// ============================================================
+// 2. ПОИСК ПО ШАБЛОНУ
+// ============================================================
+
+// 2.1 CONTAINSSTRING — аналог LIKE '%...%'
+EVALUATE
+FILTER(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название", dim_equipment[equipment_name],
+        "Серийный номер", dim_equipment[inventory_number],
+        "equipment_name_full", dim_equipment[equipment_name]
+    ),
+    CONTAINSSTRING([equipment_name_full], "ПДМ")
+)
+
+// 2.2 Поиск с начала строки — LEFT + фильтр
+EVALUATE
+FILTER(
+    dim_equipment,
+    LEFT(dim_equipment[inventory_number], 7) = "INV-LHD"
+)
+
+// 2.3 Комбинированный поиск (аналог SIMILAR TO 'INV-(LHD|TRUCK)-%')
+EVALUATE
+FILTER(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "Название", dim_equipment[equipment_name],
+        "Серийный номер", dim_equipment[inventory_number]
+    ),
+    CONTAINSSTRING([Серийный номер], "LHD")
+    || CONTAINSSTRING([Серийный номер], "TRUCK")
+)
+
+// Примечание: DAX НЕ поддерживает регулярные выражения.
+// Для сложного парсинга текста используйте Power Query (M) или SQL.
+
+// ============================================================
+// 3. ДАТА И ВРЕМЯ
+// ============================================================
+
+// 3.1 Текущая дата и время
+EVALUATE
+ROW(
+    "Сегодня", TODAY(),
+    "Сейчас", NOW()
+)
+
+// 3.2 Извлечение компонентов даты (YEAR, MONTH, DAY и др.)
+EVALUATE
+SELECTCOLUMNS(
+    FILTER(dim_equipment, NOT ISBLANK(dim_equipment[commissioning_date])),
+    "Оборудование", dim_equipment[equipment_name],
+    "Дата ввода", dim_equipment[commissioning_date],
+    "Год", YEAR(dim_equipment[commissioning_date]),
+    "Месяц", MONTH(dim_equipment[commissioning_date]),
+    "День", DAY(dim_equipment[commissioning_date]),
+    "День недели", WEEKDAY(dim_equipment[commissioning_date]),
+    "Квартал", QUARTER(dim_equipment[commissioning_date]),
+    "Номер недели", WEEKNUM(dim_equipment[commissioning_date])
+)
+
+// 3.3 Арифметика дат
+// В DAX можно добавлять дни прямо как числа
+EVALUATE
+SELECTCOLUMNS(
+    FILTER(dim_equipment, NOT ISBLANK(dim_equipment[commissioning_date])),
+    "Оборудование", dim_equipment[equipment_name],
+    "Дата ввода", dim_equipment[commissioning_date],
+    "Первое ТО (+90 дней)", dim_equipment[commissioning_date] + 90,
+    "Второе ТО (+180 дней)", dim_equipment[commissioning_date] + 180,
+    "Годовое ТО (+365 дней)", dim_equipment[commissioning_date] + 365
+)
+
+// 3.4 Разница дат (DATEDIFF)
+EVALUATE
+SELECTCOLUMNS(
+    FILTER(dim_equipment, NOT ISBLANK(dim_equipment[commissioning_date])),
+    "Оборудование", dim_equipment[equipment_name],
+    "Дата ввода", dim_equipment[commissioning_date],
+    "Дней в эксплуатации",
+        DATEDIFF(dim_equipment[commissioning_date], TODAY(), DAY),
+    "Месяцев в эксплуатации",
+        DATEDIFF(dim_equipment[commissioning_date], TODAY(), MONTH),
+    "Лет в эксплуатации",
+        DATEDIFF(dim_equipment[commissioning_date], TODAY(), YEAR)
+)
+
+// 3.5 Форматирование дат (FORMAT — аналог TO_CHAR)
+EVALUATE
+SELECTCOLUMNS(
+    FILTER(dim_equipment, NOT ISBLANK(dim_equipment[commissioning_date])),
+    "Оборудование", dim_equipment[equipment_name],
+    "Русский формат",
+        FORMAT(dim_equipment[commissioning_date], "DD.MM.YYYY"),
+    "Полный формат",
+        FORMAT(dim_equipment[commissioning_date], "DD MMMM YYYY"),
+    "Год-квартал",
+        FORMAT(dim_equipment[commissioning_date], "YYYY") & "-Q" &
+        FORMAT(QUARTER(dim_equipment[commissioning_date]), "0"),
+    "День недели",
+        FORMAT(dim_equipment[commissioning_date], "DDDD"),
+    "Год-месяц",
+        FORMAT(dim_equipment[commissioning_date], "YYYY-MM")
+)
+
+// 3.6 Создание даты из компонентов (DATE — аналог MAKE_DATE)
+EVALUATE
+ROW(
+    "Дата", DATE(2024, 3, 15),
+    "Время", TIME(14, 30, 0),
+    "Начало месяца", DATE(2024, 3, 1),
+    "Конец месяца", EOMONTH(DATE(2024, 3, 15), 0)
+)
+
+// 3.7 Эмуляция DATE_TRUNC('month', ...) в DAX
+// Усечение до начала месяца: DATE(YEAR(d), MONTH(d), 1)
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_date[year],
+        dim_date[month]
+    ),
+    "Начало месяца", DATE(dim_date[year], dim_date[month], 1),
+    "Всего тонн", CALCULATE(SUM(fact_production[tons_mined]))
+)
+ORDER BY dim_date[year], dim_date[month]
+
+// ============================================================
+// 4. КОМПЛЕКСНЫЕ ПРИМЕРЫ
+// ============================================================
+
+// 4.1 Возраст оборудования с классификацией
+EVALUATE
+ADDCOLUMNS(
+    SELECTCOLUMNS(
+        FILTER(dim_equipment, NOT ISBLANK(dim_equipment[commissioning_date])),
+        "Оборудование", dim_equipment[equipment_name],
+        "Дата ввода", dim_equipment[commissioning_date],
+        "Лет",
+            DATEDIFF(dim_equipment[commissioning_date], TODAY(), YEAR),
+        "Дней",
+            DATEDIFF(dim_equipment[commissioning_date], TODAY(), DAY)
+    ),
+    "Категория",
+        SWITCH(
+            TRUE(),
+            [Лет] < 2, "Новое",
+            [Лет] < 4, "Рабочее",
+            "Требует внимания"
+        )
+)
+ORDER BY [Дней] DESC
+
+// 4.2 Анализ простоев по дням недели
+// Примечание: в SSAS-модели fact_equipment_downtime не имеет
+// прямого столбца start_time как datetime, используем start_date_id
+// и связь с dim_date
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_equipment_downtime,
+        dim_date[day_of_week_name]
+    ),
+    "Количество простоев",
+        CALCULATE(COUNTROWS(fact_equipment_downtime)),
+    "Средняя длительность",
+        CALCULATE(AVERAGE(fact_equipment_downtime[duration_min]))
+)
+
+// 4.3 Калибровка датчиков
+EVALUATE
+ADDCOLUMNS(
+    SELECTCOLUMNS(
+        FILTER(dim_sensor, NOT ISBLANK(dim_sensor[calibration_date])),
+        "Код датчика", dim_sensor[sensor_code],
+        "Тип", RELATED(dim_sensor_type[type_name]),
+        "Оборудование", RELATED(dim_equipment[equipment_name]),
+        "Дата калибровки", dim_sensor[calibration_date],
+        "След. калибровка", dim_sensor[calibration_date] + 180,
+        "Дней с калибровки",
+            DATEDIFF(dim_sensor[calibration_date], TODAY(), DAY)
+    ),
+    "Статус",
+        SWITCH(
+            TRUE(),
+            [Дней с калибровки] > 180, "Просрочена",
+            [Дней с калибровки] > 150, "Скоро",
+            "В норме"
+        )
+)
+ORDER BY [Дней с калибровки] DESC

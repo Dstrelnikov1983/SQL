@@ -1,0 +1,69 @@
+/// Справочник датчиков
+table dim_sensor
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567807
+
+	column sensor_id
+		dataType: int64
+		lineageTag: col-sn-001
+		summarizeBy: none
+		sourceColumn: sensor_id
+
+		annotation DisplayName = ID датчика
+
+	column sensor_code
+		dataType: string
+		lineageTag: col-sn-002
+		summarizeBy: none
+		sourceColumn: sensor_name
+
+		annotation DisplayName = Наименование датчика
+
+	column sensor_type_id
+		dataType: int64
+		lineageTag: col-sn-003
+		summarizeBy: none
+		sourceColumn: sensor_type_id
+
+		annotation DisplayName = ID типа датчика
+
+	column equipment_id
+		dataType: int64
+		lineageTag: col-sn-004
+		summarizeBy: none
+		sourceColumn: equipment_id
+
+		annotation DisplayName = ID оборудования
+
+	column install_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: col-sn-005
+		summarizeBy: none
+		sourceColumn: installation_date
+
+		annotation DisplayName = Дата установки
+
+	column calibration_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: col-sn-006
+		summarizeBy: none
+		sourceColumn: calibration_date
+
+		annotation DisplayName = Дата калибровки
+
+	column status
+		dataType: string
+		lineageTag: col-sn-007
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation DisplayName = Статус
+
+	partition dim_sensor = query
+		source
+			query = SELECT sensor_id, sensor_code AS sensor_name, sensor_type_id, equipment_id, install_date AS installation_date, calibration_date, status FROM public.dim_sensor
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Датчики
+

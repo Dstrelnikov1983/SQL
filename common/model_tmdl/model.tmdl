@@ -1,0 +1,28 @@
+model Model
+	culture: ru-RU
+
+annotation ModelDescription = Аналитическая модель данных предприятия 'Руда+' для MES-системы. Схема снежинка. Содержит данные о добыче руды, телеметрии оборудования, простоях и качестве продукции.
+
+annotation ClientCompatibilityLevel = 700
+
+annotation __TEdtr = 1
+
+ref table dim_equipment_type
+ref table dim_mine
+ref table dim_shaft
+ref table dim_location
+ref table dim_equipment
+ref table dim_sensor_type
+ref table dim_sensor
+ref table dim_operator
+ref table dim_shift
+ref table dim_ore_grade
+ref table dim_downtime_reason
+ref table dim_date
+ref table dim_time
+ref table fact_production
+ref table fact_equipment_telemetry
+ref table fact_equipment_downtime
+ref table fact_ore_quality
+ref table _Measures
+

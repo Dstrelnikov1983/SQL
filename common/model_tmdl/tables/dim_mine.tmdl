@@ -1,0 +1,52 @@
+/// Справочник шахт
+table dim_mine
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567802
+
+	column mine_id
+		dataType: int64
+		lineageTag: col-mn-001
+		summarizeBy: none
+		sourceColumn: mine_id
+
+		annotation DisplayName = ID шахты
+
+	column mine_name
+		dataType: string
+		lineageTag: col-mn-002
+		summarizeBy: none
+		sourceColumn: mine_name
+
+		annotation DisplayName = Название шахты
+
+	column region
+		dataType: string
+		lineageTag: col-mn-003
+		summarizeBy: none
+		sourceColumn: mine_location
+
+		annotation DisplayName = Расположение
+
+	column max_depth_m
+		dataType: decimal
+		formatString: 0
+		lineageTag: col-mn-004
+		summarizeBy: none
+		sourceColumn: mine_depth_m
+
+		annotation DisplayName = Глубина шахты (м)
+
+	column opened_year
+		dataType: int64
+		lineageTag: col-mn-005
+		summarizeBy: none
+		sourceColumn: opening_year
+
+		annotation DisplayName = Год открытия
+
+	partition dim_mine = query
+		source
+			query = SELECT mine_id, mine_name, region AS mine_location, max_depth_m AS mine_depth_m, EXTRACT(YEAR FROM opened_date)::int AS opening_year FROM public.dim_mine
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Шахты
+

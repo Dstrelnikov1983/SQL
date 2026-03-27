@@ -1,0 +1,76 @@
+/// Справочник оборудования
+table dim_equipment
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567805
+
+	column equipment_id
+		dataType: int64
+		lineageTag: col-eq-001
+		summarizeBy: none
+		sourceColumn: equipment_id
+
+		annotation DisplayName = ID оборудования
+
+	column equipment_name
+		dataType: string
+		lineageTag: col-eq-002
+		summarizeBy: none
+		sourceColumn: equipment_name
+
+		annotation DisplayName = Наименование оборудования
+
+	column equipment_type_id
+		dataType: int64
+		lineageTag: col-eq-003
+		summarizeBy: none
+		sourceColumn: equipment_type_id
+
+		annotation DisplayName = ID типа оборудования
+
+	column mine_id
+		dataType: int64
+		lineageTag: col-eq-004
+		summarizeBy: none
+		sourceColumn: mine_id
+
+		annotation DisplayName = ID шахты
+
+	column inventory_number
+		dataType: string
+		lineageTag: col-eq-005
+		summarizeBy: none
+		sourceColumn: serial_number
+
+		annotation DisplayName = Серийный номер
+
+	column year_manufactured
+		dataType: int64
+		lineageTag: col-eq-006
+		summarizeBy: none
+		sourceColumn: manufacture_year
+
+		annotation DisplayName = Год выпуска
+
+	column commissioning_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: col-eq-007
+		summarizeBy: none
+		sourceColumn: commissioning_date
+
+		annotation DisplayName = Дата ввода в эксплуатацию
+
+	column status
+		dataType: string
+		lineageTag: col-eq-008
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation DisplayName = Статус
+
+	partition dim_equipment = query
+		source
+			query = SELECT equipment_id, equipment_name, equipment_type_id, mine_id, inventory_number AS serial_number, year_manufactured AS manufacture_year, commissioning_date, status FROM public.dim_equipment
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Оборудование
+

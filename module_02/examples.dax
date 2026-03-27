@@ -1,0 +1,159 @@
+// ============================================================
+// Модуль 2: Примеры DAX-запросов из презентации
+// Предприятие «Руда+» — аналитическая модель
+// Выполнять в DAX Studio, подключённом к Power BI Desktop
+// ============================================================
+
+
+// ------------------------------------------------------------
+// Пример 1: Просмотр содержимого таблицы
+// Аналог SQL: SELECT * FROM dim_equipment_type;
+// ------------------------------------------------------------
+
+EVALUATE
+    dim_equipment_type
+
+
+// ------------------------------------------------------------
+// Пример 2: Фильтрация — активное оборудование
+// Аналог SQL: SELECT * FROM dim_equipment WHERE status = 'active';
+// ------------------------------------------------------------
+
+EVALUATE
+    FILTER(
+        dim_equipment,
+        dim_equipment[status] = "active"
+    )
+
+
+// ------------------------------------------------------------
+// Пример 3: Агрегация — добыча по шахтам
+// Аналог SQL:
+//   SELECT m.mine_name, SUM(fp.tons_mined) AS "Добыча, т"
+//   FROM fact_production fp
+//   JOIN dim_mine m ON fp.mine_id = m.mine_id
+//   GROUP BY m.mine_name
+//   ORDER BY "Добыча, т" DESC;
+// ------------------------------------------------------------
+
+EVALUATE
+    SUMMARIZECOLUMNS(
+        dim_mine[mine_name],
+        "Добыча, т", SUM(fact_production[tons_mined])
+    )
+ORDER BY [Добыча, т] DESC
+
+
+// ------------------------------------------------------------
+// Пример 4: Добыча по шахтам и сменам
+// Аналог SQL:
+//   SELECT m.mine_name, s.shift_name,
+//          SUM(fp.tons_mined), SUM(fp.trips_count)
+//   FROM fact_production fp
+//   JOIN dim_mine m ON fp.mine_id = m.mine_id
+//   JOIN dim_shift s ON fp.shift_id = s.shift_id
+//   GROUP BY m.mine_name, s.shift_name
+//   ORDER BY SUM(fp.tons_mined) DESC;
+// ------------------------------------------------------------
+
+EVALUATE
+    SUMMARIZECOLUMNS(
+        dim_mine[mine_name],
+        dim_shift[shift_name],
+        "Добыча, т", SUM(fact_production[tons_mined]),
+        "Рейсов",    SUM(fact_production[trips_count])
+    )
+ORDER BY [Добыча, т] DESC
+
+
+// ------------------------------------------------------------
+// Пример 5: Использование DEFINE — локальная мера
+// Блок DEFINE позволяет определить меру в рамках запроса,
+// не сохраняя её в модели (аналог CTE в SQL)
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Эффективность перевозки] =
+        DIVIDE(
+            SUM(fact_production[tons_transported]),
+            SUM(fact_production[tons_mined]),
+            0
+        )
+
+EVALUATE
+    SUMMARIZECOLUMNS(
+        dim_mine[mine_name],
+        "Добыто, т", SUM(fact_production[tons_mined]),
+        "Перевезено, т", SUM(fact_production[tons_transported]),
+        "Эффективность, %", [Эффективность перевозки] * 100
+    )
+
+
+// ------------------------------------------------------------
+// Пример 6: VAR ... RETURN — переменные в DAX
+// Аналог SQL: WITH cte AS (...) SELECT * FROM cte WHERE ...;
+// Задача: средняя добыча по шахтам, только > 100 т
+// ------------------------------------------------------------
+
+EVALUATE
+VAR mine_totals =
+    SUMMARIZECOLUMNS(
+        dim_mine[mine_name],
+        "avg_tons",
+            AVERAGE(fact_production[tons_mined])
+    )
+RETURN
+    FILTER(
+        mine_totals,
+        [avg_tons] > 100
+    )
+
+
+// ------------------------------------------------------------
+// Пример 7: Вычисляемый столбец (определение в модели)
+// Этот код НЕ выполняется в DAX Studio как запрос.
+// Он показывает синтаксис создания вычисляемого столбца
+// в модели Power BI (вкладка "Данные").
+// ------------------------------------------------------------
+
+// Возраст оборудования =
+//     YEAR(TODAY()) - dim_equipment[year_manufactured]
+
+
+// ------------------------------------------------------------
+// Пример 8: Определение меры в модели
+// Этот код создаётся в Power BI Desktop (вкладка "Моделирование")
+// или в DAX Studio через блок DEFINE для тестирования.
+// ------------------------------------------------------------
+
+// Общая добыча =
+//     SUM(fact_production[tons_mined])
+
+
+// ------------------------------------------------------------
+// Пример 9: Просмотр всех столбцов и строк таблицы измерений
+// Полезно для первичного знакомства с данными модели
+// ------------------------------------------------------------
+
+EVALUATE
+    dim_mine
+
+EVALUATE
+    dim_shift
+
+EVALUATE
+    dim_ore_grade
+
+
+// ------------------------------------------------------------
+// Пример 10: Подсчёт количества записей в факт-таблице
+// Аналог SQL: SELECT COUNT(*) FROM fact_production;
+// ------------------------------------------------------------
+
+EVALUATE
+    ROW(
+        "Записей добычи",       COUNTROWS(fact_production),
+        "Записей простоев",     COUNTROWS(fact_equipment_downtime),
+        "Записей качества",     COUNTROWS(fact_ore_quality),
+        "Записей телеметрии",   COUNTROWS(fact_equipment_telemetry)
+    )

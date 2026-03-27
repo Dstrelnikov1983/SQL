@@ -1,0 +1,51 @@
+/// Справочник локаций (забоев, горизонтов)
+table dim_location
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567804
+
+	column location_id
+		dataType: int64
+		lineageTag: col-loc-001
+		summarizeBy: none
+		sourceColumn: location_id
+
+		annotation DisplayName = ID локации
+
+	column shaft_id
+		dataType: int64
+		lineageTag: col-loc-002
+		summarizeBy: none
+		sourceColumn: shaft_id
+
+		annotation DisplayName = ID ствола
+
+	column location_name
+		dataType: string
+		lineageTag: col-loc-003
+		summarizeBy: none
+		sourceColumn: location_name
+
+		annotation DisplayName = Название локации
+
+	column level_m
+		dataType: int64
+		lineageTag: col-loc-004
+		summarizeBy: none
+		sourceColumn: location_level
+
+		annotation DisplayName = Уровень (горизонт)
+
+	column location_type
+		dataType: string
+		lineageTag: col-loc-005
+		summarizeBy: none
+		sourceColumn: location_type
+
+		annotation DisplayName = Тип локации
+
+	partition dim_location = query
+		source
+			query = SELECT location_id, shaft_id, location_name, level_m AS location_level, location_type FROM public.dim_location
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Локации
+

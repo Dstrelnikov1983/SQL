@@ -1,0 +1,364 @@
+// ============================================================
+// Модуль 11. Использование табличных выражений
+// Примеры на языке DAX (DAX Studio / Power BI)
+// Предприятие «Руда+»
+// ============================================================
+
+// ============================================================
+// 1. VIEW → Вычисляемая таблица / EVALUATE-запрос
+// ============================================================
+
+// 1.1 Аналог VIEW v_mine_monthly_production
+// SQL: CREATE VIEW v_mine_monthly_production AS SELECT ...
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_mine[mine_name],
+        dim_date[year_month]
+    ),
+    "Total Tons", CALCULATE(SUM(fact_production[tons_mined])),
+    "Total Trips", CALCULATE(SUM(fact_production[trips_count])),
+    "Avg Tons", CALCULATE(AVERAGE(fact_production[tons_mined])),
+    "Total Fuel", CALCULATE(SUM(fact_production[fuel_consumed_l])),
+    "Total Hours", CALCULATE(SUM(fact_production[operating_hours]))
+)
+ORDER BY dim_mine[mine_name], dim_date[year_month]
+
+// 1.2 Аналог VIEW с обезличиванием данных
+// SQL: CREATE VIEW v_operator_anonymous AS SELECT SUBSTRING(last_name, 1, 1) || '.' ...
+EVALUATE
+SELECTCOLUMNS(
+    dim_operator,
+    "ID", dim_operator[operator_id],
+    "Табельный", dim_operator[tab_number],
+    "Инициал фамилии", LEFT(dim_operator[last_name], 1) & ".",
+    "Инициал имени", LEFT(dim_operator[first_name], 1) & ".",
+    "Должность", dim_operator[position],
+    "Квалификация", dim_operator[qualification],
+    "Статус", dim_operator[status]
+)
+
+// 1.3 Вычисляемая таблица в модели Power BI
+// (Создаётся в Power BI Desktop: Modeling → New Table)
+// MineMonthlyProduction =
+// ADDCOLUMNS(
+//     SUMMARIZE(fact_production, dim_mine[mine_name], dim_date[year_month]),
+//     "TotalTons", CALCULATE(SUM(fact_production[tons_mined])),
+//     "TotalHours", CALCULATE(SUM(fact_production[operating_hours]))
+// )
+
+
+// ============================================================
+// 2. MATERIALIZED VIEW → Вычисляемая таблица (хранится в памяти)
+// ============================================================
+
+// В DAX все вычисляемые таблицы хранятся в памяти (VertiPaq) —
+// это и есть аналог MATERIALIZED VIEW!
+
+// 2.1 Аналог mv_daily_ore_quality_summary
+// (Создаётся как Calculated Table в Power BI Desktop)
+// OreQualitySummary =
+// ADDCOLUMNS(
+//     SUMMARIZE(
+//         fact_ore_quality,
+//         dim_date[full_date],
+//         dim_date[year_month],
+//         dim_mine[mine_name],
+//         dim_shaft[shaft_name],
+//         dim_ore_grade[grade_name]
+//     ),
+//     "SamplesCount", CALCULATE(COUNTROWS(fact_ore_quality)),
+//     "AvgFe", ROUND(CALCULATE(AVERAGE(fact_ore_quality[fe_content])), 2),
+//     "MinFe", ROUND(CALCULATE(MIN(fact_ore_quality[fe_content])), 2),
+//     "MaxFe", ROUND(CALCULATE(MAX(fact_ore_quality[fe_content])), 2),
+//     "AvgSiO2", ROUND(CALCULATE(AVERAGE(fact_ore_quality[sio2_content])), 2),
+//     "AvgMoisture", ROUND(CALCULATE(AVERAGE(fact_ore_quality[moisture])), 2)
+// )
+
+// Запрос к «материализованным» данным:
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_ore_quality,
+        dim_date[year_month],
+        dim_mine[mine_name]
+    ),
+    "Проб", CALCULATE(COUNTROWS(fact_ore_quality)),
+    "Ср. Fe", ROUND(CALCULATE(AVERAGE(fact_ore_quality[fe_content])), 2),
+    "Мин. Fe", ROUND(CALCULATE(MIN(fact_ore_quality[fe_content])), 2),
+    "Макс. Fe", ROUND(CALCULATE(MAX(fact_ore_quality[fe_content])), 2)
+)
+ORDER BY dim_mine[mine_name], dim_date[year_month]
+
+
+// ============================================================
+// 3. ПРОИЗВОДНАЯ ТАБЛИЦА → VAR таблица
+// ============================================================
+
+// 3.1 Ранжирование операторов (аналог подзапроса в FROM с ROW_NUMBER)
+// SQL: SELECT * FROM (SELECT ..., ROW_NUMBER() OVER (...) AS rn ...) WHERE rn <= 3
+EVALUATE
+VAR OperatorProduction =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240331),
+            dim_mine[mine_name],
+            dim_operator[last_name],
+            dim_operator[first_name]
+        ),
+        "TotalTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+VAR Ranked =
+    ADDCOLUMNS(
+        OperatorProduction,
+        "Rank",
+            RANKX(
+                FILTER(OperatorProduction,
+                    dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+                [TotalTons],
+                , DESC, DENSE
+            )
+    )
+RETURN
+FILTER(Ranked, [Rank] <= 3)
+ORDER BY dim_mine[mine_name], [Rank]
+
+// 3.2 Агрегация агрегатов — средняя дневная добыча
+// SQL: SELECT AVG(daily_tons) FROM (SELECT SUM(tons_mined) GROUP BY date_id) ...
+EVALUATE
+VAR DailyData =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(fact_production,
+                fact_production[date_id] >= 20240101
+                && fact_production[date_id] <= 20240331),
+            dim_mine[mine_name],
+            fact_production[date_id]
+        ),
+        "DailyTons", CALCULATE(SUM(fact_production[tons_mined]))
+    )
+RETURN
+ADDCOLUMNS(
+    VALUES(dim_mine[mine_name]),
+    "AvgDailyTons",
+        ROUND(AVERAGEX(
+            FILTER(DailyData, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [DailyTons]
+        ), 1),
+    "MinDailyTons",
+        ROUND(MINX(
+            FILTER(DailyData, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [DailyTons]
+        ), 1),
+    "MaxDailyTons",
+        ROUND(MAXX(
+            FILTER(DailyData, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+            [DailyTons]
+        ), 1)
+)
+ORDER BY [AvgDailyTons] DESC
+
+
+// ============================================================
+// 4. CTE → VAR / DEFINE в DAX-запросах
+// ============================================================
+
+// 4.1 Множественные VAR (аналог множественных CTE)
+// SQL: WITH production_cte AS (...), downtime_cte AS (...) SELECT ...
+EVALUATE
+VAR ProductionByMine =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "TotalTons", CALCULATE(
+            SUM(fact_production[tons_mined]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        ),
+        "WorkHours", CALCULATE(
+            SUM(fact_production[operating_hours]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        ),
+        "EquipCount", CALCULATE(
+            DISTINCTCOUNT(fact_production[equipment_id]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        )
+    )
+VAR DowntimeByMine =
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "DowntimeHours",
+            DIVIDE(
+                CALCULATE(
+                    SUM(fact_equipment_downtime[duration_min]),
+                    fact_equipment_downtime[date_id] >= 20240101,
+                    fact_equipment_downtime[date_id] <= 20240331
+                ), 60, 0
+            ),
+        "UnplannedHours",
+            DIVIDE(
+                CALCULATE(
+                    SUM(fact_equipment_downtime[duration_min]),
+                    fact_equipment_downtime[date_id] >= 20240101,
+                    fact_equipment_downtime[date_id] <= 20240331,
+                    fact_equipment_downtime[is_planned] = FALSE
+                ), 60, 0
+            )
+    )
+VAR Combined =
+    ADDCOLUMNS(
+        ProductionByMine,
+        "DowntimeHours",
+            MAXX(
+                FILTER(DowntimeByMine, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+                [DowntimeHours]
+            ),
+        "UnplannedHours",
+            MAXX(
+                FILTER(DowntimeByMine, dim_mine[mine_name] = EARLIER(dim_mine[mine_name])),
+                [UnplannedHours]
+            )
+    )
+RETURN
+ADDCOLUMNS(
+    Combined,
+    "Availability %",
+        ROUND(DIVIDE([WorkHours], [WorkHours] + [DowntimeHours], 0) * 100, 1)
+)
+ORDER BY [TotalTons] DESC
+
+// 4.2 DEFINE — переменные уровня запроса
+// (Работает в DAX Studio и в мерах Power BI)
+DEFINE
+    VAR Q1_Start = 20240101
+    VAR Q1_End = 20240331
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_mine[mine_name],
+        dim_date[year_month]
+    ),
+    "Добыча",
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            fact_production[date_id] >= Q1_Start,
+            fact_production[date_id] <= Q1_End
+        ),
+    "Часы",
+        CALCULATE(
+            SUM(fact_production[operating_hours]),
+            fact_production[date_id] >= Q1_Start,
+            fact_production[date_id] <= Q1_End
+        )
+)
+ORDER BY dim_mine[mine_name], dim_date[year_month]
+
+
+// ============================================================
+// 5. РЕКУРСИВНЫЙ CTE → PATH-функции DAX
+// ============================================================
+
+// В DAX нет рекурсивных CTE. Для иерархий используются PATH-функции.
+
+// 5.1 Вычисляемые столбцы для иерархии (Power BI Desktop)
+// LocationPath =
+//     PATH(dim_location_hierarchy[location_id], dim_location_hierarchy[parent_id])
+//
+// PathDepth =
+//     PATHLENGTH(dim_location_hierarchy[LocationPath])
+//
+// Level1Name =
+//     VAR ID = PATHITEM(dim_location_hierarchy[LocationPath], 1, INTEGER)
+//     RETURN LOOKUPVALUE(dim_location_hierarchy[location_name], dim_location_hierarchy[location_id], ID)
+//
+// Level2Name =
+//     VAR ID = PATHITEM(dim_location_hierarchy[LocationPath], 2, INTEGER)
+//     RETURN IF(ISBLANK(ID), BLANK(),
+//         LOOKUPVALUE(dim_location_hierarchy[location_name], dim_location_hierarchy[location_id], ID))
+//
+// Level3Name =
+//     VAR ID = PATHITEM(dim_location_hierarchy[LocationPath], 3, INTEGER)
+//     RETURN IF(ISBLANK(ID), BLANK(),
+//         LOOKUPVALUE(dim_location_hierarchy[location_name], dim_location_hierarchy[location_id], ID))
+
+// 5.2 Запрос к иерархии с PATH
+// (Предполагает, что вычисляемые столбцы LocationPath и PathDepth созданы)
+// EVALUATE
+// SELECTCOLUMNS(
+//     dim_location_hierarchy,
+//     "ID", dim_location_hierarchy[location_id],
+//     "Название", dim_location_hierarchy[location_name],
+//     "Тип", dim_location_hierarchy[location_type],
+//     "Путь", dim_location_hierarchy[LocationPath],
+//     "Глубина", dim_location_hierarchy[PathDepth]
+// )
+// ORDER BY dim_location_hierarchy[LocationPath]
+
+// 5.3 PATHCONTAINS — проверка принадлежности поддереву
+// (Все локации, принадлежащие Шахте Северная, id=1)
+// EVALUATE
+// FILTER(
+//     dim_location_hierarchy,
+//     PATHCONTAINS(dim_location_hierarchy[LocationPath], 1)
+// )
+
+
+// ============================================================
+// 6. ТАБЛИЧНАЯ ФУНКЦИЯ → Мера / DEFINE MEASURE
+// ============================================================
+
+// В DAX нет табличных функций как в SQL.
+// Ближайший аналог — DEFINE MEASURE + EVALUATE.
+
+// 6.1 Параметризованный отчёт через DEFINE
+DEFINE
+    VAR _MineID = 1
+    VAR _DateFrom = 20240101
+    VAR _DateTo = 20240131
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        FILTER(fact_production,
+            fact_production[mine_id] = _MineID
+            && fact_production[date_id] >= _DateFrom
+            && fact_production[date_id] <= _DateTo),
+        dim_shift[shift_name],
+        dim_operator[last_name],
+        dim_operator[first_name],
+        dim_equipment[equipment_name]
+    ),
+    "Добыча тонн", CALCULATE(SUM(fact_production[tons_mined])),
+    "Рейсов", CALCULATE(SUM(fact_production[trips_count])),
+    "Часов", CALCULATE(SUM(fact_production[operating_hours]))
+)
+ORDER BY [Добыча тонн] DESC
+
+// 6.2 DEFINE MEASURE — переиспользуемая мера
+DEFINE
+    MEASURE fact_production[Добыча Q1] =
+        CALCULATE(
+            SUM(fact_production[tons_mined]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        )
+    MEASURE fact_production[Часы Q1] =
+        CALCULATE(
+            SUM(fact_production[operating_hours]),
+            fact_production[date_id] >= 20240101,
+            fact_production[date_id] <= 20240331
+        )
+    MEASURE fact_production[Эффективность] =
+        DIVIDE([Добыча Q1], [Часы Q1], 0)
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_mine[mine_name]),
+    "Добыча", [Добыча Q1],
+    "Часы", [Часы Q1],
+    "Тонн/час", ROUND([Эффективность], 2)
+)
+ORDER BY [Добыча] DESC

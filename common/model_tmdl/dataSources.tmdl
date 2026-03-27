@@ -1,0 +1,6 @@
+dataSource 'New Data Source' = provider
+	connectionString: Provider=MSDASQL;Driver={PostgreSQL Unicode(x64)};Server=rc1a-3fapmhnjrbfd3ve5.mdb.yandexcloud.net;Port=6432;Database=db1;UID=user1;SSLmode=require
+	impersonationMode: impersonateServiceAccount
+
+	annotation ConnectionEditUISource = Others
+

@@ -1,0 +1,52 @@
+/// Справочник стволов шахт
+table dim_shaft
+	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567803
+
+	column shaft_id
+		dataType: int64
+		lineageTag: col-sh-001
+		summarizeBy: none
+		sourceColumn: shaft_id
+
+		annotation DisplayName = ID ствола
+
+	column shaft_name
+		dataType: string
+		lineageTag: col-sh-002
+		summarizeBy: none
+		sourceColumn: shaft_name
+
+		annotation DisplayName = Название ствола
+
+	column mine_id
+		dataType: int64
+		lineageTag: col-sh-003
+		summarizeBy: none
+		sourceColumn: mine_id
+
+		annotation DisplayName = ID шахты
+
+	column depth_m
+		dataType: decimal
+		formatString: 0
+		lineageTag: col-sh-004
+		summarizeBy: none
+		sourceColumn: shaft_depth_m
+
+		annotation DisplayName = Глубина ствола (м)
+
+	column shaft_type
+		dataType: string
+		lineageTag: col-sh-005
+		summarizeBy: none
+		sourceColumn: shaft_type
+
+		annotation DisplayName = Тип ствола
+
+	partition dim_shaft = query
+		source
+			query = SELECT shaft_id, shaft_name, mine_id, depth_m AS shaft_depth_m, shaft_type FROM public.dim_shaft
+			dataSource: 'New Data Source'
+
+	annotation DisplayName = Стволы шахт
+
