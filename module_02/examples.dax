@@ -157,3 +157,251 @@ EVALUATE
         "Записей качества",     COUNTROWS(fact_ore_quality),
         "Записей телеметрии",   COUNTROWS(fact_equipment_telemetry)
     )
+
+
+// ============================================================
+// DEFINE COLUMN — вычисляемый столбец в запросе
+// ============================================================
+
+
+// ------------------------------------------------------------
+// Пример 11: DEFINE COLUMN — описание оборудования
+// Столбец существует только на время запроса.
+// Аналог SQL: SELECT e.name || ' (' || t.type_name || ')' ...
+// ------------------------------------------------------------
+
+DEFINE
+    COLUMN dim_equipment[Полное_описание] =
+        dim_equipment[equipment_name]
+            & " (" & RELATED(dim_equipment_type[type_name]) & ")"
+
+    COLUMN dim_equipment[Возраст_лет] =
+        YEAR(TODAY()) - dim_equipment[year_manufactured]
+
+EVALUATE
+    SELECTCOLUMNS(
+        FILTER(dim_equipment, dim_equipment[status] = "active"),
+        "Оборудование", dim_equipment[Полное_описание],
+        "Возраст, лет", dim_equipment[Возраст_лет],
+        "Шахта", RELATED(dim_mine[mine_name])
+    )
+ORDER BY [Возраст, лет] DESC
+
+
+// ============================================================
+// Контекст вычислений и CALCULATE
+// ============================================================
+
+
+// ------------------------------------------------------------
+// Пример 12: Контекст фильтра — одна мера, разные результаты
+// Одна и та же формула SUM возвращает разные значения
+// в зависимости от контекста, в котором вычисляется.
+// ------------------------------------------------------------
+
+// 12а: Без контекста — итого по всем данным
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+
+EVALUATE
+    ROW("Добыча всего, т", [Добыча_Итого])
+
+
+// 12б: В контексте шахты — та же мера, но для каждой шахты
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Добыча, т", [Добыча_Итого]
+    )
+
+
+// 12в: В контексте шахта + смена
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+
+EVALUATE
+    ADDCOLUMNS(
+        CROSSJOIN(
+            VALUES(dim_mine[mine_name]),
+            VALUES(dim_shift[shift_name])
+        ),
+        "Добыча, т", [Добыча_Итого]
+    )
+ORDER BY dim_mine[mine_name], dim_shift[shift_name]
+
+
+// ------------------------------------------------------------
+// Пример 13: CALCULATE — фиксированный фильтр
+// Мера всегда возвращает добычу шахты "Северная",
+// независимо от текущего контекста.
+// Аналог SQL: подзапрос с WHERE mine_name = '...'
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+    MEASURE fact_production[Добыча_Северная] =
+        CALCULATE(
+            [Добыча_Итого],
+            dim_mine[mine_id] = 1
+        )
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Добыча шахты, т", [Добыча_Итого],
+        "Добыча Северной, т", [Добыча_Северная]
+    )
+
+
+// ------------------------------------------------------------
+// Пример 14: CALCULATE + ALL — доля шахты от общей добычи
+// ALL(dim_mine) снимает фильтр по шахте.
+// Аналог SQL: SUM(...) OVER () — оконная функция без партиции
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+    MEASURE fact_production[Добыча_Всего] =
+        CALCULATE(
+            [Добыча_Итого],
+            ALL(dim_mine)
+        )
+    MEASURE fact_production[Доля_Шахты] =
+        DIVIDE([Добыча_Итого], [Добыча_Всего]) * 100
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Добыча шахты, т", [Добыча_Итого],
+        "Добыча всего, т", [Добыча_Всего],
+        "Доля, %", [Доля_Шахты]
+    )
+
+
+// ------------------------------------------------------------
+// Пример 15: CALCULATE — комбинация фильтров
+// Контекст шахты сохраняется, добавляется фильтр по смене.
+// Аналог SQL: SUM(...) FILTER (WHERE s.shift_id = 1)
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+    MEASURE fact_production[Добыча_Смена1] =
+        CALCULATE(
+            [Добыча_Итого],
+            dim_shift[shift_id] = 1
+        )
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Добыча всех смен, т", [Добыча_Итого],
+        "Добыча дневной смены, т", [Добыча_Смена1]
+    )
+
+
+// ------------------------------------------------------------
+// Пример 16: KEEPFILTERS vs замена фильтра
+// Без KEEPFILTERS: фильтр ЗАМЕНЯЕТСЯ → всегда "Северная"
+// С KEEPFILTERS: фильтр ПЕРЕСЕКАЕТСЯ → "Южная" AND "Северная" = пусто
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+
+    MEASURE fact_production[CALCULATE_Замена] =
+        CALCULATE(
+            [Добыча_Итого],
+            dim_mine[mine_id] = 1  -- Северная
+        )
+
+    MEASURE fact_production[CALCULATE_Пересечение] =
+        CALCULATE(
+            [Добыча_Итого],
+            KEEPFILTERS(dim_mine[mine_id] = 1)
+        )
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Добыча шахты, т", [Добыча_Итого],
+        "Замена (всегда Сев.), т", [CALCULATE_Замена],
+        "Пересечение, т", [CALCULATE_Пересечение]
+    )
+
+
+// ------------------------------------------------------------
+// Пример 17: CALCULATE — комбинация нескольких фильтров
+// Фильтры объединяются через AND.
+// Аналог SQL: WHERE mine_id = 1 AND shift_id = 1 AND year = 2025
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+    MEASURE fact_production[Добыча_Сев_Дн_2025] =
+        CALCULATE(
+            [Добыча_Итого],
+            dim_mine[mine_id] = 1,
+            dim_shift[shift_id] = 1,
+            dim_date[year] = 2025
+        )
+
+EVALUATE
+    ROW("Добыча Северная, дневная смена, 2025", [Добыча_Сев_Дн_2025])
+
+
+// ------------------------------------------------------------
+// Пример 18: CALCULATE + SAMEPERIODLASTYEAR — сравнение с прошлым годом
+// Типовая MES-задача: добыча текущего года vs прошлого.
+// Аналог SQL: LAG(...) OVER (ORDER BY year)
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+    MEASURE fact_production[Добыча_Прошлый_Год] =
+        CALCULATE(
+            [Добыча_Итого],
+            SAMEPERIODLASTYEAR(dim_date[full_date])
+        )
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_date[year]),
+        "Добыча, т", [Добыча_Итого],
+        "Прошлый год, т", [Добыча_Прошлый_Год]
+    )
+ORDER BY dim_date[year]
+
+
+// ------------------------------------------------------------
+// Пример 19: Переход контекста строки → контекст фильтра
+// CALCULATE внутри итератора MAXX: контекст строки
+// автоматически преобразуется в контекст фильтра.
+// Задача: найти максимальную суточную добычу по шахте.
+// ------------------------------------------------------------
+
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Макс. суточная добыча, т",
+            MAXX(
+                VALUES(dim_date[full_date]),
+                CALCULATE([Добыча_Итого])
+            )
+    )

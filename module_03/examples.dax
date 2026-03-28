@@ -326,6 +326,70 @@ NATURALLEFTOUTERJOIN(
 )
 
 // ============================================================
+// 4.6 RELATEDTABLE: обратная навигация (один → многие)
+// ============================================================
+
+// 4.6a Количество оборудования на каждой шахте
+EVALUATE
+ADDCOLUMNS(
+    dim_mine,
+    "Кол-во оборудования",
+        COUNTROWS(
+            RELATEDTABLE(dim_equipment)
+        )
+)
+
+// 4.6b Общая добыча по каждой шахте (через RELATEDTABLE + SUMX)
+EVALUATE
+ADDCOLUMNS(
+    dim_mine,
+    "Всего тонн",
+        SUMX(
+            RELATEDTABLE(fact_production),
+            fact_production[tons_mined]
+        )
+)
+
+// ============================================================
+// 4.7 CALCULATE vs CALCULATETABLE: скаляр vs таблица
+// ============================================================
+
+// 4.7a CALCULATE — скалярный результат (одно число)
+EVALUATE
+ROW(
+    "Добыча шахты Северная",
+    CALCULATE(
+        SUM(fact_production[tons_mined]),
+        dim_mine[mine_name] = "Шахта ""Северная"""
+    )
+)
+
+// 4.7b CALCULATETABLE — табличный результат
+EVALUATE
+CALCULATETABLE(
+    dim_equipment,
+    dim_mine[mine_name] = "Шахта ""Северная"""
+)
+
+// ============================================================
+// 4.8 Context Transition: CALCULATE внутри ADDCOLUMNS
+// ============================================================
+
+// 4.8a БЕЗ CALCULATE — неправильно (общая сумма для всех строк)
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_mine[mine_name]),
+    "Всего тонн (неверно)", SUM(fact_production[tons_mined])
+)
+
+// 4.8b С CALCULATE — правильно (сумма для каждой шахты)
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_mine[mine_name]),
+    "Всего тонн (верно)", CALCULATE(SUM(fact_production[tons_mined]))
+)
+
+// ============================================================
 // 5. ГРУППИРОВКА И АГРЕГИРОВАНИЕ (SUMMARIZE / SUMMARIZECOLUMNS)
 // ============================================================
 

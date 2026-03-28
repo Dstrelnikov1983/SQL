@@ -430,6 +430,171 @@ CALCULATETABLE(
 ORDER BY [Добыто, т] DESC
 ```
 
+### Шаг 4.4. RELATEDTABLE — обратная навигация (один → многие)
+
+**SQL:**
+
+```sql
+-- Количество оборудования на каждой шахте
+SELECT m.mine_name,
+       COUNT(e.equipment_id) AS equipment_count
+FROM dim_mine m
+LEFT JOIN dim_equipment e ON m.mine_id = e.mine_id
+GROUP BY m.mine_name;
+```
+
+**DAX:**
+
+```dax
+EVALUATE
+ADDCOLUMNS(
+    dim_mine,
+    "Кол-во оборудования",
+        COUNTROWS(
+            RELATEDTABLE(dim_equipment)
+        )
+)
+```
+
+> **Ключевое отличие:** `RELATED` идёт «многие → один» и возвращает скаляр. `RELATEDTABLE` идёт «один → многие» и возвращает **таблицу** связанных строк. В SQL оба направления реализуются через `JOIN`.
+
+**SQL — общая добыча по шахтам:**
+
+```sql
+SELECT m.mine_name,
+       COALESCE(SUM(fp.tons_mined), 0) AS total_tons
+FROM dim_mine m
+LEFT JOIN fact_production fp ON m.mine_id = fp.mine_id
+GROUP BY m.mine_name;
+```
+
+**DAX — через RELATEDTABLE + SUMX:**
+
+```dax
+EVALUATE
+ADDCOLUMNS(
+    dim_mine,
+    "Всего тонн",
+        SUMX(
+            RELATEDTABLE(fact_production),
+            fact_production[tons_mined]
+        )
+)
+```
+
+### Шаг 4.5. NATURALLEFTOUTERJOIN — соединение без связи в модели
+
+**SQL:**
+
+```sql
+SELECT e.equipment_name,
+       e.inventory_number,
+       et.type_name AS equipment_type
+FROM dim_equipment e
+LEFT JOIN dim_equipment_type et
+    ON e.equipment_type_id = et.equipment_type_id;
+```
+
+**DAX:**
+
+```dax
+EVALUATE
+NATURALLEFTOUTERJOIN(
+    SELECTCOLUMNS(
+        dim_equipment,
+        "equipment_type_id", dim_equipment[equipment_type_id],
+        "Название",          dim_equipment[equipment_name],
+        "Серийный номер",    dim_equipment[inventory_number]
+    ),
+    SELECTCOLUMNS(
+        dim_equipment_type,
+        "equipment_type_id", dim_equipment_type[equipment_type_id],
+        "Тип оборудования",  dim_equipment_type[type_name]
+    )
+)
+```
+
+> **Когда использовать:** `NATURALLEFTOUTERJOIN` нужен, когда между таблицами нет связи в модели данных. Соединение происходит по **одноимённым столбцам**. Если связь есть — используйте `RELATED` / `RELATEDTABLE` (эффективнее).
+
+### Шаг 4.6. CALCULATE vs CALCULATETABLE
+
+**SQL — скалярный подзапрос (аналог CALCULATE):**
+
+```sql
+SELECT (SELECT SUM(tons_mined)
+        FROM fact_production fp
+        INNER JOIN dim_mine m ON fp.mine_id = m.mine_id
+        WHERE m.mine_name = 'Шахта "Северная"') AS total_tons_north;
+```
+
+**DAX — CALCULATE (одно число):**
+
+```dax
+EVALUATE
+ROW(
+    "Добыча шахты Северная",
+    CALCULATE(
+        SUM(fact_production[tons_mined]),
+        dim_mine[mine_name] = "Шахта ""Северная"""
+    )
+)
+```
+
+**SQL — табличный подзапрос (аналог CALCULATETABLE):**
+
+```sql
+SELECT *
+FROM dim_equipment e
+INNER JOIN dim_mine m ON e.mine_id = m.mine_id
+WHERE m.mine_name = 'Шахта "Северная"';
+```
+
+**DAX — CALCULATETABLE (набор строк):**
+
+```dax
+EVALUATE
+CALCULATETABLE(
+    dim_equipment,
+    dim_mine[mine_name] = "Шахта ""Северная"""
+)
+```
+
+> **Правило:** оба модифицируют контекст фильтра одинаково. Разница — в первом аргументе: `CALCULATE` принимает скалярное выражение, `CALCULATETABLE` — табличное.
+
+### Шаг 4.7. Context Transition — CALCULATE внутри ADDCOLUMNS
+
+**SQL — коррелированный подзапрос:**
+
+```sql
+SELECT m.mine_name,
+       (SELECT SUM(fp.tons_mined)
+        FROM fact_production fp
+        WHERE fp.mine_id = m.mine_id) AS total_tons
+FROM dim_mine m;
+```
+
+**DAX — с CALCULATE (правильно):**
+
+```dax
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_mine[mine_name]),
+    "Всего тонн", CALCULATE(SUM(fact_production[tons_mined]))
+)
+```
+
+**DAX — без CALCULATE (неправильно — попробуйте!):**
+
+```dax
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(fact_production, dim_mine[mine_name]),
+    "Всего тонн", SUM(fact_production[tons_mined])
+)
+```
+
+> **Эксперимент:** выполните оба DAX-запроса и сравните результаты. Без `CALCULATE` каждая строка покажет **одинаковую** общую сумму, потому что `SUM` не «знает» о текущей шахте. `CALCULATE` выполняет **context transition** — превращает контекст строки в контекст фильтра.
+
 ---
 
 ## Часть 5. Группировка и агрегаты
@@ -554,6 +719,11 @@ ORDER BY [Всего минут] DESC
 3. Почему в DAX не нужен `JOIN`?
 4. Чем `SUMMARIZECOLUMNS` отличается от `SUMMARIZE + ADDCOLUMNS`?
 5. Как реализовать аналог `HAVING` в DAX?
+6. В чём разница между `CALCULATE` и `CALCULATETABLE`?
+7. Зачем нужен `RELATED`, если связи уже определены в модели?
+8. Чем `RELATED` отличается от `RELATEDTABLE`? В каком направлении работает каждая из них?
+9. Что такое context transition и зачем нужен `CALCULATE` внутри `ADDCOLUMNS`?
+10. Когда используется `NATURALLEFTOUTERJOIN` вместо `RELATED`?
 
 ---
 

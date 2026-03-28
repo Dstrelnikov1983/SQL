@@ -178,6 +178,43 @@ INNER JOIN dim_mine m            ON e.mine_id = m.mine_id
 INNER JOIN dim_shaft sh          ON sh.mine_id = m.mine_id
 ORDER BY m.mine_name, sh.shaft_name, e.equipment_name;
 
+-- 4.6 Обратная навигация: количество оборудования на каждой шахте
+-- (аналог RELATEDTABLE в DAX)
+SELECT m.mine_name,
+       COUNT(e.equipment_id) AS equipment_count
+FROM dim_mine m
+LEFT JOIN dim_equipment e ON m.mine_id = e.mine_id
+GROUP BY m.mine_name;
+
+-- 4.7 Обратная навигация: общая добыча по каждой шахте
+-- (аналог RELATEDTABLE + SUMX в DAX)
+SELECT m.mine_name,
+       COALESCE(SUM(fp.tons_mined), 0) AS total_tons
+FROM dim_mine m
+LEFT JOIN fact_production fp ON m.mine_id = fp.mine_id
+GROUP BY m.mine_name;
+
+-- 4.8 Скалярный подзапрос (аналог CALCULATE в DAX)
+SELECT (SELECT SUM(tons_mined)
+        FROM fact_production fp
+        INNER JOIN dim_mine m ON fp.mine_id = m.mine_id
+        WHERE m.mine_name = 'Шахта "Северная"') AS total_tons_north;
+
+-- 4.9 Коррелированный подзапрос (CALCULATE внутри ADDCOLUMNS)
+SELECT m.mine_name,
+       (SELECT SUM(fp.tons_mined)
+        FROM fact_production fp
+        WHERE fp.mine_id = m.mine_id) AS total_tons
+FROM dim_mine m;
+
+-- 4.10 «Ручное» соединение по общему столбцу (аналог NATURALLEFTOUTERJOIN)
+SELECT e.equipment_name,
+       e.inventory_number,
+       et.type_name AS equipment_type
+FROM dim_equipment e
+LEFT JOIN dim_equipment_type et
+    ON e.equipment_type_id = et.equipment_type_id;
+
 -- ============================================================
 -- 5. ГРУППИРОВКА И АГРЕГИРОВАНИЕ (GROUP BY)
 -- ============================================================
