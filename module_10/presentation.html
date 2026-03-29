@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 10 — Использование подзапросов</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .vs-badge { display: inline-block; background: var(--accent2); color: white; border-radius: 50%; width: 40px; height: 40px; line-height: 40px; text-align: center; font-weight: bold; font-size: 0.7em; }
+
+        .flow-step { display: inline-block; background: var(--accent1); color: white; border-radius: 8px; padding: 8px 16px; margin: 4px; font-size: 0.75em; }
+        .flow-arrow { display: inline-block; font-size: 1.5em; vertical-align: middle; color: var(--accent2); margin: 0 4px; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 10</h1>
+    <h2 style="border: none;">Использование подзапросов</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие &laquo;Руда+&raquo; &mdash; добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">SQL</span>
+        <span style="font-size: 1.5em; vertical-align: middle;">&#8644;</span>
+        <span class="icon-box orange">DAX</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 3 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Концепция подзапросов</strong> &mdash; что, зачем, классификация <span class="small-text">(15 мин)</span></li>
+        <li><strong>Замкнутые (Self-Contained) подзапросы</strong> &mdash; скалярные и многозначные <span class="small-text">(30 мин)</span></li>
+        <li><strong>Коррелированные подзапросы</strong> &mdash; принцип работы и производительность <span class="small-text">(30 мин)</span></li>
+        <li><strong>EXISTS и NOT EXISTS</strong> &mdash; предикаты существования <span class="small-text">(25 мин)</span></li>
+        <li><strong>Подзапросы в FROM (Inline Views)</strong> &mdash; производные таблицы <span class="small-text">(20 мин)</span></li>
+        <li><strong>Подзапросы vs JOIN</strong> &mdash; когда что использовать <span class="small-text">(15 мин)</span></li>
+        <li><strong>DAX-эквиваленты</strong> &mdash; CALCULATE, FILTER, EARLIER <span class="small-text">(20 мин)</span></li>
+        <li><strong>Практика и лабораторная работа</strong> <span class="small-text">(25 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL (SQL) | Power BI + DAX Studio (DAX)
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 1: КОНЦЕПЦИЯ ПОДЗАПРОСОВ                                 -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 1. Что такое подзапрос?</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Подзапрос (Subquery)</h3>
+            <p>Запрос SELECT, вложенный в другой SQL-оператор (SELECT, INSERT, UPDATE, DELETE)</p>
+        </div>
+        <div class="card" style="margin-top: 15px;">
+            <strong>Синонимы:</strong> вложенный запрос, внутренний запрос, подчинённый запрос
+        </div>
+        <div class="card card-orange" style="margin-top: 10px;">
+            <strong>Ключевая идея:</strong> подзапрос возвращает набор данных, который используется внешним запросом
+        </div>
+    </section>
+
+    <!-- Где можно использовать подзапросы -->
+    <section>
+        <h2>Где можно использовать подзапросы?</h2>
+        <table>
+            <thead>
+                <tr><th>Секция</th><th>Что возвращает</th><th>Пример</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>SELECT</strong></td>
+                    <td>Скалярное значение</td>
+                    <td><code>SELECT (SELECT MAX(tons_mined) FROM fact_production)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>WHERE</strong></td>
+                    <td>Скаляр, список, таблица</td>
+                    <td><code>WHERE mine_id IN (SELECT mine_id FROM ...)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>FROM</strong></td>
+                    <td>Таблица (Inline View)</td>
+                    <td><code>FROM (SELECT ... GROUP BY ...) AS sub</code></td>
+                </tr>
+                <tr>
+                    <td><strong>HAVING</strong></td>
+                    <td>Скалярное значение</td>
+                    <td><code>HAVING COUNT(*) > (SELECT AVG(...) FROM ...)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>INSERT</strong></td>
+                    <td>Набор строк</td>
+                    <td><code>INSERT INTO ... SELECT ...</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Классификация подзапросов -->
+    <section>
+        <h2>Классификация подзапросов</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">Замкнутый (Self-Contained)</h3>
+                    <ul>
+                        <li>Не зависит от внешнего запроса</li>
+                        <li>Можно выполнить <strong>отдельно</strong></li>
+                        <li>Выполняется <strong>один раз</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent2);">Коррелированный (Correlated)</h3>
+                    <ul>
+                        <li><strong>Зависит</strong> от внешнего запроса</li>
+                        <li>Нельзя выполнить отдельно</li>
+                        <li>Выполняется <strong>для каждой строки</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card card-green" style="margin-top: 15px;">
+            <strong>По результату:</strong> скалярный (одно значение), однозначный (один столбец, много строк), табличный (много столбцов, много строк)
+        </div>
+    </section>
+
+    <!-- Визуальная схема -->
+    <section>
+        <h2>Порядок выполнения</h2>
+        <h3>Замкнутый подзапрос</h3>
+        <div style="margin: 20px 0;">
+            <span class="flow-step">1. Выполнить подзапрос</span>
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-step">2. Подставить результат</span>
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-step">3. Выполнить внешний запрос</span>
+        </div>
+        <h3>Коррелированный подзапрос</h3>
+        <div style="margin: 20px 0;">
+            <span class="flow-step">1. Взять строку внешнего запроса</span>
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-step">2. Выполнить подзапрос с параметрами строки</span>
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-step">3. Повторить для каждой строки</span>
+        </div>
+        <div class="card card-orange" style="margin-top: 15px;">
+            <strong>Внимание:</strong> Коррелированные подзапросы потенциально медленнее &mdash; N выполнений подзапроса вместо одного!
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 2: ЗАМКНУТЫЕ ПОДЗАПРОСЫ                                  -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 2. Замкнутые подзапросы</h2>
+        <p>Подзапросы, которые <strong>не зависят</strong> от внешнего запроса</p>
+        <div class="compare-container" style="margin-top: 20px;">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">Скалярный</h3>
+                    <p>Возвращает <strong>одно значение</strong></p>
+                    <p class="small-text">Используется в SELECT, WHERE, HAVING</p>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent2);">Многозначный</h3>
+                    <p>Возвращает <strong>список значений</strong></p>
+                    <p class="small-text">Используется с IN, NOT IN, ANY, ALL</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Скалярный подзапрос в WHERE -->
+    <section>
+        <h2>Скалярный подзапрос в WHERE</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Найти все смены, где добыча руды выше средней</p>
+        <pre><code class="language-sql">-- Оборудование «Руда+» с добычей выше средней за смену
+SELECT fp.production_id,
+       de.equipment_name,
+       dm.mine_name,
+       fp.tons_mined
+FROM   fact_production fp
+JOIN   dim_equipment de ON fp.equipment_id = de.equipment_id
+JOIN   dim_mine dm      ON fp.mine_id = dm.mine_id
+WHERE  fp.tons_mined > (
+           SELECT AVG(tons_mined)
+           FROM   fact_production
+       )
+ORDER BY fp.tons_mined DESC;</code></pre>
+        <div class="card card-green">
+            <strong>Как это работает:</strong> Подзапрос вычисляет среднее (один раз!), затем результат подставляется в WHERE
+        </div>
+    </section>
+
+    <!-- Скалярный подзапрос в SELECT -->
+    <section>
+        <h2>Скалярный подзапрос в SELECT</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Для каждой шахты показать добычу и общее среднее</p>
+        <pre><code class="language-sql">-- Добыча по шахтам с отклонением от среднего
+SELECT dm.mine_name,
+       SUM(fp.tons_mined)  AS total_tons,
+       (SELECT AVG(tons_mined)
+        FROM   fact_production) AS overall_avg,
+       SUM(fp.tons_mined) -
+       (SELECT SUM(tons_mined) / COUNT(DISTINCT mine_id)
+        FROM   fact_production) AS deviation
+FROM   fact_production fp
+JOIN   dim_mine dm ON fp.mine_id = dm.mine_id
+GROUP BY dm.mine_name
+ORDER BY total_tons DESC;</code></pre>
+        <div class="card">
+            Скалярный подзапрос в SELECT выполняется один раз и добавляется в каждую строку результата
+        </div>
+    </section>
+
+    <!-- Многозначный подзапрос IN -->
+    <section>
+        <h2>Многозначный подзапрос: IN</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Найти операторов, работающих на шахтах Курской области</p>
+        <pre><code class="language-sql">-- Операторы шахт Курской области
+SELECT o.tab_number,
+       o.last_name || ' ' || o.first_name AS full_name,
+       o.position,
+       o.qualification
+FROM   dim_operator o
+WHERE  o.mine_id IN (
+           SELECT mine_id
+           FROM   dim_mine
+           WHERE  region = 'Курская область'
+       )
+ORDER BY o.last_name;</code></pre>
+        <div class="card card-orange">
+            <strong>IN</strong> проверяет, входит ли значение в список, возвращённый подзапросом. Эквивалент: <code>= ANY (...)</code>
+        </div>
+    </section>
+
+    <!-- NOT IN и ловушка с NULL -->
+    <section>
+        <h2>NOT IN: осторожно с NULL!</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Оборудование, которое ни разу не простаивало</p>
+        <pre><code class="language-sql">-- ОПАСНО! Если в подзапросе есть NULL — вернёт пустой результат!
+SELECT equipment_name
+FROM   dim_equipment
+WHERE  equipment_id NOT IN (
+           SELECT equipment_id  -- может содержать NULL!
+           FROM   fact_equipment_downtime
+       );
+
+-- БЕЗОПАСНАЯ версия:
+SELECT equipment_name
+FROM   dim_equipment
+WHERE  equipment_id NOT IN (
+           SELECT equipment_id
+           FROM   fact_equipment_downtime
+           WHERE  equipment_id IS NOT NULL
+       );</code></pre>
+        <div class="card card-orange">
+            <strong>Ловушка NULL:</strong> <code>NOT IN</code> со списком, содержащим NULL, всегда возвращает UNKNOWN &rarr; 0 строк. Используйте <code>NOT EXISTS</code> вместо <code>NOT IN</code>!
+        </div>
+    </section>
+
+    <!-- ANY / ALL -->
+    <section>
+        <h2>Операторы ANY и ALL</h2>
+        <pre><code class="language-sql">-- ANY: добыча выше ЛЮБОГО (минимального) значения дневной смены
+SELECT de.equipment_name, fp.tons_mined
+FROM   fact_production fp
+JOIN   dim_equipment de ON fp.equipment_id = de.equipment_id
+WHERE  fp.tons_mined > ANY (
+           SELECT tons_mined
+           FROM   fact_production
+           WHERE  shift_id = 1  -- дневная смена
+       );
+
+-- ALL: добыча выше ВСЕХ значений ночной смены
+SELECT de.equipment_name, fp.tons_mined
+FROM   fact_production fp
+JOIN   dim_equipment de ON fp.equipment_id = de.equipment_id
+WHERE  fp.tons_mined > ALL (
+           SELECT tons_mined
+           FROM   fact_production
+           WHERE  shift_id = 3  -- ночная смена
+       );</code></pre>
+        <table>
+            <thead><tr><th>Оператор</th><th>Смысл</th><th>Эквивалент</th></tr></thead>
+            <tbody>
+                <tr><td><code>&gt; ANY</code></td><td>Больше хотя бы одного</td><td><code>&gt; MIN(...)</code></td></tr>
+                <tr><td><code>&gt; ALL</code></td><td>Больше всех</td><td><code>&gt; MAX(...)</code></td></tr>
+                <tr><td><code>= ANY</code></td><td>Равен хотя бы одному</td><td><code>IN (...)</code></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Вопрос для обсуждения 1 -->
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="key-concept" style="text-align: center; padding: 30px;">
+            <h3 style="color: var(--accent2); font-size: 1.2em;">Можно ли заменить этот запрос на JOIN?</h3>
+            <pre><code class="language-sql">SELECT equipment_name
+FROM   dim_equipment
+WHERE  equipment_id IN (
+    SELECT equipment_id
+    FROM   fact_production
+    WHERE  tons_mined > 500
+);</code></pre>
+            <p style="font-size: 0.85em; margin-top: 20px;">
+                Если да &mdash; какой вариант будет эффективнее?<br>
+                Если нет &mdash; почему?
+            </p>
+        </div>
+        <div class="card card-green">
+            <strong>Подсказка:</strong> Подумайте о дубликатах &mdash; JOIN может дать больше строк, чем IN!
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Части 1–2 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — Скалярные подзапросы, Часть 2 — Многозначные подзапросы</p>
+        <p><strong>Задание:</strong> Выполните замкнутые подзапросы: скалярные в SELECT и WHERE, многозначные с IN и ANY/ALL. Сравните SQL и DAX.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10–12 минут</em></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 3: КОРРЕЛИРОВАННЫЕ ПОДЗАПРОСЫ                            -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 3. Коррелированные подзапросы</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Коррелированный подзапрос</h3>
+            <p>Ссылается на столбцы <strong>внешнего запроса</strong>. Выполняется заново для <strong>каждой строки</strong> внешнего запроса.</p>
+        </div>
+        <div style="margin: 20px 0;">
+            <span class="flow-step" style="background: var(--accent2);">Строка 1 &rarr; подзапрос</span>
+            <span class="flow-step" style="background: var(--accent2);">Строка 2 &rarr; подзапрос</span>
+            <span class="flow-step" style="background: var(--accent2);">Строка 3 &rarr; подзапрос</span>
+            <span class="flow-step" style="background: #999;">... N строк</span>
+        </div>
+        <div class="card card-orange">
+            <strong>Производительность:</strong> Концептуально O(N &times; M), но оптимизатор PostgreSQL часто преобразует в JOIN
+        </div>
+    </section>
+
+    <!-- Простой коррелированный подзапрос -->
+    <section>
+        <h2>Оборудование с добычей выше среднего по своей шахте</h2>
+        <pre><code class="language-sql">-- Для каждой единицы оборудования сравниваем со средней по ЕЁ шахте
+SELECT de.equipment_name,
+       dm.mine_name,
+       fp.tons_mined
+FROM   fact_production fp
+JOIN   dim_equipment de ON fp.equipment_id = de.equipment_id
+JOIN   dim_mine dm      ON fp.mine_id = dm.mine_id
+WHERE  fp.tons_mined > (
+           SELECT AVG(fp2.tons_mined)
+           FROM   fact_production fp2
+           WHERE  fp2.mine_id = fp.mine_id   -- корреляция!
+       )
+ORDER BY dm.mine_name, fp.tons_mined DESC;</code></pre>
+        <div class="card">
+            <strong>Корреляция:</strong> <code>fp2.mine_id = fp.mine_id</code> &mdash; подзапрос ссылается на столбец внешнего запроса
+        </div>
+    </section>
+
+    <!-- Коррелированный подзапрос в SELECT -->
+    <section>
+        <h2>Коррелированный подзапрос в SELECT</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Для каждой шахты показать кол-во внеплановых простоев</p>
+        <pre><code class="language-sql">SELECT dm.mine_name,
+       (SELECT COUNT(*)
+        FROM   fact_equipment_downtime fd
+        JOIN   dim_equipment de2 ON fd.equipment_id = de2.equipment_id
+        WHERE  de2.mine_id = dm.mine_id
+        AND    fd.is_planned = FALSE
+       ) AS unplanned_downtime_count
+FROM   dim_mine dm
+WHERE  dm.status = 'active'
+ORDER BY unplanned_downtime_count DESC;</code></pre>
+        <div class="card card-orange">
+            Коррелированный подзапрос в SELECT &mdash; удобен для &laquo;добавления&raquo; агрегатной метрики из другой таблицы
+        </div>
+    </section>
+
+    <!-- Самый результативный оператор каждой шахты -->
+    <section>
+        <h2>Лучший оператор каждой шахты</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Найти оператора с максимальной суммарной добычей в каждой шахте</p>
+        <pre><code class="language-sql">-- Коррелированный подзапрос: максимум по каждой группе
+SELECT dm.mine_name,
+       do2.last_name || ' ' || do2.first_name AS best_operator,
+       sub.total_tons
+FROM   (
+    SELECT mine_id, operator_id,
+           SUM(tons_mined) AS total_tons
+    FROM   fact_production
+    GROUP BY mine_id, operator_id
+) sub
+JOIN dim_mine dm     ON sub.mine_id = dm.mine_id
+JOIN dim_operator do2 ON sub.operator_id = do2.operator_id
+WHERE sub.total_tons = (
+    SELECT MAX(sub2.total_tons)
+    FROM   (
+        SELECT mine_id, operator_id,
+               SUM(tons_mined) AS total_tons
+        FROM   fact_production
+        GROUP BY mine_id, operator_id
+    ) sub2
+    WHERE sub2.mine_id = sub.mine_id   -- корреляция
+)
+ORDER BY sub.total_tons DESC;</code></pre>
+    </section>
+
+    <!-- Производительность -->
+    <section>
+        <h2>Производительность коррелированных подзапросов</h2>
+        <div class="card card-orange">
+            <strong>Проверяйте с EXPLAIN ANALYZE!</strong>
+        </div>
+        <pre><code class="language-sql">EXPLAIN ANALYZE
+SELECT de.equipment_name,
+       fp.tons_mined
+FROM   fact_production fp
+JOIN   dim_equipment de ON fp.equipment_id = de.equipment_id
+WHERE  fp.tons_mined > (
+           SELECT AVG(fp2.tons_mined)
+           FROM   fact_production fp2
+           WHERE  fp2.mine_id = fp.mine_id
+       );</code></pre>
+        <div class="card">
+            <strong>PostgreSQL может:</strong>
+            <ul>
+                <li>Преобразовать коррелированный подзапрос в <strong>JOIN</strong> (де-корреляция)</li>
+                <li>Использовать <strong>Lateral Join</strong> для эффективного выполнения</li>
+                <li>Кешировать результаты подзапроса (Memoize node в PostgreSQL 14+)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Вопрос для обсуждения 2 -->
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="key-concept" style="text-align: center; padding: 30px;">
+            <h3 style="color: var(--accent2); font-size: 1.1em;">Когда коррелированные подзапросы незаменимы?</h3>
+            <p style="font-size: 0.85em; margin-top: 20px;">Приведите пример задачи из контекста &laquo;Руда+&raquo;, которую <strong>нельзя</strong> решить замкнутым подзапросом.</p>
+        </div>
+        <div class="card card-green" style="margin-top: 15px;">
+            <strong>Подсказки:</strong>
+            <ul>
+                <li>Сравнение значения строки со средним <em>по её группе</em></li>
+                <li>Поиск последней записи <em>для каждого</em> оборудования</li>
+                <li>Проверка существования связанных данных</li>
+            </ul>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 4: EXISTS и NOT EXISTS                                   -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 4. EXISTS и NOT EXISTS</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Предикат EXISTS</h3>
+            <p>Возвращает <strong>TRUE</strong>, если подзапрос возвращает <strong>хотя бы одну строку</strong>.</p>
+            <p>Возвращает <strong>FALSE</strong>, если подзапрос возвращает <strong>пустой набор</strong>.</p>
+        </div>
+        <div class="card" style="margin-top: 15px;">
+            <strong>Важно:</strong> EXISTS проверяет только <em>наличие</em> строк, а не их значения. Поэтому в подзапросе часто пишут <code>SELECT 1</code>
+        </div>
+    </section>
+
+    <!-- EXISTS: базовый пример -->
+    <section>
+        <h2>EXISTS: оборудование с аварийной телеметрией</h2>
+        <pre><code class="language-sql">-- Оборудование, у которого были тревожные показания датчиков
+SELECT de.equipment_name,
+       de.inventory_number,
+       dm.mine_name
+FROM   dim_equipment de
+JOIN   dim_mine dm ON de.mine_id = dm.mine_id
+WHERE  EXISTS (
+           SELECT 1
+           FROM   fact_equipment_telemetry ft
+           WHERE  ft.equipment_id = de.equipment_id
+           AND    ft.is_alarm = TRUE
+       )
+ORDER BY dm.mine_name, de.equipment_name;</code></pre>
+        <div class="card card-green">
+            <strong>Оптимизация:</strong> EXISTS прекращает поиск сразу после нахождения первой совпадающей строки (short-circuit evaluation)
+        </div>
+    </section>
+
+    <!-- NOT EXISTS -->
+    <section>
+        <h2>NOT EXISTS: безопаснее, чем NOT IN</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Найти шахты, где не было анализов качества руды</p>
+        <pre><code class="language-sql">-- Шахты без проб качества руды
+SELECT dm.mine_name, dm.region
+FROM   dim_mine dm
+WHERE  NOT EXISTS (
+           SELECT 1
+           FROM   fact_ore_quality foq
+           WHERE  foq.mine_id = dm.mine_id
+       );
+
+-- Сравните с NOT IN (потенциальная проблема с NULL):
+SELECT mine_name, region
+FROM   dim_mine
+WHERE  mine_id NOT IN (
+           SELECT mine_id   -- если mine_id может быть NULL!
+           FROM   fact_ore_quality
+       );</code></pre>
+        <div class="card card-orange">
+            <strong>Рекомендация:</strong> Всегда используйте <code>NOT EXISTS</code> вместо <code>NOT IN</code> &mdash; безопаснее и часто быстрее
+        </div>
+    </section>
+
+    <!-- EXISTS vs IN -->
+    <section>
+        <h2>EXISTS vs IN: сравнение</h2>
+        <table>
+            <thead>
+                <tr><th>Критерий</th><th>IN</th><th>EXISTS</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>NULL-безопасность</td>
+                    <td style="color: red;">NOT IN ломается на NULL</td>
+                    <td style="color: var(--accent6);">Безопасен</td>
+                </tr>
+                <tr>
+                    <td>Тип подзапроса</td>
+                    <td>Обычно замкнутый</td>
+                    <td>Всегда коррелированный</td>
+                </tr>
+                <tr>
+                    <td>Когда лучше</td>
+                    <td>Маленький список значений</td>
+                    <td>Большие таблицы</td>
+                </tr>
+                <tr>
+                    <td>Выполнение</td>
+                    <td>Полный список</td>
+                    <td>Остановка на первом совпадении</td>
+                </tr>
+                <tr>
+                    <td>Читаемость</td>
+                    <td style="color: var(--accent6);">Проще</td>
+                    <td>Чуть сложнее</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="card card-green" style="margin-top: 10px;">
+            <strong>PostgreSQL:</strong> Оптимизатор часто преобразует <code>IN</code> в <code>EXISTS</code> (Semi Join) автоматически
+        </div>
+    </section>
+
+    <!-- Сложный EXISTS -->
+    <section>
+        <h2>EXISTS: шахты с проблемами качества</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Шахты, где есть пробы с содержанием Fe ниже нормы (&lt; 30%)</p>
+        <pre><code class="language-sql">SELECT dm.mine_name,
+       dm.region,
+       dm.max_depth_m
+FROM   dim_mine dm
+WHERE  EXISTS (
+           SELECT 1
+           FROM   fact_ore_quality foq
+           WHERE  foq.mine_id = dm.mine_id
+           AND    foq.fe_content < 30.0
+       )
+AND    dm.status = 'active'
+ORDER BY dm.mine_name;</code></pre>
+        <div class="card">
+            <strong>Бизнес-кейс:</strong> MES-система &laquo;Руда+&raquo; отслеживает качество руды. Шахты с низким содержанием Fe требуют корректировки технологии добычи.
+        </div>
+    </section>
+
+    <!-- Двойной NOT EXISTS -->
+    <section>
+        <h2>Двойной NOT EXISTS: &laquo;реляционное деление&raquo;</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Операторы, которые работали на <em>всех</em> активных шахтах</p>
+        <pre><code class="language-sql">-- Оператор, для которого НЕ СУЩЕСТВУЕТ шахты,
+-- где он НЕ работал
+SELECT o.last_name || ' ' || o.first_name AS operator_name
+FROM   dim_operator o
+WHERE  NOT EXISTS (
+    SELECT 1
+    FROM   dim_mine dm
+    WHERE  dm.status = 'active'
+    AND    NOT EXISTS (
+        SELECT 1
+        FROM   fact_production fp
+        WHERE  fp.operator_id = o.operator_id
+        AND    fp.mine_id = dm.mine_id
+    )
+);</code></pre>
+        <div class="card card-orange">
+            <strong>Реляционное деление</strong> &mdash; один из самых мощных паттернов с NOT EXISTS. Читается: &laquo;нет такой шахты, где оператор НЕ работал&raquo;.
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 5: ПОДЗАПРОСЫ В FROM (INLINE VIEWS)                      -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 5. Подзапросы в FROM (Inline Views)</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Производная таблица (Derived Table)</h3>
+            <p>Подзапрос в секции FROM создаёт <strong>временную таблицу</strong>, к которой можно обращаться как к обычной</p>
+        </div>
+        <pre><code class="language-sql">SELECT sub.mine_name, sub.total_tons
+FROM   (
+    SELECT dm.mine_name,
+           SUM(fp.tons_mined) AS total_tons
+    FROM   fact_production fp
+    JOIN   dim_mine dm ON fp.mine_id = dm.mine_id
+    GROUP BY dm.mine_name
+) sub                        -- обязательный псевдоним!
+WHERE  sub.total_tons > 10000
+ORDER BY sub.total_tons DESC;</code></pre>
+        <div class="card card-orange">
+            <strong>Обязательно:</strong> Inline View всегда требует <strong>псевдоним</strong> (AS sub)
+        </div>
+    </section>
+
+    <!-- Вложенные inline views -->
+    <section>
+        <h2>Агрегация агрегатов</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Средняя добыча по шахтам (среднее от суммы по сменам)</p>
+        <pre><code class="language-sql">-- Средняя сменная добыча по каждой шахте
+SELECT mine_name,
+       ROUND(AVG(shift_tons), 2) AS avg_shift_production,
+       COUNT(*) AS total_shifts
+FROM (
+    SELECT dm.mine_name,
+           fp.date_id,
+           fp.shift_id,
+           SUM(fp.tons_mined) AS shift_tons
+    FROM   fact_production fp
+    JOIN   dim_mine dm ON fp.mine_id = dm.mine_id
+    GROUP BY dm.mine_name, fp.date_id, fp.shift_id
+) shift_totals
+GROUP BY mine_name
+ORDER BY avg_shift_production DESC;</code></pre>
+        <div class="card">
+            Inline View позволяет применить <strong>агрегацию к агрегированным данным</strong> &mdash; двухуровневая агрегация
+        </div>
+    </section>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 6: ПОДЗАПРОСЫ vs JOIN                                    -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 6. Подзапросы vs JOIN</h2>
+        <h3>Когда что использовать?</h3>
+        <table>
+            <thead>
+                <tr><th>Ситуация</th><th>Рекомендация</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Проверка существования связи</td>
+                    <td><span class="highlight-blue">EXISTS</span> (или SEMI JOIN)</td>
+                </tr>
+                <tr>
+                    <td>Фильтрация по списку значений</td>
+                    <td><span class="highlight-blue">IN</span> или <span class="highlight-blue">EXISTS</span></td>
+                </tr>
+                <tr>
+                    <td>Нужны столбцы из обеих таблиц</td>
+                    <td><span class="highlight-green">JOIN</span></td>
+                </tr>
+                <tr>
+                    <td>Сравнение с агрегатом по группе</td>
+                    <td><span class="highlight-orange">Коррелированный подзапрос</span> или оконная функция</td>
+                </tr>
+                <tr>
+                    <td>Двухуровневая агрегация</td>
+                    <td><span class="highlight-blue">Inline View</span> или CTE</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Один запрос &mdash; три варианта</h2>
+        <p style="font-size: 0.8em;"><strong>Задача:</strong> Оборудование, у которого были простои</p>
+        <pre><code class="language-sql">-- Вариант 1: IN
+SELECT equipment_name FROM dim_equipment
+WHERE equipment_id IN (SELECT equipment_id FROM fact_equipment_downtime);
+
+-- Вариант 2: EXISTS
+SELECT equipment_name FROM dim_equipment de
+WHERE EXISTS (
+    SELECT 1 FROM fact_equipment_downtime fd
+    WHERE fd.equipment_id = de.equipment_id
+);
+
+-- Вариант 3: JOIN (DISTINCT нужен!)
+SELECT DISTINCT de.equipment_name
+FROM dim_equipment de
+JOIN fact_equipment_downtime fd ON fd.equipment_id = de.equipment_id;</code></pre>
+        <div class="card card-green">
+            Все три вернут одинаковый результат. PostgreSQL часто преобразует их в один план (Semi Join).
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7: DAX-ЭКВИВАЛЕНТЫ                                      -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 7. DAX-эквиваленты подзапросов</h2>
+        <p>В DAX нет подзапросов как синтаксической конструкции, но есть функции, решающие те же задачи</p>
+        <table>
+            <thead>
+                <tr><th>SQL-подзапрос</th><th>DAX-эквивалент</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Скалярный подзапрос</td><td><code>CALCULATE</code> + <code>ALL</code> / <code>FILTER</code></td></tr>
+                <tr><td>IN (подзапрос)</td><td><code>CALCULATETABLE</code>, <code>FILTER</code></td></tr>
+                <tr><td>EXISTS</td><td><code>COUNTROWS(FILTER(...))</code></td></tr>
+                <tr><td>Коррелированный подзапрос</td><td><code>EARLIER</code> / <code>EARLIEST</code>, вложенные итераторы</td></tr>
+                <tr><td>Inline View</td><td><code>SUMMARIZE</code>, <code>ADDCOLUMNS</code></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- CALCULATE как замкнутый подзапрос -->
+    <section>
+        <h2>SQL vs DAX: скалярный подзапрос</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- Добыча выше средней
+SELECT equipment_name,
+       tons_mined
+FROM   fact_production fp
+JOIN   dim_equipment de
+  ON   fp.equipment_id
+     = de.equipment_id
+WHERE  tons_mined > (
+    SELECT AVG(tons_mined)
+    FROM   fact_production
+);</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">// Мера: средняя добыча
+Avg Production =
+    AVERAGE(
+      fact_production[tons_mined]
+    )
+
+// Таблица: выше средней
+EVALUATE
+FILTER(
+    ADDCOLUMNS(
+        fact_production,
+        "EquipName",
+            RELATED(
+              dim_equipment[equipment_name]
+            )
+    ),
+    [tons_mined]
+        > [Avg Production]
+)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- EARLIER как коррелированный подзапрос -->
+    <section>
+        <h2>SQL vs DAX: коррелированный подзапрос</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- Добыча выше средней
+-- по своей шахте
+SELECT mine_id,
+       tons_mined
+FROM fact_production fp
+WHERE tons_mined > (
+    SELECT AVG(fp2.tons_mined)
+    FROM fact_production fp2
+    WHERE fp2.mine_id
+        = fp.mine_id
+);</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX (EARLIER)</h3>
+                <pre><code class="language-dax">// Вычисляемый столбец
+AboveAvgForMine =
+VAR CurrentMine =
+    fact_production[mine_id]
+VAR MineAvg =
+    CALCULATE(
+        AVERAGE(
+          fact_production[tons_mined]
+        ),
+        FILTER(
+            ALL(fact_production),
+            fact_production[mine_id]
+                = CurrentMine
+        )
+    )
+RETURN
+    fact_production[tons_mined]
+        > MineAvg</code></pre>
+            </div>
+        </div>
+        <div class="card card-orange">
+            <strong>EARLIER</strong> / переменные VAR &mdash; аналог корреляции. VAR CurrentMine хранит значение &laquo;текущей строки&raquo;, как <code>fp.mine_id</code> в SQL.
+        </div>
+    </section>
+
+    <!-- EXISTS в DAX -->
+    <section>
+        <h2>SQL vs DAX: EXISTS</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- Шахты с проблемами
+-- качества
+SELECT mine_name
+FROM dim_mine dm
+WHERE EXISTS (
+    SELECT 1
+    FROM fact_ore_quality foq
+    WHERE foq.mine_id
+        = dm.mine_id
+    AND foq.fe_content < 30
+);</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">// Шахты с проблемами
+EVALUATE
+FILTER(
+    dim_mine,
+    COUNTROWS(
+        FILTER(
+            RELATEDTABLE(
+                fact_ore_quality
+            ),
+            fact_ore_quality[fe_content]
+                < 30
+        )
+    ) > 0
+)</code></pre>
+            </div>
+        </div>
+        <div class="card">
+            В DAX нет прямого EXISTS. Используем <code>COUNTROWS(FILTER(...)) > 0</code> или <code>NOT ISEMPTY(...)</code>.
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- КЕЙС ДЛЯ АНАЛИЗА                                             -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Кейс: Анализ эффективности &laquo;Руда+&raquo;</h2>
+        <div class="card" style="font-size: 0.85em;">
+            <strong>Ситуация:</strong> Руководство предприятия &laquo;Руда+&raquo; поручило аналитическому отделу подготовить отчёт по эффективности за квартал. Необходимо ответить на три вопроса:
+        </div>
+        <ol style="margin-top: 15px;">
+            <li><strong>Какое оборудование</strong> работает с производительностью выше среднего по своей шахте?</li>
+            <li><strong>Какие шахты</strong> имеют проблемы с качеством руды (пробы ниже нормы)?</li>
+            <li><strong>Какие операторы</strong> ни разу не имели внеплановых простоев?</li>
+        </ol>
+        <div class="card card-orange" style="margin-top: 15px;">
+            <strong>Задание для групп:</strong> Разделитесь на 3 группы. Каждая группа решает одну задачу с использованием подзапросов. Время: 10 минут.
+        </div>
+    </section>
+
+    <!-- Подсказки для кейса -->
+    <section>
+        <h2>Кейс: подсказки</h2>
+        <table>
+            <thead>
+                <tr><th>Задача</th><th>Тип подзапроса</th><th>Ключевые таблицы</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Оборудование выше среднего</td>
+                    <td>Коррелированный</td>
+                    <td><code>fact_production</code>, <code>dim_equipment</code></td>
+                </tr>
+                <tr>
+                    <td>Шахты с проблемами качества</td>
+                    <td>EXISTS</td>
+                    <td><code>dim_mine</code>, <code>fact_ore_quality</code></td>
+                </tr>
+                <tr>
+                    <td>Операторы без простоев</td>
+                    <td>NOT EXISTS</td>
+                    <td><code>dim_operator</code>, <code>fact_equipment_downtime</code></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="card card-green" style="margin-top: 15px;">
+            <strong>Бонус:</strong> Попробуйте решить каждую задачу двумя способами &mdash; подзапросом и JOIN. Сравните планы выполнения.
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ГРУППОВОЕ ЗАДАНИЕ                                             -->
+<!-- ============================================================ -->
+<section>
+    <h2>Работа в группах: рефакторинг запросов</h2>
+    <div class="card" style="font-size: 0.85em;">
+        <strong>Задание:</strong> Перепишите следующие запросы, заменив JOIN на подзапрос (или наоборот). Обсудите, какой вариант лучше и почему.
+    </div>
+    <pre><code class="language-sql">-- Запрос 1: переписать с JOIN на EXISTS
+SELECT DISTINCT de.equipment_name
+FROM dim_equipment de
+JOIN fact_equipment_downtime fd ON fd.equipment_id = de.equipment_id
+WHERE fd.is_planned = FALSE;
+
+-- Запрос 2: переписать с подзапроса на JOIN
+SELECT mine_name FROM dim_mine
+WHERE mine_id IN (
+    SELECT mine_id FROM fact_production
+    WHERE tons_mined > 500
+);
+
+-- Запрос 3: переписать коррелированный подзапрос с оконной функцией
+SELECT * FROM fact_production fp
+WHERE tons_mined > (
+    SELECT AVG(tons_mined) FROM fact_production fp2
+    WHERE fp2.mine_id = fp.mine_id
+);</code></pre>
+    <p class="small-text">Время: 10 минут. Обсуждение результатов: 5 минут.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- КВИЗ                                                          -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Квиз: проверьте себя</h2>
+        <h3>Вопрос 1</h3>
+        <p>Какой подзапрос выполняется один раз, а какой &mdash; для каждой строки?</p>
+        <div class="quiz-option">A) Замкнутый &mdash; один раз, коррелированный &mdash; для каждой строки</div>
+        <div class="quiz-option">B) Коррелированный &mdash; один раз, замкнутый &mdash; для каждой строки</div>
+        <div class="quiz-option">C) Оба выполняются один раз</div>
+        <div class="quiz-option">D) Зависит от оптимизатора</div>
+        <div class="card card-green fragment">
+            <strong>Ответ: A</strong> &mdash; Концептуально замкнутый выполняется один раз, коррелированный &mdash; для каждой строки (хотя оптимизатор может оптимизировать).
+        </div>
+    </section>
+
+    <section>
+        <h2>Квиз</h2>
+        <h3>Вопрос 2</h3>
+        <p>Что вернёт запрос, если в подзапросе NOT IN есть NULL?</p>
+        <pre><code class="language-sql">SELECT * FROM dim_mine
+WHERE mine_id NOT IN (SELECT mine_id FROM fact_ore_quality);</code></pre>
+        <div class="quiz-option">A) Все шахты без анализов качества</div>
+        <div class="quiz-option">B) Пустой результат (0 строк)</div>
+        <div class="quiz-option">C) Ошибку SQL</div>
+        <div class="quiz-option">D) Все шахты</div>
+        <div class="card card-green fragment">
+            <strong>Ответ: B</strong> &mdash; Если в списке есть NULL, NOT IN возвращает UNKNOWN для каждой строки &rarr; 0 строк. Используйте NOT EXISTS!
+        </div>
+    </section>
+
+    <section>
+        <h2>Квиз</h2>
+        <h3>Вопрос 3</h3>
+        <p>Какой DAX-функцией можно сымитировать коррелированный подзапрос?</p>
+        <div class="quiz-option">A) SUMMARIZE</div>
+        <div class="quiz-option">B) TOPN</div>
+        <div class="quiz-option">C) CALCULATE + FILTER + ALL с VAR / EARLIER</div>
+        <div class="quiz-option">D) UNION</div>
+        <div class="card card-green fragment">
+            <strong>Ответ: C</strong> &mdash; CALCULATE с FILTER и ALL позволяет вычислить агрегат с контекстом &laquo;текущей строки&raquo;, аналогично коррелированному подзапросу.
+        </div>
+    </section>
+
+    <section>
+        <h2>Квиз</h2>
+        <h3>Вопрос 4</h3>
+        <p>Обязателен ли псевдоним для подзапроса в секции FROM?</p>
+        <pre><code class="language-sql">SELECT * FROM (SELECT mine_id, SUM(tons_mined) FROM fact_production GROUP BY mine_id);</code></pre>
+        <div class="quiz-option">A) Нет, псевдоним необязателен</div>
+        <div class="quiz-option">B) Да, PostgreSQL требует псевдоним для Inline View</div>
+        <div class="quiz-option">C) Только если к подзапросу обращаются по имени</div>
+        <div class="quiz-option">D) Только для Oracle, в PostgreSQL не нужен</div>
+        <div class="card card-green fragment">
+            <strong>Ответ: B</strong> &mdash; PostgreSQL требует обязательный псевдоним для подзапроса в FROM. Без него будет ошибка синтаксиса.
+        </div>
+    </section>
+
+    <section>
+        <h2>Квиз</h2>
+        <h3>Вопрос 5</h3>
+        <p>Какая конструкция наиболее эффективна для поиска &laquo;записей, у которых нет связанных&raquo;?</p>
+        <div class="quiz-option">A) LEFT JOIN ... WHERE ... IS NULL</div>
+        <div class="quiz-option">B) NOT IN (подзапрос)</div>
+        <div class="quiz-option">C) NOT EXISTS (подзапрос)</div>
+        <div class="quiz-option">D) Все три примерно одинаковы в PostgreSQL</div>
+        <div class="card card-green fragment">
+            <strong>Ответ: D</strong> &mdash; В PostgreSQL оптимизатор обычно приводит все три варианта к одному плану (Anti Join). Но NOT EXISTS безопаснее из-за поведения с NULL.
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВОПРОС ДЛЯ ОБСУЖДЕНИЯ 3                                      -->
+<!-- ============================================================ -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="key-concept" style="text-align: center; padding: 30px;">
+        <h3 style="color: var(--accent2); font-size: 1.1em;">Подзапросы vs CTE (Common Table Expressions)</h3>
+        <p style="font-size: 0.85em; margin-top: 20px;">
+            Мы изучили подзапросы в FROM (Inline Views). В следующих модулях рассмотрим CTE (WITH).
+        </p>
+        <p style="font-size: 0.85em;">
+            Как вы думаете, в каких случаях CTE предпочтительнее подзапроса?<br>
+            А когда подзапрос лучше?
+        </p>
+    </div>
+    <div class="card card-green">
+        <strong>Подсказка:</strong> Подумайте о читаемости, повторном использовании, рекурсии и плане выполнения.
+    </div>
+</section>
+
+<!-- ==================== ПРАКТИЧЕСКАЯ ЧАСТЬ ==================== -->
+<section>
+    <section>
+        <h2>Практическая часть</h2>
+        <p>Переходим к практической и лабораторной работе!</p>
+        <div class="compare-container" style="margin-top: 20px;">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">Практическая работа</h3>
+                    <p>Пошаговые примеры вместе с преподавателем</p>
+                    <p class="small-text">Файл: <code>practice.md</code></p>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent2);">Лабораторная работа</h3>
+                    <p>Самостоятельные задания (10&ndash;12 задач)</p>
+                    <p class="small-text">Файл: <code>lab.md</code></p>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-top: 15px;">
+            <strong>Файлы примеров:</strong> <code>examples.sql</code> (SQL) | <code>examples.dax</code> (DAX)
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Части 3–5 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 3 — Коррелированные подзапросы, Часть 4 — EXISTS, Часть 5 — Подзапросы в FROM</p>
+        <p><strong>Задание:</strong> Выполните коррелированные подзапросы, используйте EXISTS/NOT EXISTS, создайте производные таблицы. Сравните с DAX-эквивалентами.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 15–20 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на подзапросы различных типов</p>
+        <p><strong>Формат:</strong> SQL и DAX запросы, сравнение подходов и производительности</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ МОДУЛЯ ==================== -->
+<section>
+    <section>
+        <h2>Итоги модуля</h2>
+        <table>
+            <thead>
+                <tr><th>Тема</th><th>Ключевой навык</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Замкнутые подзапросы</td>
+                    <td>Скалярные (в SELECT/WHERE) и многозначные (IN, ANY, ALL)</td>
+                </tr>
+                <tr>
+                    <td>Коррелированные подзапросы</td>
+                    <td>Сравнение с агрегатом по группе, понимание производительности</td>
+                </tr>
+                <tr>
+                    <td>EXISTS / NOT EXISTS</td>
+                    <td>Проверка существования, NULL-безопасность, реляционное деление</td>
+                </tr>
+                <tr>
+                    <td>Inline Views</td>
+                    <td>Производные таблицы</td>
+                </tr>
+                <tr>
+                    <td>Подзапросы vs JOIN</td>
+                    <td>Выбор оптимального подхода для каждой задачи</td>
+                </tr>
+                <tr>
+                    <td>DAX-эквиваленты</td>
+                    <td>CALCULATE, FILTER, EARLIER, вложенные итераторы</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Что дальше?</h2>
+        <div class="card">
+            <strong>Модуль 11:</strong> CTE (Common Table Expressions) &mdash; именованные подзапросы и рекурсия
+        </div>
+        <div class="card card-orange" style="margin-top: 10px;">
+            <strong>Домашнее задание:</strong> Завершите лабораторную работу (задания 1&ndash;12). Попробуйте решить каждую задачу несколькими способами.
+        </div>
+        <div style="margin-top: 30px;">
+            <span class="icon-box">SQL</span>
+            <span style="font-size: 1.5em; vertical-align: middle;">&#8644;</span>
+            <span class="icon-box orange">DAX</span>
+        </div>
+        <p class="small-text" style="margin-top: 20px;">Спасибо за внимание! Вопросы?</p>
+    </section>
+</section>
+
+</div><!-- slides -->
+</div><!-- reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.05,
+        transition: 'slide',
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>
