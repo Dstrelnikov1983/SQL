@@ -268,6 +268,218 @@ WHEN NOT MATCHED THEN
     );
 
 
+-- 4.3 Полная синхронизация справочника с удалением «устаревших» записей
+-- ============================================================
+-- WHEN NOT MATCHED BY SOURCE THEN DELETE — доступно с PostgreSQL 17.
+-- На PostgreSQL 15–16 эмулируем через DELETE + MERGE в одной транзакции.
+-- ============================================================
+
+-- Сценарий: из мастер-системы пришёл актуальный список причин простоев.
+-- Всё, чего нет в этом списке, считается устаревшим и должно быть удалено.
+
+-- -------- Подготовка staging-таблицы --------
+DROP TABLE IF EXISTS staging_downtime_reasons_full;
+CREATE TABLE staging_downtime_reasons_full (
+    reason_code  VARCHAR(20)  NOT NULL,
+    reason_name  VARCHAR(200) NOT NULL,
+    category     VARCHAR(50)  NOT NULL,
+    description  TEXT
+);
+
+INSERT INTO staging_downtime_reasons_full
+    (reason_code, reason_name, category, description)
+VALUES
+    ('MAINT_PLAN',  'Плановое техническое обслуживание', 'плановый',        'Регламентное ТО по графику'),
+    ('REPAIR_EMRG', 'Аварийный ремонт',                 'внеплановый',     'Отказ узла или агрегата'),
+    ('NO_OPERATOR', 'Отсутствие оператора',              'организационный', 'Оператор не вышел на смену'),
+    ('OVERHEAT',    'Перегрев двигателя',                'внеплановый',     'Остановка из-за перегрева'),
+    ('POWER_OUT',   'Электроснабжение',                  'внеплановый',     'Перебои в электроснабжении');
+
+-- ======== Вариант A: PostgreSQL 17+ (WHEN NOT MATCHED BY SOURCE) ========
+
+-- MERGE INTO practice_dim_downtime_reason AS target
+-- USING staging_downtime_reasons_full AS source
+--     ON target.reason_code = source.reason_code
+--
+-- WHEN MATCHED THEN
+--     UPDATE SET
+--         reason_name = source.reason_name,
+--         category    = source.category,
+--         description = source.description
+--
+-- WHEN NOT MATCHED BY TARGET THEN
+--     INSERT (reason_id, reason_name, reason_code, category, description)
+--     VALUES (
+--         source.new_reason_id,
+--         source.reason_name,
+--         source.reason_code,
+--         source.category,
+--         source.description
+--     )
+--
+-- WHEN NOT MATCHED BY SOURCE THEN
+--     DELETE;
+
+-- ======== Вариант B: PostgreSQL 15–16 (DELETE + MERGE в транзакции) ========
+
+BEGIN;
+
+-- Шаг 1: Удаляем из target записи, которых нет в source
+-- (эмуляция WHEN NOT MATCHED BY SOURCE THEN DELETE)
+DELETE FROM practice_dim_downtime_reason AS target
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM staging_downtime_reasons_full AS source
+    WHERE source.reason_code = target.reason_code
+);
+
+-- Шаг 2: MERGE — обновляем совпавшие, вставляем новые
+MERGE INTO practice_dim_downtime_reason AS target
+USING (
+    SELECT reason_code, reason_name, category, description,
+           (SELECT COALESCE(MAX(reason_id), 0)
+            FROM practice_dim_downtime_reason)
+           + ROW_NUMBER() OVER (ORDER BY reason_code) AS new_reason_id
+    FROM staging_downtime_reasons_full
+) AS source
+    ON target.reason_code = source.reason_code
+
+WHEN MATCHED THEN
+    UPDATE SET
+        reason_name = source.reason_name,
+        category    = source.category,
+        description = source.description
+
+WHEN NOT MATCHED THEN
+    INSERT (reason_id, reason_name, reason_code, category, description)
+    VALUES (
+        source.new_reason_id,
+        source.reason_name,
+        source.reason_code,
+        source.category,
+        source.description
+    );
+
+COMMIT;
+
+-- Проверяем результат: должны остаться только 5 записей из staging
+SELECT reason_id, reason_code, reason_name, category
+FROM practice_dim_downtime_reason
+ORDER BY reason_id;
+
+
+-- 4.4 MERGE ... RETURNING — логирование всех изменений
+-- ============================================================
+-- MERGE ... RETURNING доступно с PostgreSQL 17.
+-- На PostgreSQL 15–16 эмулируем через CTE с UPDATE/INSERT RETURNING.
+-- ============================================================
+
+-- Сценарий: обновляем статусы оборудования из staging_equipment_status
+-- и записываем ВСЕ изменения (UPDATE и INSERT) в practice_equipment_log.
+
+-- ======== Вариант A: PostgreSQL 17+ (MERGE ... RETURNING) ========
+
+-- MERGE INTO practice_dim_equipment AS t
+-- USING staging_equipment_status AS s
+--     ON t.inventory_number = s.inventory_number
+--
+-- WHEN MATCHED AND t.status IS DISTINCT FROM s.new_status THEN
+--     UPDATE SET
+--         status             = s.new_status,
+--         has_video_recorder = s.has_video_recorder,
+--         has_navigation     = s.has_navigation
+--
+-- WHEN NOT MATCHED THEN
+--     INSERT (equipment_id, inventory_number, status,
+--             has_video_recorder, has_navigation)
+--     VALUES (
+--         (SELECT MAX(equipment_id) + 1 FROM practice_dim_equipment),
+--         s.inventory_number, s.new_status,
+--         s.has_video_recorder, s.has_navigation
+--     )
+--
+-- RETURNING
+--     merge_action()  AS action,   -- 'INSERT' или 'UPDATE'
+--     t.equipment_id,
+--     t.inventory_number,
+--     t.status AS new_status;
+
+-- ======== Вариант B: PostgreSQL 15–16 (CTE + RETURNING) ========
+
+BEGIN;
+
+-- Шаг 1: UPDATE существующего оборудования с логированием
+WITH old_values AS (
+    -- Фиксируем текущее состояние ДО обновления
+    SELECT t.equipment_id,
+           t.status             AS old_status,
+           s.new_status,
+           s.has_video_recorder,
+           s.has_navigation
+    FROM practice_dim_equipment t
+    JOIN staging_equipment_status s
+        ON t.inventory_number = s.inventory_number
+    WHERE t.status IS DISTINCT FROM s.new_status
+),
+do_update AS (
+    -- Выполняем UPDATE и получаем ID обновлённых строк
+    UPDATE practice_dim_equipment AS t
+    SET status             = o.new_status,
+        has_video_recorder = o.has_video_recorder,
+        has_navigation     = o.has_navigation
+    FROM old_values o
+    WHERE t.equipment_id = o.equipment_id
+    RETURNING t.equipment_id
+)
+-- Записываем в лог через INSERT ... SELECT
+INSERT INTO practice_equipment_log
+    (equipment_id, action, old_status, new_status, details)
+SELECT o.equipment_id,
+       'UPDATE',
+       o.old_status,
+       o.new_status,
+       'Статус изменён при синхронизации из staging'
+FROM old_values o
+JOIN do_update u ON o.equipment_id = u.equipment_id;
+
+-- Шаг 2: INSERT нового оборудования с логированием
+WITH inserted AS (
+    INSERT INTO practice_dim_equipment (
+        equipment_id, inventory_number, status,
+        has_video_recorder, has_navigation
+    )
+    SELECT (SELECT COALESCE(MAX(equipment_id), 0)
+            FROM practice_dim_equipment)
+           + ROW_NUMBER() OVER (ORDER BY s.inventory_number),
+           s.inventory_number,
+           s.new_status,
+           s.has_video_recorder,
+           s.has_navigation
+    FROM staging_equipment_status s
+    WHERE NOT EXISTS (
+        SELECT 1 FROM practice_dim_equipment t
+        WHERE t.inventory_number = s.inventory_number
+    )
+    RETURNING equipment_id, status AS new_status
+)
+INSERT INTO practice_equipment_log
+    (equipment_id, action, old_status, new_status, details)
+SELECT equipment_id,
+       'INSERT',
+       NULL,
+       new_status,
+       'Новое оборудование добавлено из staging'
+FROM inserted;
+
+-- Проверяем журнал изменений
+SELECT log_id, equipment_id, action,
+       old_status, new_status, details, changed_at
+FROM practice_equipment_log
+ORDER BY log_id;
+
+COMMIT;
+
+
 -- ============================================================
 -- 5. UPSERT — INSERT ... ON CONFLICT
 -- ============================================================

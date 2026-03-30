@@ -405,3 +405,52 @@ EVALUATE
                 CALCULATE([Добыча_Итого])
             )
     )
+
+
+// ------------------------------------------------------------
+// Пример 20: Мера vs выражение внутри итератора
+// Три варианта одного запроса — разница в context transition.
+// ------------------------------------------------------------
+
+// 20а: МЕРА внутри MAXX — автоматический context transition
+// Результат КОРРЕКТНЫЙ: ~1430 т (Северная), ~846 т (Южная)
+DEFINE
+    MEASURE fact_production[Добыча_Итого] =
+        SUM(fact_production[tons_mined])
+
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Макс. суточная добыча, т",
+            MAXX(
+                VALUES(dim_date[full_date]),
+                [Добыча_Итого]  -- мера: context transition автоматически
+            )
+    )
+
+
+// 20б: ВЫРАЖЕНИЕ без CALCULATE — context transition НЕ происходит
+// Результат НЕКОРРЕКТНЫЙ: ~549106 т (Северная), ~317303 т (Южная)
+// SUM вычисляется по ВСЕМ датам, MAXX находит одно и то же число
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Макс. суточная добыча, т",
+            MAXX(
+                VALUES(dim_date[full_date]),
+                SUM(fact_production[tons_mined])  -- НЕ мера: нет context transition!
+            )
+    )
+
+
+// 20в: ВЫРАЖЕНИЕ с CALCULATE — явный context transition
+// Результат КОРРЕКТНЫЙ: ~1430 т (Северная), ~846 т (Южная)
+EVALUATE
+    ADDCOLUMNS(
+        VALUES(dim_mine[mine_name]),
+        "Макс. суточная добыча, т",
+            MAXX(
+                VALUES(dim_date[full_date]),
+                CALCULATE(SUM(fact_production[tons_mined]))  -- явный переход
+            )
+    )

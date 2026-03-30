@@ -498,23 +498,32 @@ LEFT JOIN dim_equipment_type et
 **DAX:**
 
 ```dax
+// Вариант 1: CROSSJOIN + FILTER (универсальный, работает всегда)
 EVALUATE
-NATURALLEFTOUTERJOIN(
-    SELECTCOLUMNS(
-        dim_equipment,
-        "equipment_type_id", dim_equipment[equipment_type_id],
-        "Название",          dim_equipment[equipment_name],
-        "Серийный номер",    dim_equipment[inventory_number]
+VAR equip = SELECTCOLUMNS(
+    dim_equipment,
+    "eq_type_id",     dim_equipment[equipment_type_id],
+    "Название",       dim_equipment[equipment_name],
+    "Серийный номер", dim_equipment[inventory_number]
+)
+VAR types = SELECTCOLUMNS(
+    dim_equipment_type,
+    "tp_type_id",       dim_equipment_type[equipment_type_id],
+    "Тип оборудования", dim_equipment_type[type_name]
+)
+RETURN
+SELECTCOLUMNS(
+    FILTER(
+        CROSSJOIN(equip, types),
+        [eq_type_id] = [tp_type_id]
     ),
-    SELECTCOLUMNS(
-        dim_equipment_type,
-        "equipment_type_id", dim_equipment_type[equipment_type_id],
-        "Тип оборудования",  dim_equipment_type[type_name]
-    )
+    "Название",        [Название],
+    "Серийный номер",  [Серийный номер],
+    "Тип оборудования", [Тип оборудования]
 )
 ```
 
-> **Когда использовать:** `NATURALLEFTOUTERJOIN` нужен, когда между таблицами нет связи в модели данных. Соединение происходит по **одноимённым столбцам**. Если связь есть — используйте `RELATED` / `RELATEDTABLE` (эффективнее).
+> **Важно:** `NATURALLEFTOUTERJOIN` не работает, когда между таблицами уже есть связь в модели данных. В этом случае используйте `CROSSJOIN` + `FILTER` или, если связь есть, просто `RELATED` / `RELATEDTABLE` (проще и эффективнее).
 
 ### Шаг 4.6. CALCULATE vs CALCULATETABLE
 

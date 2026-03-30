@@ -250,19 +250,10 @@ SELECTCOLUMNS(
 )
 
 // 4.2 Оборудование шахты «Северная» с типом
-EVALUATE
-CALCULATETABLE(
-    SELECTCOLUMNS(
-        dim_equipment,
-        "Название",      dim_equipment[equipment_name],
-        "Тип",           RELATED(dim_equipment_type[type_name]),
-        "Год выпуска",   dim_equipment[year_manufactured],
-        "Статус",        dim_equipment[status]
-    ),
-    RELATED(dim_mine[mine_name]) = "Шахта ""Северная"""
-)
-
-// Альтернативный вариант — фильтр по связанной таблице
+// Примечание: RELATED() нельзя использовать в фильтре CALCULATETABLE,
+// т.к. фильтр работает в контексте фильтра, а не строки.
+// Используем прямое обращение к dim_mine — фильтр автоматически
+// «протекает» по связи модели на dim_equipment.
 EVALUATE
 CALCULATETABLE(
     SELECTCOLUMNS(
@@ -308,20 +299,49 @@ CALCULATETABLE(
 )
 ORDER BY [Длительность, мин] DESC
 
-// 4.5 Использование NATURALLEFTOUTERJOIN для «ручного» соединения
-// (когда нет прямой связи в модели)
+// 4.5 «Ручное» соединение таблиц без связи в модели
+// Примечание: NATURALLEFTOUTERJOIN не работает, когда между таблицами
+// уже есть связь в модели данных. Поэтому используем CROSSJOIN + FILTER.
+// Если связь есть — используйте RELATED (проще и эффективнее).
+
+// Вариант 1: CROSSJOIN + FILTER (универсальный)
 EVALUATE
-NATURALLEFTOUTERJOIN(
-    SELECTCOLUMNS(
-        dim_equipment,
-        "equipment_type_id", dim_equipment[equipment_type_id],
-        "Название",          dim_equipment[equipment_name],
-        "Серийный номер",    dim_equipment[inventory_number]
+VAR equip = SELECTCOLUMNS(
+    dim_equipment,
+    "eq_type_id",     dim_equipment[equipment_type_id],
+    "Название",       dim_equipment[equipment_name],
+    "Серийный номер", dim_equipment[inventory_number]
+)
+VAR types = SELECTCOLUMNS(
+    dim_equipment_type,
+    "tp_type_id",       dim_equipment_type[equipment_type_id],
+    "Тип оборудования", dim_equipment_type[type_name]
+)
+RETURN
+SELECTCOLUMNS(
+    FILTER(
+        CROSSJOIN(equip, types),
+        [eq_type_id] = [tp_type_id]
     ),
+    "Название",        [Название],
+    "Серийный номер",  [Серийный номер],
+    "Тип оборудования", [Тип оборудования]
+)
+
+// Вариант 2: GENERATE + CALCULATETABLE (использует связи модели)
+EVALUATE
+GENERATE(
     SELECTCOLUMNS(
         dim_equipment_type,
-        "equipment_type_id", dim_equipment_type[equipment_type_id],
-        "Тип оборудования",  dim_equipment_type[type_name]
+        "Тип оборудования", dim_equipment_type[type_name],
+        "type_id",           dim_equipment_type[equipment_type_id]
+    ),
+    CALCULATETABLE(
+        SELECTCOLUMNS(
+            dim_equipment,
+            "Название",       dim_equipment[equipment_name],
+            "Серийный номер", dim_equipment[inventory_number]
+        )
     )
 )
 
