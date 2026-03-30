@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 6 — Использование встроенных функций</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        /* Двухколоночный layout для SQL vs DAX */
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        /* Карточки для заданий/вопросов */
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        /* Таблицы */
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 6</h1>
+    <h2 style="border: none;">Использование встроенных функций</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">SQL</span>
+        <span style="font-size: 1.5em; vertical-align: middle;">&#8644;</span>
+        <span class="icon-box orange">DAX</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 2 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Математические функции</strong> <span class="small-text">(20 мин)</span></li>
+        <li><strong>Агрегатные функции — углублённый обзор</strong> <span class="small-text">(25 мин)</span></li>
+        <li><strong>Функции преобразования типов</strong> <span class="small-text">(20 мин)</span></li>
+        <li><strong>Условная логика: CASE, COALESCE, NULLIF</strong> <span class="small-text">(20 мин)</span></li>
+        <li><strong>Работа с NULL</strong> <span class="small-text">(15 мин)</span></li>
+        <li><strong>Кейс:</strong> Расчёт KPI эффективности оборудования <span class="small-text">(20 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL (SQL) | Power BI + DAX Studio (DAX)
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 1: МАТЕМАТИЧЕСКИЕ ФУНКЦИИ ==================== -->
+<section>
+    <h2>Часть 1. Математические функции</h2>
+    <p>Функции для числовых вычислений в аналитических запросах</p>
+    <div class="card">
+        <strong>Зачем?</strong> Расчёт KPI, нормализация данных, контроль допусков, округление результатов анализов качества руды.
+    </div>
+</section>
+
+<!-- ROUND, CEIL, FLOOR -->
+<section>
+    <h2>ROUND, CEIL, FLOOR</h2>
+    <table>
+        <tr><th>Функция</th><th>Описание</th><th>Пример</th><th>Результат</th></tr>
+        <tr><td><code>ROUND(x, n)</code></td><td>Округление до n знаков</td><td><code>ROUND(56.789, 1)</code></td><td>56.8</td></tr>
+        <tr><td><code>CEIL(x)</code></td><td>Округление вверх</td><td><code>CEIL(56.1)</code></td><td>57</td></tr>
+        <tr><td><code>FLOOR(x)</code></td><td>Округление вниз</td><td><code>FLOOR(56.9)</code></td><td>56</td></tr>
+        <tr><td><code>TRUNC(x, n)</code></td><td>Отсечение до n знаков</td><td><code>TRUNC(56.789, 1)</code></td><td>56.7</td></tr>
+    </table>
+    <div class="card-orange card" style="margin-top: 10px;">
+        <strong>Разница ROUND vs TRUNC:</strong> ROUND(2.55, 1) = 2.6, но TRUNC(2.55, 1) = 2.5
+    </div>
+</section>
+
+<!-- Пример: Округление содержания Fe -->
+<section>
+    <h2>Пример: Округление содержания Fe</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">SELECT
+    sample_number,
+    fe_content,
+    ROUND(fe_content, 1)  AS fe_round_1,
+    CEIL(fe_content)      AS fe_ceil,
+    FLOOR(fe_content)     AS fe_floor,
+    TRUNC(fe_content, 0)  AS fe_trunc
+FROM fact_ore_quality
+WHERE date_id = 20240315
+ORDER BY fe_content DESC
+LIMIT 5;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+TOPN(5,
+  ADDCOLUMNS(
+    FILTER(fact_ore_quality,
+      fact_ore_quality[date_id] = 20240315),
+    "Fe округл.",
+      ROUND(fact_ore_quality[fe_content], 1),
+    "Fe вверх",
+      CEILING(fact_ore_quality[fe_content], 1),
+    "Fe вниз",
+      FLOOR(fact_ore_quality[fe_content], 1)
+  ),
+  fact_ore_quality[fe_content], DESC
+)</code></pre>
+        </div>
+    </div>
+    <div class="card-green card">
+        <strong>DAX:</strong> CEILING и FLOOR в DAX принимают второй параметр — значимость (significance). Подробнее на следующем слайде →
+    </div>
+</section>
+
+<!-- Параметр significance в CEILING / FLOOR (DAX) -->
+<section>
+    <h2>Параметр significance в CEILING / FLOOR</h2>
+    <p>Параметр <strong>significance</strong> задаёт <em>кратность округления</em> — шаг сетки, к которой «прилипает» число.</p>
+    <table>
+        <tr><th>Выражение DAX</th><th>Результат</th><th>Пояснение</th></tr>
+        <tr><td><code>CEILING(2.3, 1)</code></td><td>3</td><td>Вверх до целого (кратно 1)</td></tr>
+        <tr><td><code>CEILING(2.3, 0.5)</code></td><td>2.5</td><td>Вверх до ближайшего 0.5</td></tr>
+        <tr><td><code>CEILING(2.3, 5)</code></td><td>5</td><td>Вверх до кратного 5</td></tr>
+        <tr><td><code>FLOOR(7.8, 1)</code></td><td>7</td><td>Вниз до целого</td></tr>
+        <tr><td><code>FLOOR(7.8, 0.25)</code></td><td>7.75</td><td>Вниз до ближайшего 0.25</td></tr>
+        <tr><td><code>FLOOR(7.8, 5)</code></td><td>5</td><td>Вниз до кратного 5</td></tr>
+    </table>
+    <div class="card-orange card" style="margin-top: 10px;">
+        <strong>В PostgreSQL</strong> у <code>CEIL()</code> / <code>FLOOR()</code> параметра significance нет — они всегда округляют до целого.<br>
+        Аналог с произвольным шагом:
+<pre style="margin: 8px 0 0 0;"><code class="language-sql">-- Аналог CEILING(x, 0.5)
+SELECT CEIL(x / 0.5) * 0.5;
+
+-- Аналог FLOOR(x, 5)
+SELECT FLOOR(x / 5) * 5;</code></pre>
+    </div>
+</section>
+
+<!-- ABS, MOD, POWER, SQRT -->
+<section>
+    <h2>ABS, MOD, POWER, SQRT</h2>
+    <table>
+        <tr><th>Функция SQL</th><th>Функция DAX</th><th>Описание</th></tr>
+        <tr><td><code>ABS(x)</code></td><td><code>ABS(x)</code></td><td>Модуль числа</td></tr>
+        <tr><td><code>MOD(x, y)</code></td><td><code>MOD(x, y)</code></td><td>Остаток от деления</td></tr>
+        <tr><td><code>POWER(x, y)</code></td><td><code>POWER(x, y)</code></td><td>Возведение в степень</td></tr>
+        <tr><td><code>SQRT(x)</code></td><td><code>SQRT(x)</code></td><td>Квадратный корень</td></tr>
+        <tr><td><code>LN(x)</code></td><td><code>LN(x)</code></td><td>Натуральный логарифм</td></tr>
+        <tr><td><code>LOG(x, base)</code></td><td><code>LOG(x, base)</code></td><td>Логарифм по основанию</td></tr>
+        <tr><td><code>PI()</code></td><td><code>PI()</code></td><td>Число Пи</td></tr>
+    </table>
+    <div class="card">
+        <strong>Совпадение:</strong> Большинство математических функций одинаковы в SQL и DAX!
+    </div>
+</section>
+
+<!-- Пример: Отклонение от нормы -->
+<section>
+    <h2>Пример: Отклонение содержания Fe от нормы</h2>
+<pre><code class="language-sql">-- Абсолютное отклонение от целевого содержания Fe (60%)
+SELECT
+    sample_number,
+    fe_content,
+    ABS(fe_content - 60.0)        AS abs_deviation,
+    POWER(fe_content - 60.0, 2)   AS squared_deviation,
+    SQRT(POWER(fe_content - 60.0, 2)) AS rmse_component
+FROM fact_ore_quality
+WHERE date_id BETWEEN 20240301 AND 20240331
+ORDER BY abs_deviation DESC
+LIMIT 10;</code></pre>
+    <div class="card-orange card">
+        <strong>Бизнес-смысл:</strong> Целевое содержание Fe = 60%. Отклонение влияет на сортность руды и стоимость продукции.
+    </div>
+</section>
+
+<!-- SIGN, RANDOM -->
+<section>
+    <h2>Дополнительные: SIGN, RANDOM</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- SIGN: определяем направление отклонения
+SELECT
+    sample_number,
+    fe_content - 60.0 AS deviation,
+    SIGN(fe_content - 60.0) AS direction
+    -- -1 = ниже нормы, 0 = норма, 1 = выше
+FROM fact_ore_quality
+WHERE shift_id = 1
+  AND date_id = 20240315;
+
+-- RANDOM: выборка 3 случайных проб
+SELECT sample_number, fe_content
+FROM fact_ore_quality
+ORDER BY RANDOM()
+LIMIT 3;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">// SIGN
+EVALUATE
+ADDCOLUMNS(
+  FILTER(fact_ore_quality,
+    fact_ore_quality[shift_id] = 1
+    && fact_ore_quality[date_id] = 20240315),
+  "Отклонение",
+    fact_ore_quality[fe_content] - 60,
+  "Направление",
+    SIGN(fact_ore_quality[fe_content] - 60)
+)
+
+// RAND (DAX) — случайное число
+EVALUATE
+ROW("Случайное", RAND())</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- Вопрос для обсуждения 1 -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card" style="font-size: 1em; padding: 20px;">
+        <p><strong>Вопрос:</strong> На предприятии «Руда+» содержание Fe в руде колеблется от 48% до 67%. Какие математические функции вы бы использовали для:</p>
+        <ol>
+            <li>Округления результатов анализов до 1 десятичного знака в отчёте?</li>
+            <li>Вычисления среднеквадратичного отклонения содержания Fe от целевого?</li>
+            <li>Определения, выше или ниже нормы результат анализа?</li>
+        </ol>
+        <p class="small-text">Время на обсуждение: 3 минуты</p>
+    </div>
+</section>
+
+<!-- Практика: Часть 1 — Математические функции -->
+<section>
+    <div style="background: #FFF3E0; border-left: 4px solid #ED7D31; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 0.8em;">
+        📋 <strong>Практика:</strong> practice.md → Часть 1 — Математические функции (шаги 1.1–1.3): ROUND, ABS, POWER, SQRT на данных качества руды
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 2: АГРЕГАТНЫЕ ФУНКЦИИ ==================== -->
+<section>
+    <h2>Часть 2. Агрегатные функции — углублённый обзор</h2>
+    <p>Выходим за рамки базового SUM / COUNT</p>
+    <div class="card">
+        <strong>Что нового:</strong> STRING_AGG, ARRAY_AGG, агрегаты с FILTER, статистические функции
+    </div>
+</section>
+
+<!-- Базовые агрегаты: напоминание -->
+<section>
+    <h2>Базовые агрегаты: SQL vs DAX</h2>
+    <table>
+        <tr><th>SQL</th><th>DAX</th><th>Описание</th></tr>
+        <tr><td><code>SUM(col)</code></td><td><code>SUM(table[col])</code></td><td>Сумма</td></tr>
+        <tr><td><code>AVG(col)</code></td><td><code>AVERAGE(table[col])</code></td><td>Среднее арифметическое</td></tr>
+        <tr><td><code>COUNT(col)</code></td><td><code>COUNT(table[col])</code></td><td>Кол-во не-NULL значений</td></tr>
+        <tr><td><code>COUNT(*)</code></td><td><code>COUNTROWS(table)</code></td><td>Кол-во строк</td></tr>
+        <tr><td><code>MIN(col)</code></td><td><code>MIN(table[col])</code></td><td>Минимум</td></tr>
+        <tr><td><code>MAX(col)</code></td><td><code>MAX(table[col])</code></td><td>Максимум</td></tr>
+        <tr><td><code>COUNT(DISTINCT col)</code></td><td><code>DISTINCTCOUNT(table[col])</code></td><td>Кол-во уникальных</td></tr>
+    </table>
+    <div class="card-orange card">
+        <strong>Внимание:</strong> В DAX нет <code>AVG</code> — используйте <code>AVERAGE</code>. И нет <code>COUNT(*)</code> — используйте <code>COUNTROWS</code>.
+    </div>
+</section>
+
+<!-- Пример: Сводка добычи за март -->
+<section>
+    <h2>Пример: Сводка добычи за март 2024</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">SELECT
+    COUNT(*)             AS total_records,
+    COUNT(DISTINCT equipment_id)
+                         AS unique_equipment,
+    SUM(tons_mined)      AS total_tons,
+    AVG(tons_mined)      AS avg_tons,
+    MIN(tons_mined)      AS min_tons,
+    MAX(tons_mined)      AS max_tons,
+    ROUND(AVG(operating_hours), 2)
+                         AS avg_hours
+FROM fact_production
+WHERE date_id BETWEEN 20240301
+                   AND 20240331;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+VAR _data =
+  FILTER(fact_production,
+    fact_production[date_id] >= 20240301
+    && fact_production[date_id] <= 20240331)
+RETURN
+ROW(
+  "Записей",  COUNTROWS(_data),
+  "Обор-ие",  DISTINCTCOUNT(
+    fact_production[equipment_id]),
+  "Всего т",  CALCULATE(
+    SUM(fact_production[tons_mined]),
+    _data),
+  "Ср. т",    CALCULATE(
+    AVERAGE(fact_production[tons_mined]),
+    _data),
+  "Мин. т",   CALCULATE(
+    MIN(fact_production[tons_mined]),
+    _data),
+  "Макс. т",  CALCULATE(
+    MAX(fact_production[tons_mined]),
+    _data)
+)</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- STRING_AGG -->
+<section>
+    <h2>STRING_AGG — конкатенация строк</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Список оборудования каждой шахты одной строкой
+SELECT
+    m.mine_name,
+    STRING_AGG(
+        e.equipment_name,
+        ', '
+        ORDER BY e.equipment_name
+    ) AS equipment_list,
+    COUNT(*) AS total
+FROM dim_equipment e
+JOIN dim_mine m ON e.mine_id = m.mine_id
+WHERE e.status = 'active'
+GROUP BY m.mine_name;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">// CONCATENATEX — аналог STRING_AGG
+EVALUATE
+ADDCOLUMNS(
+  VALUES(dim_mine[mine_name]),
+  "Оборудование",
+    CONCATENATEX(
+      RELATEDTABLE(dim_equipment),
+      dim_equipment[equipment_name],
+      ", ",
+      dim_equipment[equipment_name], ASC
+    ),
+  "Всего",
+    COUNTROWS(
+      RELATEDTABLE(dim_equipment))
+)</code></pre>
+        </div>
+    </div>
+    <div class="card">
+        <strong>STRING_AGG</strong> (SQL) = <strong>CONCATENATEX</strong> (DAX). Оба поддерживают сортировку.
+    </div>
+</section>
+
+<!-- ARRAY_AGG -->
+<section>
+    <h2>ARRAY_AGG — специфика PostgreSQL</h2>
+<pre><code class="language-sql">-- Массив уникальных дат добычи по каждому оператору
+SELECT
+    o.last_name || ' ' || o.first_name AS operator_name,
+    ARRAY_AGG(DISTINCT fp.date_id ORDER BY fp.date_id) AS work_dates,
+    ARRAY_LENGTH(
+        ARRAY_AGG(DISTINCT fp.date_id), 1
+    ) AS days_worked
+FROM fact_production fp
+JOIN dim_operator o ON fp.operator_id = o.operator_id
+WHERE fp.date_id BETWEEN 20240301 AND 20240307
+GROUP BY o.last_name, o.first_name
+ORDER BY days_worked DESC;</code></pre>
+    <div class="card-orange card">
+        <strong>Только PostgreSQL!</strong> ARRAY_AGG возвращает массив. В DAX прямого аналога нет — используйте CONCATENATEX или промежуточные таблицы.
+    </div>
+</section>
+
+<!-- Агрегаты с FILTER (PostgreSQL 9.4+) -->
+<section>
+    <h2>Агрегаты с FILTER (PostgreSQL)</h2>
+<pre><code class="language-sql">-- Условная агрегация: добыча по сменам в одном запросе
+SELECT
+    d.full_date,
+    COUNT(*) FILTER (WHERE fp.shift_id = 1) AS records_shift_1,
+    COUNT(*) FILTER (WHERE fp.shift_id = 2) AS records_shift_2,
+    SUM(fp.tons_mined) FILTER (WHERE fp.shift_id = 1) AS tons_shift_1,
+    SUM(fp.tons_mined) FILTER (WHERE fp.shift_id = 2) AS tons_shift_2,
+    ROUND(
+        AVG(fp.tons_mined) FILTER (WHERE fp.shift_id = 1), 2
+    ) AS avg_tons_shift_1
+FROM fact_production fp
+JOIN dim_date d ON fp.date_id = d.date_id
+WHERE d.year = 2024 AND d.month = 3
+GROUP BY d.full_date
+ORDER BY d.full_date;</code></pre>
+    <div class="card">
+        <strong>FILTER-клаузула</strong> в агрегатах PostgreSQL — мощная альтернатива CASE WHEN внутри SUM/COUNT.
+    </div>
+</section>
+
+<!-- Статистические функции -->
+<section>
+    <h2>Статистические функции</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">SELECT
+    ROUND(STDDEV(fe_content), 3)
+        AS std_dev,
+    ROUND(VARIANCE(fe_content), 3)
+        AS variance,
+    ROUND(
+        PERCENTILE_CONT(0.5)
+        WITHIN GROUP (ORDER BY fe_content),
+    2) AS median_fe,
+    MODE() WITHIN GROUP
+        (ORDER BY ore_grade_id)
+        AS mode_grade
+FROM fact_ore_quality
+WHERE date_id BETWEEN 20240301
+                   AND 20240331;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+VAR _data =
+  FILTER(fact_ore_quality,
+    fact_ore_quality[date_id] >= 20240301
+    && fact_ore_quality[date_id] <= 20240331)
+RETURN
+ROW(
+  "Станд. откл.",
+    CALCULATE(
+      STDEV.S(fact_ore_quality[fe_content]),
+      _data),
+  "Медиана Fe",
+    CALCULATE(
+      MEDIAN(fact_ore_quality[fe_content]),
+      _data),
+  "Перцентиль 90",
+    CALCULATE(
+      PERCENTILEX.INC(
+        fact_ore_quality,
+        fact_ore_quality[fe_content], 0.9),
+      _data)
+)</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- Квиз: агрегаты -->
+<section>
+    <h2>Мини-квиз: Агрегатные функции</h2>
+    <p><strong>Вопрос 1:</strong> Какой результат вернёт запрос?</p>
+<pre><code class="language-sql">SELECT COUNT(sio2_content), COUNT(*), COUNT(DISTINCT ore_grade_id)
+FROM fact_ore_quality
+-- Допустим: 100 строк, в 15 строках sio2_content = NULL, 4 уникальных сорта</code></pre>
+    <div class="quiz-option">A) 100, 100, 4</div>
+    <div class="quiz-option">B) 85, 100, 4</div>
+    <div class="quiz-option">C) 85, 85, 4</div>
+    <div class="quiz-option">D) 100, 85, 4</div>
+    <div class="fragment card-green card" style="margin-top: 10px;">
+        <strong>Ответ: B)</strong> COUNT(col) пропускает NULL, COUNT(*) считает все строки, COUNT(DISTINCT col) — уникальные не-NULL.
+    </div>
+</section>
+
+<!-- Квиз: агрегаты 2 -->
+<section>
+    <h2>Мини-квиз: Агрегатные функции (2)</h2>
+    <p><strong>Вопрос 2:</strong> Чем отличаются эти два запроса?</p>
+<pre><code class="language-sql">-- Запрос A
+SELECT AVG(tons_mined) FROM fact_production;
+
+-- Запрос B
+SELECT SUM(tons_mined) / COUNT(*) FROM fact_production;</code></pre>
+    <div class="quiz-option">A) Результат всегда одинаковый</div>
+    <div class="quiz-option">B) Различие при наличии NULL в tons_mined</div>
+    <div class="quiz-option">C) Различие в типе результата</div>
+    <div class="fragment card-green card" style="margin-top: 10px;">
+        <strong>Ответ: B)</strong> AVG пропускает NULL (делит на кол-во не-NULL). SUM/COUNT(*) делит сумму на все строки, включая NULL. Если tons_mined NOT NULL — результат одинаков.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 3: ФУНКЦИИ ПРЕОБРАЗОВАНИЯ ==================== -->
+<section>
+    <h2>Часть 3. Функции преобразования типов</h2>
+    <p>Явное и неявное приведение типов данных</p>
+    <div class="card-orange card">
+        <strong>Зачем?</strong> Объединение данных из разных источников, форматирование отчётов, корректные вычисления с разнотипными данными.
+    </div>
+</section>
+
+<!-- CAST и :: -->
+<section>
+    <h2>CAST и оператор :: (PostgreSQL)</h2>
+<pre><code class="language-sql">-- Стандартный синтаксис CAST
+SELECT CAST(date_id AS VARCHAR)     AS date_str,
+       CAST('123.45' AS NUMERIC)    AS num_value,
+       CAST(tons_mined AS INTEGER)  AS tons_int
+FROM fact_production
+LIMIT 3;
+
+-- Краткий синтаксис PostgreSQL ::
+SELECT date_id::VARCHAR              AS date_str,
+       '123.45'::NUMERIC             AS num_value,
+       tons_mined::INTEGER           AS tons_int
+FROM fact_production
+LIMIT 3;</code></pre>
+    <div class="card">
+        <strong>::</strong> — краткий оператор приведения типа, специфичный для PostgreSQL. <strong>CAST</strong> — стандарт SQL (работает везде).
+    </div>
+</section>
+
+<!-- Типы преобразований -->
+<section>
+    <h2>Типичные преобразования в PostgreSQL</h2>
+    <table>
+        <tr><th>Из</th><th>В</th><th>Пример</th><th>Результат</th></tr>
+        <tr><td>INTEGER</td><td>VARCHAR</td><td><code>20240315::VARCHAR</code></td><td>'20240315'</td></tr>
+        <tr><td>VARCHAR</td><td>INTEGER</td><td><code>'2024'::INTEGER</code></td><td>2024</td></tr>
+        <tr><td>NUMERIC</td><td>INTEGER</td><td><code>56.78::INTEGER</code></td><td>57</td></tr>
+        <tr><td>VARCHAR</td><td>DATE</td><td><code>'2024-03-15'::DATE</code></td><td>2024-03-15</td></tr>
+        <tr><td>VARCHAR</td><td>NUMERIC</td><td><code>'12.5'::NUMERIC(5,2)</code></td><td>12.50</td></tr>
+        <tr><td>BOOLEAN</td><td>INTEGER</td><td><code>TRUE::INTEGER</code></td><td>1</td></tr>
+        <tr><td>TIMESTAMP</td><td>DATE</td><td><code>NOW()::DATE</code></td><td>2024-03-15</td></tr>
+    </table>
+</section>
+
+<!-- TO_NUMBER, TO_DATE, TO_TIMESTAMP -->
+<section>
+    <h2>TO_NUMBER, TO_DATE, TO_TIMESTAMP</h2>
+<pre><code class="language-sql">-- TO_DATE: преобразование строки в дату по шаблону
+SELECT TO_DATE('15.03.2024', 'DD.MM.YYYY') AS parsed_date;
+
+-- TO_TIMESTAMP: преобразование строки во временну́ю метку
+SELECT TO_TIMESTAMP('15-03-2024 14:30:00', 'DD-MM-YYYY HH24:MI:SS')
+    AS parsed_ts;
+
+-- TO_NUMBER: преобразование строки в число по шаблону
+SELECT TO_NUMBER('1 234,56', '9G999D99') AS parsed_num;
+
+-- TO_CHAR: обратное преобразование — число/дата в строку
+SELECT TO_CHAR(NOW(), 'DD.MM.YYYY HH24:MI')    AS formatted_now,
+       TO_CHAR(12345.6, 'FM999G999D00')         AS formatted_num;</code></pre>
+    <div class="card">
+        <strong>Шаблоны:</strong> DD — день, MM — месяц, YYYY — год, HH24 — час (24ч), MI — минуты, 9 — цифра, D — разделитель дробной части, G — разделитель тысяч.
+    </div>
+</section>
+
+<!-- Практика: Часть 2 + 3 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 2 — Агрегатные функции (шаги 2.1–2.4), Часть 3 — Преобразование типов (шаги 3.1–3.3)</p>
+        <p><strong>Задание:</strong> Выполните сводку добычи с STRING_AGG, условные агрегаты с FILTER, статистические функции. Попрактикуйтесь с CAST и TO_CHAR.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 12–15 минут</em></p>
+</section>
+
+<!-- Пример: date_id в дату -->
+<section>
+    <h2>Пример: Преобразование date_id в дату</h2>
+<pre><code class="language-sql">-- date_id хранится как INTEGER (20240315)
+-- Преобразуем в полноценную дату
+SELECT
+    date_id,
+    TO_DATE(date_id::VARCHAR, 'YYYYMMDD') AS real_date,
+    TO_CHAR(
+        TO_DATE(date_id::VARCHAR, 'YYYYMMDD'),
+        'DD Mon YYYY'
+    ) AS formatted_date
+FROM fact_production
+WHERE date_id BETWEEN 20240301 AND 20240305
+GROUP BY date_id
+ORDER BY date_id;</code></pre>
+    <div class="card-orange card">
+        <strong>Практика:</strong> Суррогатный ключ date_id (INT) удобен для индексов и партиционирования, но для форматирования отчётов нужно преобразование.
+    </div>
+</section>
+
+<!-- SQL vs DAX: преобразование типов -->
+<section>
+    <h2>Преобразование типов: SQL vs DAX</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- CAST / ::
+SELECT
+    CAST(tons_mined AS INTEGER),
+    date_id::VARCHAR,
+    TO_CHAR(NOW(), 'DD.MM.YYYY'),
+    TO_DATE('15.03.2024', 'DD.MM.YYYY');
+</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">// CONVERT — основная функция
+EVALUATE
+ROW(
+  "Целое", CONVERT(56.78, INTEGER),
+  "Текст", CONVERT(20240315, STRING),
+  "Формат даты",
+    FORMAT(TODAY(), "DD.MM.YYYY"),
+  "Формат числа",
+    FORMAT(12345.6, "#,##0.00")
+)
+
+// INT, VALUE — быстрые функции
+// INT(56.78) = 56  (усечение!)
+// VALUE("123.45") = 123.45</code></pre>
+        </div>
+    </div>
+    <div class="card">
+        <strong>Ключевое отличие:</strong> В DAX для форматирования используется <code>FORMAT()</code>, а не <code>TO_CHAR</code>. Для преобразования — <code>CONVERT()</code>.
+    </div>
+</section>
+
+<!-- Implicit vs Explicit -->
+<section>
+    <h2>Неявное vs явное преобразование</h2>
+    <div class="key-concept">
+        <h3>Явное преобразование (рекомендуется)</h3>
+        <p>Программист указывает тип: <code>CAST(x AS INTEGER)</code> или <code>x::INTEGER</code></p>
+    </div>
+    <div class="card-orange card">
+        <h3 style="margin-top: 0;">Неявное преобразование (осторожно!)</h3>
+        <p>СУБД автоматически приводит типы при сравнении / операциях</p>
+<pre><code class="language-sql">-- PostgreSQL: неявное приведение при конкатенации
+SELECT 'Добыто: ' || tons_mined || ' тонн' -- NUMERIC -> TEXT автоматически
+FROM fact_production LIMIT 1;
+
+-- Ошибка! PostgreSQL строже MySQL:
+-- SELECT '10' + 5;  -- Ошибка в PostgreSQL!
+SELECT '10'::INTEGER + 5; -- Правильно: 15</code></pre>
+    </div>
+</section>
+
+<!-- Приоритет неявных преобразований PostgreSQL -->
+<section>
+    <h2>Приоритет неявных преобразований (PostgreSQL)</h2>
+    <p>При смешивании типов PostgreSQL приводит «младший» тип к «старшему» по иерархии:</p>
+    <table>
+        <tr><th>Приоритет</th><th>Тип</th><th>Пояснение</th></tr>
+        <tr><td>1 (высший)</td><td><code>NUMERIC / DECIMAL</code></td><td>Точная арифметика — «побеждает» в вычислениях</td></tr>
+        <tr><td>2</td><td><code>DOUBLE PRECISION</code></td><td>Приближённое число с плавающей точкой</td></tr>
+        <tr><td>3</td><td><code>REAL</code></td><td>4-байтовое число с плавающей точкой</td></tr>
+        <tr><td>4</td><td><code>BIGINT</code></td><td>8-байтовое целое</td></tr>
+        <tr><td>5</td><td><code>INTEGER</code></td><td>4-байтовое целое</td></tr>
+        <tr><td>6 (низший)</td><td><code>SMALLINT</code></td><td>2-байтовое целое</td></tr>
+    </table>
+    <div class="card-green card" style="margin-top: 10px;">
+        <strong>Правило:</strong> при операции <code>INTEGER + NUMERIC</code> → результат <code>NUMERIC</code>.<br>
+        При <code>INTEGER + DOUBLE PRECISION</code> → результат <code>DOUBLE PRECISION</code>.
+    </div>
+</section>
+
+<!-- Примеры неявных преобразований PostgreSQL -->
+<section>
+    <h2>Примеры неявных преобразований (PostgreSQL)</h2>
+<pre><code class="language-sql">-- 1. INTEGER + NUMERIC → NUMERIC
+SELECT 10 + 2.5;              -- результат: 12.5 (NUMERIC)
+
+-- 2. INTEGER / INTEGER → INTEGER (потеря точности!)
+SELECT 7 / 2;                 -- результат: 3, а не 3.5!
+SELECT 7 / 2.0;               -- результат: 3.5 (NUMERIC)
+
+-- 3. Конкатенация: число → текст автоматически
+SELECT 'Смена #' || shift_id   -- shift_id (INT) → TEXT
+FROM fact_production LIMIT 1;
+
+-- 4. Сравнение DATE и TIMESTAMP → TIMESTAMP
+SELECT * FROM fact_production
+WHERE production_date > '2024-03-15';
+-- строка '2024-03-15' → DATE неявно</code></pre>
+    <div class="card-orange card">
+        <strong>Ловушка:</strong> целочисленное деление <code>7 / 2 = 3</code>. Чтобы получить дробь, хотя бы один операнд должен быть <code>NUMERIC</code> или <code>FLOAT</code>.
+    </div>
+</section>
+
+<!-- Неявные преобразования в DAX -->
+<section>
+    <h2>Неявные преобразования в DAX</h2>
+    <p>DAX выполняет неявные преобразования <strong>гораздо агрессивнее</strong>, чем PostgreSQL:</p>
+    <table>
+        <tr><th>Операция</th><th>DAX-поведение</th><th>PostgreSQL</th></tr>
+        <tr><td><code>"10" + 5</code></td><td>15 (текст → число автоматически)</td><td>Ошибка!</td></tr>
+        <tr><td><code>"3.14" * 2</code></td><td>6.28 (текст → число)</td><td>Ошибка!</td></tr>
+        <tr><td><code>TRUE + TRUE</code></td><td>2 (TRUE = 1, FALSE = 0)</td><td>2 (аналогично)</td></tr>
+        <tr><td><code>1 &amp; " шт."</code></td><td>"1 шт." (число → текст для &amp;)</td><td>Используется ||, аналогично</td></tr>
+        <tr><td><code>"2024-03-15" + 1</code></td><td>Дата + 1 день (текст → дата → число)</td><td>Ошибка без CAST</td></tr>
+    </table>
+    <div class="card-orange card" style="margin-top: 10px;">
+        <strong>Осторожно:</strong> «Удобство» DAX может маскировать ошибки в данных. Строка <code>"N/A"</code> вместо числа вызовет ошибку только в момент вычисления, а не при загрузке.
+    </div>
+</section>
+
+<!-- Приоритет типов в DAX -->
+<section>
+    <h2>Приоритет типов в DAX</h2>
+    <p>При смешивании типов DAX приводит оба операнда к типу с <strong>наивысшим приоритетом</strong>:</p>
+    <table>
+        <tr><th>Приоритет</th><th>Тип DAX</th><th>Аналог SQL</th></tr>
+        <tr><td>1 (высший)</td><td><code>Currency</code> (фикс. точка)</td><td><code>NUMERIC(19,4)</code></td></tr>
+        <tr><td>2</td><td><code>Decimal Number</code> (Double)</td><td><code>DOUBLE PRECISION</code></td></tr>
+        <tr><td>3</td><td><code>Whole Number</code> (Int64)</td><td><code>BIGINT</code></td></tr>
+        <tr><td>4</td><td><code>DateTime</code></td><td><code>TIMESTAMP</code></td></tr>
+        <tr><td>5</td><td><code>Date</code></td><td><code>DATE</code></td></tr>
+        <tr><td>6</td><td><code>Boolean</code> (TRUE/FALSE)</td><td><code>BOOLEAN</code></td></tr>
+        <tr><td>7 (низший)</td><td><code>Text</code> (String)</td><td><code>VARCHAR</code></td></tr>
+    </table>
+    <div class="card-green card" style="margin-top: 10px;">
+        <strong>Пример:</strong> <code>Whole Number + Decimal Number</code> → результат <code>Decimal Number</code>.<br>
+        Но для оператора <code>&amp;</code> (конкатенация) оба операнда всегда приводятся к <code>Text</code>.
+    </div>
+</section>
+
+<!-- Сравнение подходов: SQL vs DAX -->
+<section>
+    <h2>Неявные преобразования: SQL vs DAX — выводы</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">PostgreSQL</h3>
+            <ul>
+                <li><strong>Строгий подход</strong> — ошибка при несовместимых типах</li>
+                <li>Числовые типы приводятся автоматически (INT → NUMERIC)</li>
+                <li>Текст → число: <strong>только явно</strong> через CAST</li>
+                <li>Конкатенация <code>||</code>: число → текст автоматически</li>
+                <li>Целочисленное деление сохраняется</li>
+            </ul>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+            <ul>
+                <li><strong>Гибкий подход</strong> — пытается преобразовать автоматически</li>
+                <li>Текст «10» + число 5 = 15 (без ошибки)</li>
+                <li>Boolean → число: TRUE = 1, FALSE = 0</li>
+                <li>Конкатенация <code>&amp;</code>: всё → текст</li>
+                <li>Нет целочисленного деления: 7 / 2 = 3.5</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card card-orange" style="margin-top: 10px;">
+        <strong>Рекомендация:</strong> Используйте явное преобразование в обоих языках — это делает код читаемым и предсказуемым.
+    </div>
+</section>
+
+<!-- Вопрос для обсуждения 2 -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card" style="font-size: 1em; padding: 20px;">
+        <p><strong>Вопрос:</strong> Почему явное приведение типов предпочтительнее неявного в промышленных системах?</p>
+        <p>Подумайте о сценариях на предприятии «Руда+»:</p>
+        <ul>
+            <li>Данные с датчиков приходят как текстовые строки</li>
+            <li>Суррогатный ключ date_id (INT) нужно сравнить с датой</li>
+            <li>Содержание Fe приходит как '58,7' (с запятой) из CSV-файла</li>
+        </ul>
+        <p class="small-text">Время на обсуждение: 3 минуты</p>
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 4: УСЛОВНАЯ ЛОГИКА ==================== -->
+<section>
+    <h2>Часть 4. Условная логика</h2>
+    <p>CASE WHEN, COALESCE, NULLIF, GREATEST, LEAST</p>
+    <div class="card">
+        <strong>Суть:</strong> Принятие решений внутри запроса — классификация, подстановка значений, защита от ошибок.
+    </div>
+</section>
+
+<!-- CASE WHEN: простая форма -->
+<section>
+    <h2>CASE WHEN — простая форма</h2>
+<pre><code class="language-sql">-- Классификация руды по содержанию Fe
+SELECT
+    sample_number,
+    fe_content,
+    CASE
+        WHEN fe_content >= 65 THEN 'Богатая руда'
+        WHEN fe_content >= 55 THEN 'Средняя руда'
+        WHEN fe_content >= 45 THEN 'Бедная руда'
+        ELSE 'Забалансовая'
+    END AS ore_category,
+    CASE
+        WHEN fe_content >= 60 THEN 'Соответствует'
+        ELSE 'Не соответствует'
+    END AS meets_target
+FROM fact_ore_quality
+WHERE date_id = 20240315
+ORDER BY fe_content DESC;</code></pre>
+    <div class="card-orange card">
+        <strong>Порядок важен!</strong> Условия проверяются сверху вниз. Первое истинное срабатывает. Всегда добавляйте ELSE.
+    </div>
+</section>
+
+<!-- CASE WHEN: поисковая форма vs простая -->
+<section>
+    <h2>Две формы CASE</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 style="text-align: center; color: var(--accent1);">Простая форма</h3>
+<pre><code class="language-sql">-- Сравнение с одним выражением
+SELECT
+    shift_id,
+    CASE shift_id
+        WHEN 1 THEN 'Утренняя'
+        WHEN 2 THEN 'Дневная'
+        WHEN 3 THEN 'Ночная'
+        ELSE 'Неизвестно'
+    END AS shift_name
+FROM fact_production;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 style="text-align: center; color: var(--accent2);">Поисковая форма</h3>
+<pre><code class="language-sql">-- Произвольные условия
+SELECT
+    equipment_id,
+    tons_mined,
+    CASE
+        WHEN tons_mined > 150 THEN 'Высокая'
+        WHEN tons_mined > 100 THEN 'Средняя'
+        WHEN tons_mined > 50  THEN 'Низкая'
+        ELSE 'Критически низкая'
+    END AS productivity
+FROM fact_production;</code></pre>
+        </div>
+    </div>
+    <div class="card">
+        <strong>Простая форма</strong> — когда сравниваем одно поле с конкретными значениями. <strong>Поисковая</strong> — когда нужны диапазоны или разные столбцы.
+    </div>
+</section>
+
+<!-- CASE в агрегатах -->
+<section>
+    <h2>CASE внутри агрегатных функций</h2>
+<pre><code class="language-sql">-- Кросс-табуляция: добыча по категориям качества
+SELECT
+    d.full_date,
+    SUM(CASE WHEN oq.fe_content >= 60 THEN 1 ELSE 0 END) AS good_samples,
+    SUM(CASE WHEN oq.fe_content < 60  THEN 1 ELSE 0 END) AS poor_samples,
+    ROUND(
+        100.0 * SUM(CASE WHEN oq.fe_content >= 60 THEN 1 ELSE 0 END)
+        / NULLIF(COUNT(*), 0),
+    1) AS good_pct
+FROM fact_ore_quality oq
+JOIN dim_date d ON oq.date_id = d.date_id
+WHERE d.year = 2024 AND d.month = 3
+GROUP BY d.full_date
+ORDER BY d.full_date;</code></pre>
+    <div class="card-green card">
+        <strong>Паттерн:</strong> SUM(CASE WHEN ... THEN 1 ELSE 0 END) — подсчёт строк по условию. Альтернатива: COUNT(*) FILTER (WHERE ...) в PostgreSQL.
+    </div>
+</section>
+
+<!-- SQL CASE vs DAX IF/SWITCH -->
+<section>
+    <h2>SQL CASE vs DAX IF / SWITCH</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL: CASE WHEN</h3>
+<pre><code class="language-sql">SELECT
+    fe_content,
+    CASE
+        WHEN fe_content >= 65 THEN 'Богатая'
+        WHEN fe_content >= 55 THEN 'Средняя'
+        WHEN fe_content >= 45 THEN 'Бедная'
+        ELSE 'Забалансовая'
+    END AS category
+FROM fact_ore_quality;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX: IF / SWITCH</h3>
+<pre><code class="language-dax">// IF (вложенный)
+EVALUATE
+ADDCOLUMNS(fact_ore_quality,
+  "Категория",
+    IF(fact_ore_quality[fe_content] >= 65,
+      "Богатая",
+      IF(fact_ore_quality[fe_content] >= 55,
+        "Средняя",
+        IF(fact_ore_quality[fe_content] >= 45,
+          "Бедная",
+          "Забалансовая")))
+)
+
+// SWITCH(TRUE(), ...) — более читаемо
+"Категория" =
+SWITCH(TRUE(),
+  fact_ore_quality[fe_content] >= 65, "Богатая",
+  fact_ore_quality[fe_content] >= 55, "Средняя",
+  fact_ore_quality[fe_content] >= 45, "Бедная",
+  "Забалансовая"
+)</code></pre>
+        </div>
+    </div>
+    <div class="card">
+        <strong>SWITCH(TRUE(), ...)</strong> в DAX — самый близкий аналог поискового CASE WHEN из SQL.
+    </div>
+</section>
+
+<!-- COALESCE -->
+<section>
+    <h2>COALESCE — первое не-NULL значение</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Подстановка значения по умолчанию
+SELECT
+    sample_number,
+    fe_content,
+    COALESCE(sio2_content, 0) AS sio2_safe,
+    COALESCE(al2o3_content, 0) AS al2o3_safe,
+    COALESCE(moisture, 0)     AS moisture_safe,
+    COALESCE(
+        comment,
+        'Комментарий отсутствует'
+    ) AS comment_text
+FROM fact_ore_quality
+WHERE date_id = 20240315;
+
+-- Цепочка: первое непустое
+SELECT COALESCE(
+    sio2_content,
+    al2o3_content,
+    0
+) AS first_non_null;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">// COALESCE (DAX 2021+)
+EVALUATE
+ADDCOLUMNS(
+  FILTER(fact_ore_quality,
+    fact_ore_quality[date_id] = 20240315),
+  "SiO2 безоп.",
+    COALESCE(
+      fact_ore_quality[sio2_content], 0),
+  "Al2O3 безоп.",
+    COALESCE(
+      fact_ore_quality[al2o3_content], 0)
+)
+
+// До COALESCE в DAX использовали:
+// IF(ISBLANK(x), default, x)</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- NULLIF -->
+<section>
+    <h2>NULLIF — защита от деления на ноль</h2>
+<pre><code class="language-sql">-- NULLIF(a, b): возвращает NULL, если a = b, иначе a
+
+-- Расчёт эффективности транспортировки
+SELECT
+    equipment_id,
+    tons_mined,
+    tons_transported,
+    trips_count,
+    -- Без защиты: ошибка при trips_count = 0
+    -- tons_transported / trips_count,
+
+    -- С защитой: NULLIF превращает 0 в NULL, деление на NULL = NULL
+    ROUND(
+        tons_transported / NULLIF(trips_count, 0), 2
+    ) AS tons_per_trip
+FROM fact_production
+WHERE date_id = 20240315;</code></pre>
+    <div class="card">
+        <strong>Паттерн:</strong> <code>x / NULLIF(y, 0)</code> — безопасное деление. Если y = 0, результат NULL вместо ошибки.
+    </div>
+    <div class="card-orange card">
+        <strong>DAX:</strong> Используйте <code>DIVIDE(a, b, alt)</code> — встроенная безопасная дивизия: <code>DIVIDE(tons_transported, trips_count, 0)</code>
+    </div>
+</section>
+
+<!-- DIVIDE в DAX -->
+<section>
+    <h2>Безопасное деление: SQL vs DAX</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Вариант 1: NULLIF
+SELECT
+    tons_transported
+    / NULLIF(trips_count, 0) AS v1,
+
+-- Вариант 2: CASE WHEN
+    CASE
+        WHEN trips_count = 0 THEN NULL
+        ELSE tons_transported
+             / trips_count
+    END AS v2,
+
+-- Вариант 3: COALESCE + NULLIF
+    COALESCE(
+        tons_transported
+        / NULLIF(trips_count, 0),
+        0
+    ) AS v3
+FROM fact_production;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">// DIVIDE — одна функция решает всё!
+EVALUATE
+ADDCOLUMNS(
+  fact_production,
+  "Тонн/рейс",
+    DIVIDE(
+      fact_production[tons_transported],
+      fact_production[trips_count],
+      0  -- альтернативный результат при /0
+    )
+)
+
+// DIVIDE(числитель, знаменатель [, альт])
+// Если знаменатель = 0 или BLANK,
+// возвращает альт (по умолчанию BLANK)</code></pre>
+        </div>
+    </div>
+    <div class="card-green card">
+        <strong>Преимущество DAX:</strong> DIVIDE() — чище и безопаснее. В SQL приходится комбинировать NULLIF + COALESCE.
+    </div>
+</section>
+
+<!-- GREATEST / LEAST -->
+<section>
+    <h2>GREATEST / LEAST</h2>
+<pre><code class="language-sql">-- GREATEST: наибольшее из списка значений
+-- LEAST: наименьшее из списка значений
+
+SELECT
+    sample_number,
+    fe_content,
+    sio2_content,
+    al2o3_content,
+    -- Максимальное содержание примеси
+    GREATEST(
+        COALESCE(sio2_content, 0),
+        COALESCE(al2o3_content, 0)
+    ) AS max_impurity,
+    -- Ограничение значения в диапазоне (clamp)
+    GREATEST(LEAST(fe_content, 70.0), 40.0) AS fe_clamped
+    -- Результат будет в диапазоне [40, 70]
+FROM fact_ore_quality
+WHERE date_id = 20240315;</code></pre>
+    <div class="card-orange card">
+        <strong>DAX:</strong> Прямых аналогов GREATEST/LEAST нет. Используйте <code>MAX(a, b)</code> / <code>MIN(a, b)</code> в вычисляемых столбцах или вложенные IF.
+    </div>
+</section>
+
+<!-- Вопрос для обсуждения 3 -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card" style="font-size: 1em; padding: 20px;">
+        <p><strong>Ситуация:</strong> Инженер качества «Руда+» запрашивает отчёт, где нужно:</p>
+        <ol>
+            <li>Классифицировать каждую пробу по сортности (4 категории)</li>
+            <li>Заменить NULL в содержании SiO2 на среднее значение</li>
+            <li>Рассчитать процент проб, соответствующих целевому Fe &ge; 60%</li>
+            <li>Безопасно рассчитать отношение Fe/SiO2</li>
+        </ol>
+        <p><strong>Какие функции из Части 4 вы используете для каждого пункта?</strong></p>
+        <p class="small-text">Время на обсуждение: 5 минут</p>
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 5: РАБОТА С NULL ==================== -->
+<section>
+    <h2>Часть 5. Работа с NULL</h2>
+    <p>NULL — не значение, а отсутствие значения</p>
+    <div class="key-concept">
+        <h3>Три правила NULL</h3>
+        <ol>
+            <li><strong>NULL = NULL</strong> — не TRUE и не FALSE, а <strong>UNKNOWN</strong></li>
+            <li><strong>NULL в арифметике:</strong> любая операция с NULL = NULL</li>
+            <li><strong>NULL в агрегатах:</strong> SUM, AVG, COUNT(col) игнорируют NULL</li>
+        </ol>
+    </div>
+</section>
+
+<!-- IS NULL / IS NOT NULL -->
+<section>
+    <h2>IS NULL / IS NOT NULL</h2>
+<pre><code class="language-sql">-- Найти незавершённые простои (end_time не заполнен)
+SELECT
+    d.downtime_id,
+    e.equipment_name,
+    d.start_time,
+    d.end_time,       -- NULL = простой продолжается
+    d.duration_min     -- NULL = длительность не рассчитана
+FROM fact_equipment_downtime d
+JOIN dim_equipment e ON d.equipment_id = e.equipment_id
+WHERE d.end_time IS NULL;
+
+-- Пробы, где SiO2 не определён
+SELECT COUNT(*) AS total,
+       COUNT(sio2_content) AS with_sio2,
+       COUNT(*) - COUNT(sio2_content) AS without_sio2
+FROM fact_ore_quality;</code></pre>
+    <div class="card-orange card">
+        <strong>НИКОГДА:</strong> <code>WHERE sio2_content = NULL</code> — всегда возвращает 0 строк! Используйте <code>IS NULL</code>.
+    </div>
+</section>
+
+<!-- NULL в DAX: BLANK -->
+<section>
+    <h2>NULL в DAX: BLANK()</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL: NULL</h3>
+<pre><code class="language-sql">-- Проверка на NULL
+SELECT *
+FROM fact_ore_quality
+WHERE sio2_content IS NULL;
+
+-- Подстановка
+SELECT COALESCE(sio2_content, 0)
+FROM fact_ore_quality;
+
+-- Установка NULL
+UPDATE fact_ore_quality
+SET sio2_content = NULL
+WHERE quality_id = 5;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX: BLANK</h3>
+<pre><code class="language-dax">// Проверка: ISBLANK
+EVALUATE
+FILTER(fact_ore_quality,
+  ISBLANK(fact_ore_quality[sio2_content])
+)
+
+// Подстановка: COALESCE или IF
+EVALUATE
+ADDCOLUMNS(fact_ore_quality,
+  "SiO2 безоп.",
+    COALESCE(
+      fact_ore_quality[sio2_content], 0)
+)
+
+// Создание BLANK
+"Результат" =
+IF(condition, value, BLANK())</code></pre>
+        </div>
+    </div>
+    <div class="card">
+        <strong>SQL NULL</strong> = <strong>DAX BLANK()</strong>. Проверка: <code>IS NULL</code> = <code>ISBLANK()</code>. Важно: в DAX <code>BLANK() + 5 = 5</code>, а в SQL <code>NULL + 5 = NULL</code>!
+    </div>
+</section>
+
+<!-- Подводные камни NULL -->
+<section>
+    <h2>Подводные камни NULL</h2>
+<pre><code class="language-sql">-- 1. NOT IN с NULL — ОПАСНО!
+-- Если подзапрос возвращает NULL, NOT IN вернёт пустой результат
+SELECT * FROM dim_equipment
+WHERE equipment_id NOT IN (1, 2, NULL);
+-- Вернёт 0 строк! Используйте NOT EXISTS или добавьте фильтр
+
+-- 2. UNION и NULL
+SELECT NULL UNION SELECT NULL;
+-- Вернёт одну строку (UNION считает NULL = NULL для дедупликации)
+
+-- 3. ORDER BY и NULL
+SELECT equipment_name, sio2_content
+FROM fact_ore_quality
+ORDER BY sio2_content NULLS LAST; -- или NULLS FIRST
+
+-- 4. COALESCE в WHERE
+SELECT * FROM fact_ore_quality
+WHERE COALESCE(sio2_content, 0) > 5; -- Работает, но не использует индекс!</code></pre>
+    <div class="card-orange card">
+        <strong>Правило:</strong> <code>NULLS FIRST / NULLS LAST</code> в ORDER BY — специфика PostgreSQL. По умолчанию NULL идут последними при ASC.
+    </div>
+</section>
+
+<!-- Полная таблица: SQL vs DAX NULL -->
+<section>
+    <h2>Сравнение: работа с NULL / BLANK</h2>
+    <table>
+        <tr><th>Операция</th><th>SQL (PostgreSQL)</th><th>DAX</th></tr>
+        <tr><td>Проверка</td><td><code>IS NULL / IS NOT NULL</code></td><td><code>ISBLANK() / NOT ISBLANK()</code></td></tr>
+        <tr><td>Подстановка</td><td><code>COALESCE(x, def)</code></td><td><code>COALESCE(x, def)</code> / <code>IF(ISBLANK(x), def, x)</code></td></tr>
+        <tr><td>Создание</td><td><code>NULL</code></td><td><code>BLANK()</code></td></tr>
+        <tr><td>Обнуление</td><td><code>NULLIF(x, val)</code></td><td>нет аналога, используйте IF</td></tr>
+        <tr><td>Арифметика</td><td><code>NULL + 5 = NULL</code></td><td><code>BLANK() + 5 = 5</code></td></tr>
+        <tr><td>Сравнение</td><td><code>NULL = NULL &rarr; UNKNOWN</code></td><td><code>BLANK() = BLANK() &rarr; TRUE</code></td></tr>
+        <tr><td>Сортировка</td><td><code>NULLS FIRST/LAST</code></td><td>BLANK сортируется первым</td></tr>
+    </table>
+    <div class="card-orange card">
+        <strong>Критическая разница:</strong> В DAX BLANK() + 5 = 5, а в SQL NULL + 5 = NULL. Это может привести к разным результатам!
+    </div>
+</section>
+
+<!-- Квиз: NULL -->
+<section>
+    <h2>Мини-квиз: NULL</h2>
+    <p><strong>Вопрос:</strong> Что вернёт этот запрос?</p>
+<pre><code class="language-sql">SELECT
+    CASE WHEN NULL = NULL      THEN 'Да' ELSE 'Нет' END AS test1,
+    CASE WHEN NULL IS NULL     THEN 'Да' ELSE 'Нет' END AS test2,
+    CASE WHEN NOT (NULL = 1)   THEN 'Да' ELSE 'Нет' END AS test3,
+    COALESCE(NULL, NULL, 'OK') AS test4,
+    NULLIF(5, 5)               AS test5;</code></pre>
+    <div class="quiz-option">A) 'Да', 'Да', 'Да', 'OK', NULL</div>
+    <div class="quiz-option">B) 'Нет', 'Да', 'Нет', 'OK', NULL</div>
+    <div class="quiz-option">C) 'Нет', 'Да', 'Да', NULL, 5</div>
+    <div class="quiz-option">D) NULL, 'Да', 'Нет', 'OK', 0</div>
+    <div class="fragment card-green card" style="margin-top: 10px;">
+        <strong>Ответ: B)</strong> NULL=NULL &rarr; UNKNOWN &rarr; ELSE. NULL IS NULL &rarr; TRUE. NOT(UNKNOWN) &rarr; UNKNOWN &rarr; ELSE. COALESCE пропускает NULL. NULLIF(5,5) &rarr; NULL.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 6: КЕЙС ==================== -->
+<section>
+    <h2>Часть 6. Кейс: KPI эффективности оборудования</h2>
+    <div class="card-orange card" style="font-size: 0.95em;">
+        <strong>Бизнес-задача:</strong> Руководство «Руда+» запросило ежемесячный отчёт по эффективности оборудования с расчётом следующих KPI:
+        <ul>
+            <li><strong>Коэффициент использования</strong> = отработано часов / плановое время</li>
+            <li><strong>Производительность</strong> = тонн / отработано часов</li>
+            <li><strong>Категория эффективности:</strong> высокая / средняя / низкая</li>
+            <li><strong>Процент качественной руды</strong> (Fe &ge; 60%)</li>
+        </ul>
+    </div>
+</section>
+
+<!-- Кейс: SQL решение -->
+<section>
+    <h2>Кейс: SQL решение</h2>
+<pre><code class="language-sql">SELECT
+    e.equipment_name,
+    et.type_name,
+    COUNT(fp.production_id)             AS total_shifts,
+    ROUND(SUM(fp.tons_mined), 1)        AS total_tons,
+    ROUND(SUM(fp.operating_hours), 1)   AS total_hours,
+    -- KPI: производительность (тонн/час)
+    ROUND(
+        SUM(fp.tons_mined)
+        / NULLIF(SUM(fp.operating_hours), 0), 2
+    ) AS tons_per_hour,
+    -- KPI: коэффициент использования (%)
+    ROUND(
+        100.0 * SUM(fp.operating_hours)
+        / NULLIF(COUNT(fp.production_id) * 8.0, 0), 1
+    ) AS utilization_pct,
+    -- Категория эффективности
+    CASE
+        WHEN SUM(fp.tons_mined) / NULLIF(SUM(fp.operating_hours), 0) > 20
+            THEN 'Высокая'
+        WHEN SUM(fp.tons_mined) / NULLIF(SUM(fp.operating_hours), 0) > 12
+            THEN 'Средняя'
+        ELSE 'Низкая'
+    END AS efficiency_category
+FROM fact_production fp
+JOIN dim_equipment e ON fp.equipment_id = e.equipment_id
+JOIN dim_equipment_type et ON e.equipment_type_id = et.equipment_type_id
+WHERE fp.date_id BETWEEN 20240301 AND 20240331
+GROUP BY e.equipment_name, et.type_name
+ORDER BY tons_per_hour DESC;</code></pre>
+</section>
+
+<!-- Кейс: DAX решение -->
+<section>
+    <h2>Кейс: DAX решение</h2>
+<pre><code class="language-dax">EVALUATE
+VAR _march =
+  FILTER(fact_production,
+    fact_production[date_id] >= 20240301
+    && fact_production[date_id] <= 20240331)
+RETURN
+ADDCOLUMNS(
+  SUMMARIZE(_march,
+    dim_equipment[equipment_name],
+    dim_equipment_type[type_name]),
+  "Всего смен",    CALCULATE(COUNTROWS(fact_production), _march),
+  "Всего тонн",    CALCULATE(SUM(fact_production[tons_mined]), _march),
+  "Всего часов",   CALCULATE(SUM(fact_production[operating_hours]), _march),
+  "Тонн/час",
+    DIVIDE(
+      CALCULATE(SUM(fact_production[tons_mined]), _march),
+      CALCULATE(SUM(fact_production[operating_hours]), _march),
+      0),
+  "Использование %",
+    DIVIDE(
+      CALCULATE(SUM(fact_production[operating_hours]), _march),
+      CALCULATE(COUNTROWS(fact_production), _march) * 8,
+      0) * 100,
+  "Категория",
+    SWITCH(TRUE(),
+      DIVIDE(
+        CALCULATE(SUM(fact_production[tons_mined]), _march),
+        CALCULATE(SUM(fact_production[operating_hours]), _march), 0) > 20,
+          "Высокая",
+      DIVIDE(
+        CALCULATE(SUM(fact_production[tons_mined]), _march),
+        CALCULATE(SUM(fact_production[operating_hours]), _march), 0) > 12,
+          "Средняя",
+      "Низкая")
+)</code></pre>
+</section>
+
+<!-- Кейс: обсуждение -->
+<section>
+    <h2>Обсуждение кейса</h2>
+    <div class="card" style="font-size: 0.95em; padding: 20px;">
+        <p><strong>Вопросы для обсуждения:</strong></p>
+        <ol>
+            <li>Какие встроенные функции использованы в решении? Перечислите.</li>
+            <li>Почему мы используем <code>NULLIF</code> (SQL) / <code>DIVIDE</code> (DAX) вместо простого деления?</li>
+            <li>Как бы вы добавили KPI «процент качественной руды» к этому отчёту?</li>
+            <li>Какие ещё KPI могут быть полезны для горнодобывающего предприятия?</li>
+        </ol>
+    </div>
+    <div class="card-green card">
+        <p><strong>Групповое задание (5 мин):</strong> Разделитесь на группы по 3-4 человека. Каждая группа предложите 2 дополнительных KPI и напишите SQL-выражения для их расчёта. Используйте CASE, COALESCE, NULLIF, ROUND.</p>
+    </div>
+</section>
+
+<!-- Групповое упражнение -->
+<section>
+    <h2>Групповое упражнение</h2>
+    <div class="card-orange card" style="font-size: 0.95em; padding: 20px;">
+        <strong>Задание:</strong> Каждая группа получает один из сценариев:
+        <ol>
+            <li><strong>Группа 1:</strong> Отчёт по качеству руды — классификация проб, % брака, средние показатели с обработкой NULL</li>
+            <li><strong>Группа 2:</strong> Отчёт по простоям — категоризация по длительности, % плановых/внеплановых, суммарные потери</li>
+            <li><strong>Группа 3:</strong> Отчёт по операторам — рейтинг по производительности, категории квалификации, нормализация данных</li>
+        </ol>
+        <p><strong>Требования:</strong> Используйте минимум 5 различных встроенных функций из модуля. Напишите SQL-запрос и объясните выбор функций.</p>
+        <p class="small-text">Время: 10 минут на подготовку + 5 минут на презентацию</p>
+    </div>
+</section>
+
+<!-- Практика: Часть 4 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 4 — Условная логика (шаги 4.1–4.4)</p>
+        <p><strong>Задание:</strong> Классифицируйте руду с CASE WHEN / IF(DAX), используйте COALESCE и NULLIF, примените GREATEST/LEAST для анализа данных.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 8 заданий на встроенные функции — от базовых вычислений до комплексных KPI</p>
+        <p><strong>Формат:</strong> SQL и DAX запросы, сравнение результатов и синтаксиса</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <h2>Итоги модуля</h2>
+    <table>
+        <tr><th>Категория</th><th>SQL (PostgreSQL)</th><th>DAX</th></tr>
+        <tr><td>Округление</td><td>ROUND, CEIL, FLOOR, TRUNC</td><td>ROUND, CEILING, FLOOR, TRUNC</td></tr>
+        <tr><td>Математика</td><td>ABS, MOD, POWER, SQRT</td><td>ABS, MOD, POWER, SQRT</td></tr>
+        <tr><td>Агрегаты</td><td>SUM, AVG, COUNT, STRING_AGG</td><td>SUM, AVERAGE, COUNTROWS, CONCATENATEX</td></tr>
+        <tr><td>Преобразование</td><td>CAST, ::, TO_DATE, TO_CHAR</td><td>CONVERT, FORMAT, INT, VALUE</td></tr>
+        <tr><td>Условная логика</td><td>CASE WHEN, COALESCE, NULLIF</td><td>IF, SWITCH, COALESCE, DIVIDE</td></tr>
+        <tr><td>NULL</td><td>IS NULL, COALESCE, NULLIF</td><td>ISBLANK, COALESCE, BLANK()</td></tr>
+        <tr><td>Диапазоны</td><td>GREATEST, LEAST</td><td>MAX(a,b), MIN(a,b) или IF</td></tr>
+    </table>
+</section>
+
+<!-- Что дальше -->
+<section>
+    <h2>Что дальше?</h2>
+    <div class="card" style="font-size: 0.95em;">
+        <p><strong>Практическая работа:</strong> Преподаватель демонстрирует пошаговое построение аналитических запросов с использованием встроенных функций.</p>
+    </div>
+    <div class="card-orange card" style="font-size: 0.95em;">
+        <p><strong>Лабораторная работа:</strong> 8 заданий на самостоятельную работу — от базовых вычислений до комплексных KPI.</p>
+    </div>
+    <div class="card-green card" style="font-size: 0.95em;">
+        <p><strong>Следующий модуль:</strong> Подзапросы и CTE — вложенные запросы, Common Table Expressions.</p>
+    </div>
+</section>
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.04,
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>

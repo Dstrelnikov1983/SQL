@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 11 — Использование табличных выражений</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .vs-badge { display: inline-block; background: var(--accent2); color: white; border-radius: 50%; width: 40px; height: 40px; line-height: 40px; text-align: center; font-weight: bold; font-size: 0.7em; }
+
+        .tree-node { background: var(--accent1); color: white; padding: 4px 12px; border-radius: 6px; display: inline-block; margin: 2px; font-size: 0.7em; }
+        .tree-node.level1 { background: var(--accent2); }
+        .tree-node.level2 { background: var(--accent6); }
+        .tree-connector { color: #999; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 11</h1>
+    <h2 style="border: none;">Использование табличных выражений</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие &laquo;Руда+&raquo; &mdash; добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">SQL</span>
+        <span style="font-size: 1.5em; vertical-align: middle;">&#8644;</span>
+        <span class="icon-box orange">DAX</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 3 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Представления (Views)</strong> &mdash; создание, обновляемые, материализованные <span class="small-text">(40 мин)</span></li>
+        <li><strong>Табличные функции</strong> &mdash; RETURNS TABLE, SETOF <span class="small-text">(30 мин)</span></li>
+        <li><strong>Производные таблицы</strong> &mdash; подзапросы в FROM <span class="small-text">(20 мин)</span></li>
+        <li><strong>Общие табличные выражения (CTE)</strong> &mdash; WITH, рекурсивные CTE <span class="small-text">(50 мин)</span></li>
+        <li><strong>Временные таблицы</strong> &mdash; TEMP TABLE, UNLOGGED, ON COMMIT <span class="small-text">(25 мин)</span></li>
+        <li><strong>SQL vs DAX</strong> &mdash; сравнение подходов <span class="small-text">(15 мин)</span></li>
+        <li><strong>Групповая работа и кейс</strong> <span class="small-text">(15 мин)</span></li>
+        <li><strong>Квиз и итоги</strong> <span class="small-text">(10 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL (SQL) | Power BI + DAX Studio (DAX)
+    </div>
+</section>
+
+<!-- ==================== ВВОДНЫЙ ВОПРОС ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card">
+        <h3>Подумайте и обсудите с соседом (2 минуты):</h3>
+        <p>Представьте, что вам нужно каждый день формировать один и тот же сложный отчёт по добыче руды на предприятии &laquo;Руда+&raquo; &mdash; с агрегацией по шахтам, сменам, операторам.</p>
+        <ul>
+            <li>Удобно ли каждый раз писать один и тот же запрос заново?</li>
+            <li>Как можно &laquo;сохранить&raquo; запрос в базе данных?</li>
+            <li>Что если структура данных иерархическая (шахта &rarr; ствол &rarr; горизонт &rarr; забой)?</li>
+        </ul>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 1: ПРЕДСТАВЛЕНИЯ (VIEWS)                                 -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 1. Представления (Views)</h2>
+        <p>Именованные запросы, сохранённые в базе данных</p>
+        <div class="key-concept">
+            <h3>Что такое представление?</h3>
+            <ul>
+                <li><strong>Виртуальная таблица</strong> &mdash; не хранит данные (обычное VIEW)</li>
+                <li><strong>Именованный запрос</strong> &mdash; SELECT, сохранённый в каталоге БД</li>
+                <li>Обращение к VIEW аналогично обращению к таблице</li>
+                <li>Упрощает сложные запросы и обеспечивает безопасность</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- CREATE VIEW: базовый синтаксис -->
+    <section>
+        <h2>CREATE VIEW: синтаксис</h2>
+        <pre><code class="language-sql">-- Базовый синтаксис
+CREATE [ OR REPLACE ] VIEW имя_представления
+    [ (список_столбцов) ]
+AS
+    SELECT ...;
+
+-- Пример для «Руда+»: сводка добычи по шахтам
+CREATE OR REPLACE VIEW v_mine_production_summary AS
+SELECT
+    m.mine_name,
+    d.year,
+    d.month_name,
+    COUNT(*)              AS records_count,
+    SUM(fp.tons_mined)    AS total_tons,
+    AVG(fp.tons_mined)    AS avg_tons_per_shift,
+    SUM(fp.trips_count)   AS total_trips
+FROM fact_production fp
+JOIN dim_mine m     ON fp.mine_id = m.mine_id
+JOIN dim_date d     ON fp.date_id = d.date_id
+GROUP BY m.mine_name, d.year, d.month_name, d.month
+ORDER BY m.mine_name, d.year, d.month;</code></pre>
+    </section>
+
+    <!-- Использование VIEW -->
+    <section>
+        <h2>Использование представления</h2>
+        <pre><code class="language-sql">-- Теперь используем VIEW как обычную таблицу
+SELECT mine_name, total_tons
+FROM v_mine_production_summary
+WHERE year = 2024 AND month_name = 'Январь';
+
+-- Можно JOIN-ить с другими таблицами
+SELECT vps.mine_name, vps.total_tons,
+       COUNT(DISTINCT e.equipment_id) AS equipment_count
+FROM v_mine_production_summary vps
+JOIN dim_mine m ON vps.mine_name = m.mine_name
+JOIN dim_equipment e ON m.mine_id = e.mine_id
+WHERE vps.year = 2024
+GROUP BY vps.mine_name, vps.total_tons;</code></pre>
+        <div class="card">
+            <strong>Как работает:</strong> PostgreSQL подставляет SQL из VIEW вместо имени &mdash; оптимизатор видит полный запрос и строит план как для обычного SELECT.
+        </div>
+    </section>
+
+    <!-- Представление для безопасности -->
+    <section>
+        <h2>VIEW для безопасности данных</h2>
+        <pre><code class="language-sql">-- Скрываем персональные данные операторов
+CREATE VIEW v_operator_public AS
+SELECT
+    operator_id,
+    tab_number,
+    SUBSTRING(last_name, 1, 1) || '***' AS last_name,
+    position,
+    qualification,
+    mine_id,
+    status
+FROM dim_operator;
+
+-- Выдаём права только на VIEW, не на таблицу
+GRANT SELECT ON v_operator_public TO analyst_role;
+REVOKE SELECT ON dim_operator FROM analyst_role;</code></pre>
+        <div class="card-orange card">
+            <strong>Практика &laquo;Руда+&raquo;:</strong> аналитики MES-системы видят только обезличенные данные операторов через VIEW. Полные ФИО доступны только кадровой службе.
+        </div>
+    </section>
+
+    <!-- Обновляемые VIEW -->
+    <section>
+        <h2>Обновляемые представления</h2>
+        <div class="card">
+            <h3>Когда VIEW можно обновлять (INSERT/UPDATE/DELETE)?</h3>
+            <ul>
+                <li>VIEW основано на <strong>одной таблице</strong></li>
+                <li>Нет <code>GROUP BY</code>, <code>HAVING</code>, <code>DISTINCT</code>, <code>UNION</code></li>
+                <li>Нет агрегатных функций и подзапросов в SELECT</li>
+                <li>Все NOT NULL столбцы присутствуют (для INSERT)</li>
+            </ul>
+        </div>
+        <pre><code class="language-sql">-- Обновляемое VIEW: активное оборудование
+CREATE VIEW v_active_equipment AS
+SELECT equipment_id, equipment_name, inventory_number,
+       equipment_type_id, mine_id, status
+FROM dim_equipment
+WHERE status = 'active';
+
+-- Можно обновлять через VIEW!
+UPDATE v_active_equipment
+SET status = 'maintenance'
+WHERE equipment_id = 5;</code></pre>
+    </section>
+
+    <!-- WITH CHECK OPTION -->
+    <section>
+        <h2>WITH CHECK OPTION</h2>
+        <pre><code class="language-sql">-- Защита: запрет вставки/обновления данных вне условия VIEW
+CREATE VIEW v_active_equipment_safe AS
+SELECT equipment_id, equipment_name, inventory_number,
+       equipment_type_id, mine_id, status
+FROM dim_equipment
+WHERE status = 'active'
+WITH CHECK OPTION;
+
+-- Теперь это ЗАПРЕЩЕНО — статус не 'active':
+UPDATE v_active_equipment_safe
+SET status = 'decommissioned'
+WHERE equipment_id = 5;
+-- ERROR: new row violates check option for view</code></pre>
+        <div class="card-green card">
+            <strong>WITH CHECK OPTION</strong> гарантирует, что через VIEW можно вставить/обновить только те строки, которые удовлетворяют условию WHERE представления.
+        </div>
+    </section>
+
+    <!-- Материализованные представления -->
+    <section>
+        <h2>Материализованные представления</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">VIEW (обычное)</h3>
+                    <ul style="font-size: 0.8em;">
+                        <li>Не хранит данные</li>
+                        <li>Выполняет запрос каждый раз</li>
+                        <li>Всегда актуальные данные</li>
+                        <li>Нет накладных расходов на хранение</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept" style="border-color: var(--accent2);">
+                    <h3 style="color: var(--accent2);">MATERIALIZED VIEW</h3>
+                    <ul style="font-size: 0.8em;">
+                        <li><strong>Хранит результат</strong> на диске</li>
+                        <li>Выполняет запрос при REFRESH</li>
+                        <li>Данные могут устареть</li>
+                        <li>Можно создавать индексы!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MATERIALIZED VIEW: пример -->
+    <section>
+        <h2>MATERIALIZED VIEW: пример &laquo;Руда+&raquo;</h2>
+        <pre><code class="language-sql">-- Ежедневная сводка по качеству руды — тяжёлый запрос
+CREATE MATERIALIZED VIEW mv_daily_ore_quality AS
+SELECT
+    d.full_date,
+    m.mine_name,
+    sh.shaft_name,
+    g.grade_name,
+    COUNT(*)            AS samples_count,
+    AVG(q.fe_content)   AS avg_fe,
+    MIN(q.fe_content)   AS min_fe,
+    MAX(q.fe_content)   AS max_fe,
+    AVG(q.moisture)     AS avg_moisture
+FROM fact_ore_quality q
+JOIN dim_date d       ON q.date_id = d.date_id
+JOIN dim_mine m       ON q.mine_id = m.mine_id
+JOIN dim_shaft sh     ON q.shaft_id = sh.shaft_id
+LEFT JOIN dim_ore_grade g ON q.ore_grade_id = g.ore_grade_id
+GROUP BY d.full_date, m.mine_name, sh.shaft_name, g.grade_name;
+
+-- Создаём индекс на материализованном представлении!
+CREATE INDEX idx_mv_quality_date ON mv_daily_ore_quality(full_date);
+CREATE INDEX idx_mv_quality_mine ON mv_daily_ore_quality(mine_name);</code></pre>
+    </section>
+
+    <!-- REFRESH MATERIALIZED VIEW -->
+    <section>
+        <h2>Обновление материализованного представления</h2>
+        <pre><code class="language-sql">-- Полное обновление (блокирует чтение)
+REFRESH MATERIALIZED VIEW mv_daily_ore_quality;
+
+-- Конкурентное обновление (не блокирует чтение!)
+-- Требует UNIQUE INDEX
+CREATE UNIQUE INDEX idx_mv_quality_uniq
+    ON mv_daily_ore_quality(full_date, mine_name, shaft_name, grade_name);
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_ore_quality;</code></pre>
+        <div class="card-orange card">
+            <strong>Для &laquo;Руда+&raquo;:</strong> материализованные представления обновляются по расписанию (pg_cron) &mdash; например, каждый час для телеметрии и раз в сутки для сводок по качеству руды.
+        </div>
+        <pre><code class="language-sql">-- Автоматическое обновление через pg_cron
+SELECT cron.schedule('refresh_ore_quality',
+    '0 */1 * * *',  -- каждый час
+    'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_ore_quality');</code></pre>
+    </section>
+
+    <!-- Вопрос для обсуждения -->
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="card-orange card">
+            <h3>Когда использовать MATERIALIZED VIEW вместо обычного VIEW?</h3>
+            <p>Обсудите в парах (2 минуты):</p>
+            <ul>
+                <li>Таблица <code>fact_equipment_telemetry</code> содержит 50 млн строк</li>
+                <li>Сводный отчёт по средним показаниям датчиков за месяц запрашивается 100 раз в день</li>
+                <li>Данные обновляются каждые 30 секунд</li>
+            </ul>
+            <p><strong>Как бы вы решили эту задачу?</strong></p>
+        </div>
+        <div class="fragment card-green card">
+            <strong>Ответ:</strong> MATERIALIZED VIEW с обновлением раз в час (CONCURRENTLY) &mdash; компромисс между актуальностью и производительностью. 100 запросов будут читать предварительно вычисленный результат.
+        </div>
+    </section>
+
+    <!-- Ограничения MATERIALIZED VIEW в PostgreSQL -->
+    <section>
+        <h2>Ограничения MATERIALIZED VIEW в PostgreSQL</h2>
+        <table>
+            <thead>
+                <tr><th>Ограничение</th><th>Суть</th><th>Обходной путь</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Нет авто-обновления</strong></td>
+                    <td>Данные устаревают сразу после создания / последнего REFRESH</td>
+                    <td><code>pg_cron</code>, внешний планировщик (Airflow, cron)</td>
+                </tr>
+                <tr>
+                    <td><strong>REFRESH блокирует чтение</strong></td>
+                    <td>Обычный REFRESH ставит exclusive lock &mdash; SELECT ждут</td>
+                    <td><code>REFRESH ... CONCURRENTLY</code> + уникальный индекс</td>
+                </tr>
+                <tr>
+                    <td><strong>Полный пересчёт</strong></td>
+                    <td>Нет инкрементального обновления &mdash; пересчитывается весь запрос</td>
+                    <td>Партиционирование, расширение <code>pg_ivm</code> (экспериментальное)</td>
+                </tr>
+                <tr>
+                    <td><strong>Нет DML</strong></td>
+                    <td>Нельзя выполнять INSERT / UPDATE / DELETE</td>
+                    <td>Использовать обычную таблицу + триггеры</td>
+                </tr>
+                <tr>
+                    <td><strong>Нет параметров</strong></td>
+                    <td>Нельзя передать аргументы (в отличие от функций)</td>
+                    <td>Табличные функции (RETURNS TABLE)</td>
+                </tr>
+                <tr>
+                    <td><strong>Занимает место</strong></td>
+                    <td>Данные + индексы хранятся физически</td>
+                    <td>Мониторинг: <code>pg_total_relation_size()</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Зависимости</strong></td>
+                    <td>ALTER TABLE базовой таблицы не обновляет MV &mdash; нужно пересоздать</td>
+                    <td>Планирование миграций с учётом MV</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="card" style="margin-top: 10px; font-size: 0.8em;">
+            <strong>Для &laquo;Руда+&raquo;:</strong> MV по качеству руды (~100 тыс. строк) обновляется за секунды. Но MV по телеметрии (~50 млн строк) потребует CONCURRENTLY и займёт минуты.
+        </div>
+    </section>
+
+    <!-- Сравнение: PostgreSQL vs MS SQL Server -->
+    <section>
+        <h2>PostgreSQL vs MS SQL Server</h2>
+        <p class="subtitle">Материализованные представления: два подхода</p>
+        <table>
+            <thead>
+                <tr><th></th><th style="background: var(--accent1);">PostgreSQL<br><small>MATERIALIZED VIEW</small></th><th style="background: var(--accent2);">MS SQL Server<br><small>Indexed View</small></th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Обновление</strong></td>
+                    <td>Ручное (<code>REFRESH</code>)</td>
+                    <td>Автоматическое (синхронное)</td>
+                </tr>
+                <tr>
+                    <td><strong>Актуальность</strong></td>
+                    <td>Данные устаревают между REFRESH</td>
+                    <td>Всегда актуальные</td>
+                </tr>
+                <tr>
+                    <td><strong>Влияние на запись</strong></td>
+                    <td>Нет влияния на INSERT/UPDATE/DELETE</td>
+                    <td>Замедляет каждую запись в базовые таблицы</td>
+                </tr>
+                <tr>
+                    <td><strong>Гибкость запросов</strong></td>
+                    <td>Любые SELECT, JOIN, подзапросы</td>
+                    <td>Много ограничений: нет LEFT JOIN, UNION, подзапросов, оконных функций</td>
+                </tr>
+                <tr>
+                    <td><strong>Агрегатные функции</strong></td>
+                    <td>Все</td>
+                    <td>Только SUM, COUNT_BIG (AVG через SUM/COUNT_BIG)</td>
+                </tr>
+                <tr>
+                    <td><strong>Контроль обновления</strong></td>
+                    <td>Полный &mdash; когда и как часто</td>
+                    <td>Нет &mdash; обновляется при каждой записи</td>
+                </tr>
+                <tr>
+                    <td><strong>Требования</strong></td>
+                    <td>Уникальный индекс для CONCURRENTLY</td>
+                    <td><code>WITH SCHEMABINDING</code> + уникальный кластерный индекс</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- SQL Server: пример Indexed View -->
+    <section>
+        <h2>MS SQL Server: Indexed View (пример)</h2>
+        <pre><code class="language-sql">-- SQL Server: автоматически обновляемое представление
+CREATE VIEW dbo.v_mine_production_summary
+WITH SCHEMABINDING  -- обязательно!
+AS
+SELECT
+    mine_id,
+    SUM(tons_mined)   AS total_tons,
+    COUNT_BIG(*)      AS records_count  -- обязательно вместо COUNT(*)
+FROM dbo.fact_production
+GROUP BY mine_id;
+GO
+
+-- Создание кластерного индекса «материализует» представление
+CREATE UNIQUE CLUSTERED INDEX IX_v_mine_prod
+ON dbo.v_mine_production_summary(mine_id);
+
+-- Теперь данные обновляются автоматически при каждом
+-- INSERT/UPDATE/DELETE в fact_production</code></pre>
+        <div class="card-orange card" style="font-size: 0.8em;">
+            <strong>Ограничения Indexed View:</strong> нельзя использовать LEFT/RIGHT JOIN, OUTER APPLY, подзапросы, UNION, DISTINCT, TOP, оконные функции, HAVING, CUBE, ROLLUP. В Standard Edition &mdash; нужен хинт <code>WITH (NOEXPAND)</code>.
+        </div>
+        <div class="card-green card" style="font-size: 0.8em;">
+            <strong>Вывод:</strong> PostgreSQL даёт гибкость и контроль, SQL Server &mdash; автоматическую актуальность ценой жёстких ограничений и нагрузки на запись.
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Часть 1 — Views -->
+<section>
+    <div style="background: #FFF3E0; border-left: 4px solid #ED7D31; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 0.8em;">
+        📋 <strong>Практика:</strong> practice.md → Часть 1 — Представления (Views), Часть 2 — Материализованные представления: создание, обновление, индексы
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 2: ТАБЛИЧНЫЕ ФУНКЦИИ                                     -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 2. Табличные функции</h2>
+        <p>Функции, возвращающие наборы строк</p>
+        <div class="key-concept">
+            <h3>Зачем нужны табличные функции?</h3>
+            <ul>
+                <li><strong>Параметризация</strong> &mdash; в отличие от VIEW, принимают аргументы</li>
+                <li><strong>Инкапсуляция логики</strong> &mdash; сложный SQL внутри функции</li>
+                <li><strong>Переиспользование</strong> &mdash; вызов из любого запроса</li>
+                <li>Используются в <code>FROM</code> как обычные таблицы</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- RETURNS TABLE -->
+    <section>
+        <h2>RETURNS TABLE: базовый синтаксис</h2>
+        <pre><code class="language-sql">-- Функция: производственный отчёт для конкретной шахты
+CREATE OR REPLACE FUNCTION fn_mine_production_report(
+    p_mine_id   INT,
+    p_date_from INT,
+    p_date_to   INT
+)
+RETURNS TABLE (
+    shift_name      VARCHAR,
+    operator_name   TEXT,
+    equipment_name  VARCHAR,
+    total_tons      NUMERIC,
+    total_trips     INT,
+    avg_fuel        NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        s.shift_name,
+        o.last_name || ' ' || o.first_name,
+        e.equipment_name,
+        SUM(fp.tons_mined),
+        SUM(fp.trips_count)::INT,
+        AVG(fp.fuel_consumed_l)
+    FROM fact_production fp
+    JOIN dim_shift s    ON fp.shift_id = s.shift_id
+    JOIN dim_operator o ON fp.operator_id = o.operator_id
+    JOIN dim_equipment e ON fp.equipment_id = e.equipment_id
+    WHERE fp.mine_id = p_mine_id
+      AND fp.date_id BETWEEN p_date_from AND p_date_to
+    GROUP BY s.shift_name, o.last_name, o.first_name, e.equipment_name;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+    </section>
+
+    <!-- Вызов табличной функции -->
+    <section>
+        <h2>Вызов табличной функции</h2>
+        <pre><code class="language-sql">-- Вызов как подзапрос в FROM
+SELECT *
+FROM fn_mine_production_report(1, 20240101, 20240131);
+
+-- Фильтрация и сортировка результата
+SELECT shift_name, operator_name, total_tons
+FROM fn_mine_production_report(1, 20240101, 20240331)
+WHERE total_tons > 100
+ORDER BY total_tons DESC;
+
+-- JOIN с другими таблицами
+SELECT r.*, m.mine_name
+FROM dim_mine m
+CROSS JOIN LATERAL fn_mine_production_report(
+    m.mine_id, 20240101, 20240131
+) r;</code></pre>
+        <div class="card">
+            <strong>CROSS JOIN LATERAL</strong> позволяет вызвать функцию для каждой строки левой таблицы &mdash; мощный паттерн для параметризованных отчётов.
+        </div>
+    </section>
+
+    <!-- RETURNS SETOF -->
+    <section>
+        <h2>RETURNS SETOF: возврат набора записей</h2>
+        <pre><code class="language-sql">-- Альтернативный синтаксис: RETURNS SETOF record-type
+CREATE OR REPLACE FUNCTION fn_equipment_status_report(
+    p_mine_id INT
+)
+RETURNS SETOF dim_equipment AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM dim_equipment
+    WHERE mine_id = p_mine_id
+      AND status = 'active'
+    ORDER BY equipment_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Использование
+SELECT equipment_name, inventory_number, model
+FROM fn_equipment_status_report(1);</code></pre>
+        <div class="card-orange card">
+            <strong>SETOF тип_таблицы</strong> &mdash; возвращает строки в формате существующей таблицы. Удобно, когда функция &mdash; это &laquo;фильтр&raquo; для таблицы.
+        </div>
+    </section>
+
+    <!-- SQL-функции (без plpgsql) -->
+    <section>
+        <h2>SQL-функции: лаконичный вариант</h2>
+        <pre><code class="language-sql">-- Чистая SQL-функция (без plpgsql)
+CREATE OR REPLACE FUNCTION fn_downtime_by_reason(
+    p_date_from INT,
+    p_date_to   INT
+)
+RETURNS TABLE (
+    reason_name     VARCHAR,
+    category        VARCHAR,
+    total_events    BIGINT,
+    total_hours     NUMERIC,
+    avg_duration_h  NUMERIC
+) AS $$
+    SELECT
+        dr.reason_name,
+        dr.category,
+        COUNT(*),
+        ROUND(SUM(dt.duration_min) / 60.0, 1),
+        ROUND(AVG(dt.duration_min) / 60.0, 2)
+    FROM fact_equipment_downtime dt
+    JOIN dim_downtime_reason dr ON dt.reason_id = dr.reason_id
+    WHERE dt.date_id BETWEEN p_date_from AND p_date_to
+    GROUP BY dr.reason_name, dr.category
+    ORDER BY total_hours DESC;
+$$ LANGUAGE sql;
+
+-- SQL-функции проще и могут быть «встроены» (inlined) оптимизатором
+SELECT * FROM fn_downtime_by_reason(20240101, 20240630);</code></pre>
+    </section>
+
+    <!-- PL/pgSQL vs SQL функции -->
+    <section>
+        <h2>LANGUAGE plpgsql vs LANGUAGE sql</h2>
+        <table>
+            <tr>
+                <th>Характеристика</th>
+                <th style="background: var(--accent1);">LANGUAGE sql</th>
+                <th style="background: var(--accent2);">LANGUAGE plpgsql</th>
+            </tr>
+            <tr>
+                <td><strong>Инлайн-оптимизация</strong></td>
+                <td class="highlight-green">Да &mdash; оптимизатор &laquo;встраивает&raquo; тело в вызывающий запрос</td>
+                <td>Нет &mdash; выполняется как &laquo;чёрный ящик&raquo;</td>
+            </tr>
+            <tr>
+                <td><strong>Производительность</strong></td>
+                <td class="highlight-green">Обычно выше (оптимизатор видит всю картину)</td>
+                <td>Может быть ниже из-за барьера оптимизации</td>
+            </tr>
+            <tr>
+                <td><strong>Синтаксис</strong></td>
+                <td>Голый SELECT, без BEGIN/END</td>
+                <td>BEGIN ... RETURN QUERY ... END</td>
+            </tr>
+            <tr>
+                <td><strong>Переменные</strong></td>
+                <td>Нет</td>
+                <td class="highlight-green">Да (DECLARE ... BEGIN ... END)</td>
+            </tr>
+            <tr>
+                <td><strong>Управляющие конструкции</strong></td>
+                <td>Нет</td>
+                <td class="highlight-green">IF/ELSE, LOOP, FOR, WHILE</td>
+            </tr>
+            <tr>
+                <td><strong>Обработка ошибок</strong></td>
+                <td>Нет</td>
+                <td class="highlight-green">EXCEPTION WHEN ...</td>
+            </tr>
+            <tr>
+                <td><strong>Несколько RETURN QUERY</strong></td>
+                <td>Нет (один SELECT)</td>
+                <td class="highlight-green">Да &mdash; условная логика возврата</td>
+            </tr>
+        </table>
+        <div class="card-green card" style="margin-top: 10px; font-size: 0.8em;">
+            <strong>Правило:</strong> если функция &mdash; один SELECT с параметрами, используйте <code>LANGUAGE sql</code>. Нужна логика (условия, циклы, обработка ошибок) &mdash; <code>LANGUAGE plpgsql</code>.
+        </div>
+    </section>
+
+    <!-- Пример: одна задача — два подхода -->
+    <section>
+        <h2>Пример: одна задача &mdash; два подхода</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">LANGUAGE sql</h3>
+                <pre><code class="language-sql">CREATE FUNCTION fn_downtime_summary(
+    p_from INT, p_to INT
+)
+RETURNS TABLE (
+    reason VARCHAR, hours NUMERIC
+) AS $$
+  SELECT dr.reason_name,
+    ROUND(SUM(dt.duration_min)
+          / 60.0, 1)
+  FROM fact_equipment_downtime dt
+  JOIN dim_downtime_reason dr
+    ON dt.reason_id = dr.reason_id
+  WHERE dt.date_id
+    BETWEEN p_from AND p_to
+  GROUP BY dr.reason_name
+  ORDER BY 2 DESC;
+$$ LANGUAGE sql;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header" style="background: var(--accent2);">LANGUAGE plpgsql</h3>
+                <pre><code class="language-sql">CREATE FUNCTION fn_downtime_summary(
+    p_from INT, p_to INT
+)
+RETURNS TABLE (
+    reason VARCHAR, hours NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT dr.reason_name,
+    ROUND(SUM(dt.duration_min)
+          / 60.0, 1)
+  FROM fact_equipment_downtime dt
+  JOIN dim_downtime_reason dr
+    ON dt.reason_id = dr.reason_id
+  WHERE dt.date_id
+    BETWEEN p_from AND p_to
+  GROUP BY dr.reason_name
+  ORDER BY 2 DESC;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+            </div>
+        </div>
+        <div class="card" style="font-size: 0.8em;">
+            <strong>Результат одинаковый</strong>, но SQL-версия будет встроена оптимизатором в вызывающий запрос &mdash; потенциально более эффективный план выполнения.
+        </div>
+    </section>
+
+    <!-- VIEW vs Function -->
+    <section>
+        <h2>VIEW vs табличная функция</h2>
+        <table>
+            <tr>
+                <th>Характеристика</th>
+                <th>VIEW</th>
+                <th>Табличная функция</th>
+            </tr>
+            <tr>
+                <td><strong>Параметры</strong></td>
+                <td>Нет (фиксированный запрос)</td>
+                <td class="highlight-green">Да (принимает аргументы)</td>
+            </tr>
+            <tr>
+                <td><strong>Оптимизация</strong></td>
+                <td class="highlight-green">Встраивается в запрос</td>
+                <td>plpgsql &mdash; &laquo;чёрный ящик&raquo;; SQL &mdash; inline</td>
+            </tr>
+            <tr>
+                <td><strong>Логика</strong></td>
+                <td>Только SELECT</td>
+                <td class="highlight-green">IF/ELSE, циклы, переменные</td>
+            </tr>
+            <tr>
+                <td><strong>Обновляемость</strong></td>
+                <td class="highlight-green">Да (при условиях)</td>
+                <td>Нет</td>
+            </tr>
+            <tr>
+                <td><strong>Безопасность</strong></td>
+                <td class="highlight-green">GRANT на VIEW</td>
+                <td class="highlight-green">GRANT EXECUTE</td>
+            </tr>
+            <tr>
+                <td><strong>Материализация</strong></td>
+                <td class="highlight-green">MATERIALIZED VIEW</td>
+                <td>Нет (кешируйте результат)</td>
+            </tr>
+        </table>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 3: ПРОИЗВОДНЫЕ ТАБЛИЦЫ (DERIVED TABLES)                  -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 3. Производные таблицы</h2>
+        <p>Подзапросы в секции FROM</p>
+        <div class="key-concept">
+            <h3>Что такое производная таблица?</h3>
+            <ul>
+                <li>Подзапрос в <code>FROM</code>, которому присвоен <strong>псевдоним</strong></li>
+                <li>Существует только <strong>во время выполнения</strong> запроса</li>
+                <li>Не сохраняется в базе данных (в отличие от VIEW)</li>
+                <li>Удобна для <strong>поэтапных вычислений</strong></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Базовый пример -->
+    <section>
+        <h2>Производная таблица: синтаксис</h2>
+        <pre><code class="language-sql">-- Синтаксис
+SELECT ...
+FROM (
+    SELECT ...  -- подзапрос = производная таблица
+) AS alias;
+
+-- Пример: Найти шахты, где среднесуточная добыча > 500 тонн
+SELECT sub.mine_name, sub.avg_daily_tons
+FROM (
+    SELECT m.mine_name,
+           AVG(daily.total_tons) AS avg_daily_tons
+    FROM (
+        SELECT mine_id, date_id, SUM(tons_mined) AS total_tons
+        FROM fact_production
+        GROUP BY mine_id, date_id
+    ) daily
+    JOIN dim_mine m ON daily.mine_id = m.mine_id
+    GROUP BY m.mine_name
+) sub
+WHERE sub.avg_daily_tons > 500
+ORDER BY sub.avg_daily_tons DESC;</code></pre>
+    </section>
+
+    <!-- Практический пример -->
+    <section>
+        <h2>Пример: анализ простоев &laquo;Руда+&raquo;</h2>
+        <pre><code class="language-sql">-- Найти оборудование, у которого доля внеплановых простоев
+-- превышает 30% от общего времени простоев
+SELECT
+    equipment_stats.equipment_name,
+    equipment_stats.total_downtime_h,
+    equipment_stats.unplanned_downtime_h,
+    ROUND(equipment_stats.unplanned_downtime_h * 100.0
+          / equipment_stats.total_downtime_h, 1) AS unplanned_pct
+FROM (
+    SELECT
+        e.equipment_name,
+        SUM(dt.duration_min) / 60.0 AS total_downtime_h,
+        SUM(CASE WHEN dt.is_planned = FALSE
+            THEN dt.duration_min ELSE 0 END) / 60.0 AS unplanned_downtime_h
+    FROM fact_equipment_downtime dt
+    JOIN dim_equipment e ON dt.equipment_id = e.equipment_id
+    WHERE dt.date_id BETWEEN 20240101 AND 20240630
+    GROUP BY e.equipment_name
+) equipment_stats
+WHERE equipment_stats.total_downtime_h > 0
+  AND (equipment_stats.unplanned_downtime_h / equipment_stats.total_downtime_h) > 0.3
+ORDER BY unplanned_pct DESC;</code></pre>
+    </section>
+
+    <!-- Проблема вложенности -->
+    <section>
+        <h2>Проблема: глубокая вложенность</h2>
+        <pre><code class="language-sql">-- Трудно читать: 3 уровня вложенности
+SELECT final.mine_name, final.efficiency
+FROM (
+    SELECT sub2.mine_name,
+           sub2.produced / sub2.available * 100 AS efficiency
+    FROM (
+        SELECT sub1.mine_name, sub1.total_tons AS produced,
+               sub1.total_hours * 50 AS available
+        FROM (
+            SELECT m.mine_name,
+                   SUM(fp.tons_mined) AS total_tons,
+                   SUM(fp.operating_hours) AS total_hours
+            FROM fact_production fp
+            JOIN dim_mine m ON fp.mine_id = m.mine_id
+            GROUP BY m.mine_name
+        ) sub1
+    ) sub2
+) final
+WHERE final.efficiency > 70;</code></pre>
+        <div class="card-orange card">
+            <strong>Проблема:</strong> вложенные производные таблицы быстро становятся нечитаемыми. Решение &mdash; <strong>CTE (WITH)</strong>, которые мы изучим далее!
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 4: ОБЩИЕ ТАБЛИЧНЫЕ ВЫРАЖЕНИЯ (CTE)                       -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 4. Общие табличные выражения (CTE)</h2>
+        <p>WITH &mdash; мощный инструмент структурирования запросов</p>
+        <div class="key-concept">
+            <h3>CTE = Common Table Expression</h3>
+            <ul>
+                <li>Именованный подзапрос, определённый <strong>перед основным SELECT</strong></li>
+                <li>Делает запрос <strong>читаемым</strong> и <strong>модульным</strong></li>
+                <li>Можно определить <strong>несколько CTE</strong> в одном запросе</li>
+                <li>Поддерживает <strong>рекурсию</strong> (RECURSIVE)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- CTE базовый синтаксис -->
+    <section>
+        <h2>CTE: базовый синтаксис</h2>
+        <pre><code class="language-sql">-- Синтаксис
+WITH cte_name AS (
+    SELECT ...
+)
+SELECT ...
+FROM cte_name;
+
+-- Перепишем предыдущий пример с вложенными подзапросами
+WITH production_totals AS (
+    SELECT m.mine_name,
+           SUM(fp.tons_mined)       AS total_tons,
+           SUM(fp.operating_hours)  AS total_hours
+    FROM fact_production fp
+    JOIN dim_mine m ON fp.mine_id = m.mine_id
+    GROUP BY m.mine_name
+),
+efficiency_calc AS (
+    SELECT mine_name,
+           total_tons AS produced,
+           total_hours * 50 AS available,
+           total_tons / (total_hours * 50) * 100 AS efficiency
+    FROM production_totals
+    WHERE total_hours > 0
+)
+SELECT mine_name, ROUND(efficiency, 1) AS efficiency_pct
+FROM efficiency_calc
+WHERE efficiency > 70
+ORDER BY efficiency DESC;</code></pre>
+    </section>
+
+    <!-- Множественные CTE -->
+    <section>
+        <h2>Множественные CTE</h2>
+        <pre><code class="language-sql">-- Комплексный анализ: добыча + простои + качество
+WITH daily_production AS (
+    SELECT mine_id, date_id,
+           SUM(tons_mined) AS tons, SUM(trips_count) AS trips
+    FROM fact_production
+    GROUP BY mine_id, date_id
+),
+daily_downtime AS (
+    SELECT e.mine_id, dt.date_id,
+           SUM(dt.duration_min) AS downtime_min
+    FROM fact_equipment_downtime dt
+    JOIN dim_equipment e ON dt.equipment_id = e.equipment_id
+    GROUP BY e.mine_id, dt.date_id
+),
+daily_quality AS (
+    SELECT mine_id, date_id, AVG(fe_content) AS avg_fe
+    FROM fact_ore_quality
+    GROUP BY mine_id, date_id
+)
+SELECT m.mine_name, d.full_date,
+       p.tons, p.trips,
+       COALESCE(dt.downtime_min, 0) AS downtime_min,
+       q.avg_fe
+FROM daily_production p
+JOIN dim_mine m ON p.mine_id = m.mine_id
+JOIN dim_date d ON p.date_id = d.date_id
+LEFT JOIN daily_downtime dt
+    ON p.mine_id = dt.mine_id AND p.date_id = dt.date_id
+LEFT JOIN daily_quality q
+    ON p.mine_id = q.mine_id AND p.date_id = q.date_id
+ORDER BY d.full_date, m.mine_name;</code></pre>
+    </section>
+
+    <!-- CTE vs производная таблица -->
+    <section>
+        <h2>CTE vs производная таблица</h2>
+        <table>
+            <tr>
+                <th>Характеристика</th>
+                <th>Производная таблица</th>
+                <th>CTE (WITH)</th>
+            </tr>
+            <tr>
+                <td><strong>Читаемость</strong></td>
+                <td>Вложенные &mdash; сложно</td>
+                <td class="highlight-green">Линейная структура</td>
+            </tr>
+            <tr>
+                <td><strong>Повторное использование</strong></td>
+                <td>Дублирование подзапроса</td>
+                <td class="highlight-green">Ссылка по имени</td>
+            </tr>
+            <tr>
+                <td><strong>Рекурсия</strong></td>
+                <td>Невозможна</td>
+                <td class="highlight-green">WITH RECURSIVE</td>
+            </tr>
+            <tr>
+                <td><strong>Оптимизация (PG 12+)</strong></td>
+                <td>Всегда inline</td>
+                <td>Inline по умолчанию (если 1 ссылка)</td>
+            </tr>
+            <tr>
+                <td><strong>Область видимости</strong></td>
+                <td>Только в том FROM, где определена</td>
+                <td class="highlight-green">Весь основной запрос</td>
+            </tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>PostgreSQL 12+:</strong> CTE по умолчанию встраиваются (inline) в запрос. Если нужно принудительно материализовать &mdash; используйте <code>WITH cte AS MATERIALIZED (...)</code>.
+        </div>
+    </section>
+
+    <!-- NOT MATERIALIZED / MATERIALIZED -->
+    <section>
+        <h2>CTE: MATERIALIZED vs NOT MATERIALIZED</h2>
+        <pre><code class="language-sql">-- PostgreSQL 12+: управление материализацией CTE
+
+-- CTE вычисляется 1 раз и результат кешируется
+WITH heavy_query AS MATERIALIZED (
+    SELECT equipment_id, AVG(sensor_value) AS avg_val
+    FROM fact_equipment_telemetry
+    GROUP BY equipment_id
+)
+SELECT * FROM heavy_query WHERE avg_val > 100
+UNION ALL
+SELECT * FROM heavy_query WHERE avg_val < 50;
+
+-- CTE встраивается в основной запрос (по умолчанию)
+WITH light_filter AS NOT MATERIALIZED (
+    SELECT * FROM dim_equipment WHERE status = 'active'
+)
+SELECT * FROM light_filter WHERE mine_id = 1;</code></pre>
+        <div class="card-orange card">
+            <strong>Когда MATERIALIZED:</strong> CTE используется &gt; 1 раза или запрос внутри тяжёлый.<br>
+            <strong>Когда NOT MATERIALIZED:</strong> CTE используется 1 раз, оптимизатору нужен доступ к фильтрам.
+        </div>
+    </section>
+
+    <!-- Ограничения CTE MATERIALIZED -->
+    <section>
+        <h2>Ограничения CTE MATERIALIZED</h2>
+        <table>
+            <thead>
+                <tr><th>Ограничение</th><th>Суть</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Барьер оптимизации</strong></td>
+                    <td>Предикаты из внешнего запроса <span class="highlight-orange">не проталкиваются</span> внутрь CTE &mdash; индексы базовых таблиц могут не использоваться</td>
+                </tr>
+                <tr>
+                    <td><strong>Нет индексов на результате</strong></td>
+                    <td>В отличие от MATERIALIZED VIEW, на результат CTE нельзя создать индекс</td>
+                </tr>
+                <tr>
+                    <td><strong>Потребление памяти</strong></td>
+                    <td>Результат хранится в <code>work_mem</code>, при переполнении &mdash; сброс на диск (temp files)</td>
+                </tr>
+                <tr>
+                    <td><strong>Время жизни &mdash; 1 запрос</strong></td>
+                    <td>Результат существует только в рамках текущего оператора (нельзя переиспользовать)</td>
+                </tr>
+                <tr>
+                    <td><strong>Только SELECT</strong></td>
+                    <td>Data-modifying CTE (INSERT/UPDATE/DELETE) всегда материализуются &mdash; хинт не применим</td>
+                </tr>
+                <tr>
+                    <td><strong>WITH RECURSIVE</strong></td>
+                    <td>Рекурсивные CTE всегда материализуются &mdash; <code>NOT MATERIALIZED</code> для них не работает</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Пример: барьер оптимизации -->
+    <section>
+        <h2>Пример: барьер оптимизации</h2>
+        <pre><code class="language-sql">-- MATERIALIZED — фильтр НЕ проталкивается внутрь CTE
+WITH production AS MATERIALIZED (
+    SELECT mine_id, SUM(tons_mined) AS total
+    FROM fact_production           -- сканирует ВСЕ строки
+    GROUP BY mine_id               -- агрегирует ВСЕ шахты
+)
+SELECT * FROM production
+WHERE mine_id = 1;                 -- фильтр только снаружи
+
+-- NOT MATERIALIZED — оптимизатор встроит CTE и протолкнёт фильтр
+WITH production AS NOT MATERIALIZED (
+    SELECT mine_id, SUM(tons_mined) AS total
+    FROM fact_production           -- оптимизатор добавит mine_id = 1
+    GROUP BY mine_id               -- агрегирует только 1 шахту
+)
+SELECT * FROM production
+WHERE mine_id = 1;</code></pre>
+        <div class="card-orange card" style="font-size: 0.8em;">
+            <strong>EXPLAIN ANALYZE</strong> покажет разницу: при MATERIALIZED &mdash; Seq Scan по всей таблице, при NOT MATERIALIZED &mdash; Index Scan по mine_id = 1.
+        </div>
+    </section>
+
+    <!-- Когда использовать MATERIALIZED -->
+    <section>
+        <h2>Когда использовать MATERIALIZED?</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept" style="border-color: var(--accent6);">
+                    <h3 style="color: var(--accent6);">MATERIALIZED &mdash; полезен</h3>
+                    <ul style="font-size: 0.78em;">
+                        <li>CTE используется <strong>&gt; 1 раза</strong> &mdash; избегаем повторного вычисления</li>
+                        <li>CTE содержит <strong>volatile-функции</strong> (<code>random()</code>, <code>now()</code>) &mdash; гарантия одного вычисления</li>
+                        <li>Нужна <strong>стабильность</strong> результата &mdash; один и тот же snapshot</li>
+                        <li>Тяжёлый запрос, результат <strong>маленький</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept" style="border-color: var(--accent2);">
+                    <h3 style="color: var(--accent2);">MATERIALIZED &mdash; вреден</h3>
+                    <ul style="font-size: 0.78em;">
+                        <li>Внешний запрос <strong>сильно фильтрует</strong> результат CTE</li>
+                        <li>CTE возвращает <strong>большой объём</strong> данных</li>
+                        <li>Используется <strong>один раз</strong> &mdash; нет смысла кешировать</li>
+                        <li>Критична <strong>скорость</strong> &mdash; барьер оптимизации замедлит план</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-top: 10px; font-size: 0.8em;">
+            <strong>PostgreSQL 12+ по умолчанию:</strong> CTE с 1 ссылкой &rarr; NOT MATERIALIZED (встраивается), CTE с &gt; 1 ссылкой &rarr; MATERIALIZED (кешируется).
+        </div>
+    </section>
+
+    <!-- ========== РЕКУРСИВНЫЕ CTE ========== -->
+    <section>
+        <h2>Рекурсивные CTE: WITH RECURSIVE</h2>
+        <div class="key-concept">
+            <h3>Зачем нужна рекурсия?</h3>
+            <ul>
+                <li>Обход <strong>иерархий</strong> (оргструктура, дерево категорий)</li>
+                <li>Генерация <strong>последовательностей</strong> (даты, числовые ряды)</li>
+                <li>Обход <strong>графов</strong> (маршруты в шахте)</li>
+            </ul>
+        </div>
+        <pre><code class="language-sql">-- Структура рекурсивного CTE
+WITH RECURSIVE cte_name AS (
+    -- Якорный (начальный) запрос
+    SELECT ...
+    UNION ALL
+    -- Рекурсивный запрос (ссылается на cte_name)
+    SELECT ...
+    FROM cte_name
+    JOIN ...
+)
+SELECT * FROM cte_name;</code></pre>
+    </section>
+
+    <!-- Иерархия шахт -->
+    <section>
+        <h2>Рекурсия: иерархия локаций &laquo;Руда+&raquo;</h2>
+        <div style="text-align: center; margin: 10px 0;">
+            <span class="tree-node">Шахта &laquo;Северная&raquo;</span><br>
+            <span class="tree-connector">&darr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;</span><br>
+            <span class="tree-node level1">Ствол &laquo;Главный&raquo;</span>
+            <span class="tree-node level1">Ствол &laquo;Вентиляционный&raquo;</span><br>
+            <span class="tree-connector">&darr;&nbsp;&nbsp;&nbsp;&darr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+            <span class="tree-node level2">Горизонт -300м</span>
+            <span class="tree-node level2">Горизонт -450м</span>
+        </div>
+        <pre><code class="language-sql">-- Дополнительная таблица для иерархии локаций
+CREATE TABLE dim_location_hierarchy (
+    location_id     INT PRIMARY KEY,
+    parent_id       INT REFERENCES dim_location_hierarchy(location_id),
+    location_name   VARCHAR(200),
+    location_type   VARCHAR(50),  -- шахта, ствол, горизонт, штрек, забой
+    depth_level     INT
+);</code></pre>
+    </section>
+
+    <!-- Рекурсивный обход иерархии -->
+    <section>
+        <h2>Рекурсивный обход дерева локаций</h2>
+        <pre><code class="language-sql">-- Все потомки шахты «Северная» (location_id = 1)
+WITH RECURSIVE location_tree AS (
+    -- Якорь: корневой элемент
+    SELECT location_id, parent_id, location_name,
+           location_type, depth_level,
+           location_name::TEXT AS full_path,
+           1 AS tree_depth
+    FROM dim_location_hierarchy
+    WHERE location_id = 1   -- Шахта «Северная»
+
+    UNION ALL
+
+    -- Рекурсия: дети текущего уровня
+    SELECT child.location_id, child.parent_id,
+           child.location_name, child.location_type,
+           child.depth_level,
+           tree.full_path || ' → ' || child.location_name,
+           tree.tree_depth + 1
+    FROM dim_location_hierarchy child
+    JOIN location_tree tree ON child.parent_id = tree.location_id
+)
+SELECT
+    REPEAT('  ', tree_depth - 1) || location_name AS hierarchy,
+    location_type,
+    full_path
+FROM location_tree
+ORDER BY full_path;</code></pre>
+    </section>
+
+    <!-- Результат обхода -->
+    <section>
+        <h2>Результат: дерево локаций</h2>
+        <table>
+            <tr>
+                <th>Иерархия</th>
+                <th>Тип</th>
+                <th>Полный путь</th>
+            </tr>
+            <tr>
+                <td>Шахта Северная</td>
+                <td>шахта</td>
+                <td>Шахта Северная</td>
+            </tr>
+            <tr>
+                <td>&nbsp;&nbsp;Ствол Главный</td>
+                <td>ствол</td>
+                <td>Шахта Северная &rarr; Ствол Главный</td>
+            </tr>
+            <tr>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;Горизонт -300м</td>
+                <td>горизонт</td>
+                <td>...Ствол Главный &rarr; Горизонт -300м</td>
+            </tr>
+            <tr>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Штрек 3-Сев</td>
+                <td>штрек</td>
+                <td>...Горизонт -300м &rarr; Штрек 3-Сев</td>
+            </tr>
+            <tr>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Забой 3С-7</td>
+                <td>забой</td>
+                <td>...Штрек 3-Сев &rarr; Забой 3С-7</td>
+            </tr>
+            <tr>
+                <td>&nbsp;&nbsp;Ствол Вентиляционный</td>
+                <td>ствол</td>
+                <td>Шахта Северная &rarr; Ствол Вент.</td>
+            </tr>
+        </table>
+        <div class="card-green card">
+            <strong>Рекурсивные CTE</strong> &mdash; стандартный способ обхода иерархий в SQL. В &laquo;Руда+&raquo; это незаменимо для навигации по структуре шахты.
+        </div>
+    </section>
+
+    <!-- Генерация последовательности дат -->
+    <section>
+        <h2>Рекурсивная генерация последовательности дат</h2>
+        <pre><code class="language-sql">-- Генерация календаря (все дни 2024 года)
+WITH RECURSIVE date_series AS (
+    SELECT DATE '2024-01-01' AS dt
+    UNION ALL
+    SELECT dt + INTERVAL '1 day'
+    FROM date_series
+    WHERE dt < DATE '2024-12-31'
+)
+SELECT dt::DATE AS calendar_date
+FROM date_series;
+
+-- Практическое применение: найти дни БЕЗ добычи
+WITH RECURSIVE date_series AS (
+    SELECT DATE '2024-01-01' AS dt
+    UNION ALL
+    SELECT dt + INTERVAL '1 day'
+    FROM date_series WHERE dt < DATE '2024-06-30'
+),
+production_dates AS (
+    SELECT DISTINCT d.full_date
+    FROM fact_production fp
+    JOIN dim_date d ON fp.date_id = d.date_id
+    WHERE fp.mine_id = 1
+)
+SELECT ds.dt AS missing_date
+FROM date_series ds
+LEFT JOIN production_dates pd ON ds.dt = pd.full_date
+WHERE pd.full_date IS NULL
+ORDER BY ds.dt;</code></pre>
+    </section>
+
+    <!-- generate_series: альтернатива рекурсии -->
+    <section>
+        <h2>PostgreSQL: generate_series (альтернатива)</h2>
+        <pre><code class="language-sql">-- PostgreSQL имеет встроенную функцию generate_series
+SELECT dt::DATE AS calendar_date
+FROM generate_series(
+    DATE '2024-01-01',
+    DATE '2024-12-31',
+    INTERVAL '1 day'
+) AS dt;
+
+-- Но рекурсивные CTE — стандарт SQL (работают в любой СУБД)
+-- generate_series — специфика PostgreSQL</code></pre>
+        <div class="card-orange card">
+            <strong>Совет:</strong> для генерации последовательностей в PostgreSQL предпочтительна <code>generate_series</code> (быстрее). Рекурсивные CTE &mdash; универсальный подход для обхода иерархий и графов.
+        </div>
+    </section>
+
+    <!-- Рекурсивная агрегация: нарастающий итог -->
+    <section>
+        <h2>CTE: накопительная добыча по дням</h2>
+        <pre><code class="language-sql">-- Нарастающий итог добычи за месяц (шахта «Северная»)
+WITH daily_tons AS (
+    SELECT d.full_date, SUM(fp.tons_mined) AS day_tons
+    FROM fact_production fp
+    JOIN dim_date d ON fp.date_id = d.date_id
+    WHERE fp.mine_id = 1
+      AND d.year = 2024 AND d.month = 1
+    GROUP BY d.full_date
+),
+running_total AS (
+    SELECT full_date, day_tons,
+           SUM(day_tons) OVER (ORDER BY full_date) AS cumulative_tons,
+           ROW_NUMBER() OVER (ORDER BY full_date) AS day_num
+    FROM daily_tons
+)
+SELECT full_date, day_tons,
+       ROUND(cumulative_tons, 1) AS cumulative_tons,
+       ROUND(cumulative_tons / day_num, 1) AS avg_per_day
+FROM running_total
+ORDER BY full_date;</code></pre>
+        <div class="card">
+            Здесь CTE используется не рекурсивно, а для <strong>поэтапного</strong> построения запроса: сначала агрегация по дням, затем нарастающий итог.
+        </div>
+    </section>
+
+    <!-- Защита от бесконечной рекурсии -->
+    <section>
+        <h2>Защита от бесконечной рекурсии</h2>
+        <pre><code class="language-sql">-- Ограничение глубины рекурсии
+WITH RECURSIVE location_tree AS (
+    SELECT location_id, parent_id, location_name,
+           1 AS depth
+    FROM dim_location_hierarchy
+    WHERE parent_id IS NULL
+
+    UNION ALL
+
+    SELECT child.location_id, child.parent_id,
+           child.location_name, tree.depth + 1
+    FROM dim_location_hierarchy child
+    JOIN location_tree tree ON child.parent_id = tree.location_id
+    WHERE tree.depth < 10   -- ОГРАНИЧЕНИЕ ГЛУБИНЫ!
+)
+SELECT * FROM location_tree;
+
+-- Глобальное ограничение PostgreSQL
+SET statement_timeout = '30s';  -- Таймаут для любого запроса</code></pre>
+        <div class="card-orange card">
+            <strong>Всегда добавляйте ограничение глубины!</strong> Циклические ссылки в данных (parent_id указывает на потомка) вызовут бесконечную рекурсию и исчерпание памяти.
+        </div>
+    </section>
+
+    <!-- CYCLE detection (PG 14+) -->
+    <section>
+        <h2>PostgreSQL 14+: обнаружение циклов</h2>
+        <pre><code class="language-sql">-- CYCLE clause (PostgreSQL 14+)
+WITH RECURSIVE location_tree AS (
+    SELECT location_id, parent_id, location_name,
+           ARRAY[location_id] AS path
+    FROM dim_location_hierarchy
+    WHERE parent_id IS NULL
+
+    UNION ALL
+
+    SELECT child.location_id, child.parent_id,
+           child.location_name,
+           tree.path || child.location_id
+    FROM dim_location_hierarchy child
+    JOIN location_tree tree ON child.parent_id = tree.location_id
+    WHERE child.location_id != ALL(tree.path)  -- Защита от циклов!
+)
+CYCLE location_id SET is_cycle USING cycle_path;
+
+-- is_cycle = TRUE для строк, создающих цикл
+SELECT * FROM location_tree WHERE NOT is_cycle;</code></pre>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 5: ВРЕМЕННЫЕ ТАБЛИЦЫ                                     -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 5. Временные таблицы</h2>
+        <p>Промежуточное хранение данных в рамках сессии</p>
+        <div class="key-concept">
+            <h3>Зачем нужны временные таблицы?</h3>
+            <ul>
+                <li><strong>Промежуточные вычисления</strong> &mdash; слишком сложно для одного CTE</li>
+                <li><strong>Многократное использование</strong> &mdash; результат нужен в нескольких запросах</li>
+                <li><strong>Индексы</strong> &mdash; можно создать индекс на промежуточных данных</li>
+                <li><strong>ETL-процессы</strong> &mdash; staging-данные при загрузке</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- CREATE TEMP TABLE -->
+    <section>
+        <h2>CREATE TEMP TABLE: синтаксис</h2>
+        <pre><code class="language-sql">-- Базовый синтаксис
+CREATE TEMPORARY TABLE имя_таблицы (
+    столбец1 тип,
+    столбец2 тип,
+    ...
+);
+
+-- Сокращённая запись
+CREATE TEMP TABLE имя_таблицы (
+    столбец1 тип,
+    столбец2 тип
+);
+
+-- Создание из результата запроса (самый частый способ)
+CREATE TEMP TABLE tmp_mine_totals AS
+SELECT
+    m.mine_name,
+    SUM(fp.tons_mined)       AS total_tons,
+    SUM(fp.operating_hours)  AS total_hours,
+    COUNT(DISTINCT fp.equipment_id) AS equip_count
+FROM fact_production fp
+JOIN dim_mine m ON fp.mine_id = m.mine_id
+WHERE fp.date_id BETWEEN 20240101 AND 20240331
+GROUP BY m.mine_name;</code></pre>
+    </section>
+
+    <!-- Использование TEMP TABLE -->
+    <section>
+        <h2>Работа с временной таблицей</h2>
+        <pre><code class="language-sql">-- Можно создавать индексы!
+CREATE INDEX idx_tmp_mine ON tmp_mine_totals(mine_name);
+
+-- Использовать в нескольких запросах
+SELECT mine_name, total_tons
+FROM tmp_mine_totals ORDER BY total_tons DESC;
+
+SELECT mine_name,
+       ROUND(total_tons / NULLIF(total_hours, 0), 2) AS tons_per_hour
+FROM tmp_mine_totals;
+
+-- Можно INSERT/UPDATE/DELETE
+INSERT INTO tmp_mine_totals
+VALUES ('Шахта Тестовая', 0, 0, 0);
+
+-- Удаление (или исчезнет при завершении сессии)
+DROP TABLE tmp_mine_totals;</code></pre>
+        <div class="card">
+            <strong>Главное отличие от CTE:</strong> временная таблица живёт всю сессию, на неё можно создать индексы, и она доступна в любом количестве последующих запросов.
+        </div>
+    </section>
+
+    <!-- ON COMMIT -->
+    <section>
+        <h2>ON COMMIT: управление временем жизни</h2>
+        <pre><code class="language-sql">-- По умолчанию: данные живут до конца сессии
+CREATE TEMP TABLE tmp_default (id INT)
+ON COMMIT PRESERVE ROWS;       -- значение по умолчанию
+
+-- Очистка данных при COMMIT (структура остаётся)
+CREATE TEMP TABLE tmp_transaction_only (id INT)
+ON COMMIT DELETE ROWS;
+
+-- Удаление таблицы целиком при COMMIT
+CREATE TEMP TABLE tmp_drop_on_commit (id INT)
+ON COMMIT DROP;</code></pre>
+        <table>
+            <thead>
+                <tr><th>Режим</th><th>Данные после COMMIT</th><th>Таблица после COMMIT</th><th>Когда использовать</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>PRESERVE ROWS</code></td>
+                    <td class="highlight-green">Сохраняются</td>
+                    <td class="highlight-green">Существует</td>
+                    <td>Многошаговые вычисления в сессии</td>
+                </tr>
+                <tr>
+                    <td><code>DELETE ROWS</code></td>
+                    <td class="highlight-orange">Удаляются</td>
+                    <td class="highlight-green">Существует</td>
+                    <td>Повторные загрузки в каждой транзакции</td>
+                </tr>
+                <tr>
+                    <td><code>DROP</code></td>
+                    <td class="highlight-orange">Удаляются</td>
+                    <td class="highlight-orange">Удаляется</td>
+                    <td>Одноразовые промежуточные данные</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- TEMP TABLE: область видимости -->
+    <section>
+        <h2>Область видимости и особенности</h2>
+        <div class="key-concept">
+            <h3>Важные свойства временных таблиц в PostgreSQL</h3>
+            <ul>
+                <li><strong>Видимость:</strong> только текущая сессия &mdash; другие пользователи не видят</li>
+                <li><strong>Приоритет имён:</strong> TEMP TABLE с тем же именем &laquo;перекрывает&raquo; обычную таблицу</li>
+                <li><strong>Схема:</strong> хранятся в специальной схеме <code>pg_temp</code></li>
+                <li><strong>WAL-логирование:</strong> минимальное &mdash; быстрее обычных таблиц</li>
+                <li><strong>VACUUM/ANALYZE:</strong> autovacuum <span class="highlight-orange">не обрабатывает</span> TEMP &mdash; нужен ручной <code>ANALYZE</code> после массовой загрузки</li>
+                <li><strong>Статистика:</strong> планировщик не имеет актуальной статистики &mdash; может строить плохие планы</li>
+            </ul>
+        </div>
+        <pre><code class="language-sql">-- После массовой загрузки — обновить статистику вручную
+CREATE TEMP TABLE tmp_telemetry AS
+SELECT * FROM fact_equipment_telemetry
+WHERE date_id BETWEEN 20240101 AND 20240131;
+
+ANALYZE tmp_telemetry;  -- важно для хороших планов запросов!</code></pre>
+    </section>
+
+    <!-- UNLOGGED TABLE -->
+    <section>
+        <h2>UNLOGGED TABLE: альтернатива TEMP</h2>
+        <pre><code class="language-sql">-- UNLOGGED — постоянная таблица без WAL-записи
+CREATE UNLOGGED TABLE staging_production (
+    mine_name   VARCHAR(100),
+    shift_date  DATE,
+    tons_mined  NUMERIC,
+    loaded_at   TIMESTAMP DEFAULT now()
+);
+
+-- Быстрая загрузка данных (нет WAL → быстрее INSERT)
+INSERT INTO staging_production (mine_name, shift_date, tons_mined)
+SELECT m.mine_name, d.full_date, SUM(fp.tons_mined)
+FROM fact_production fp
+JOIN dim_mine m ON fp.mine_id = m.mine_id
+JOIN dim_date d ON fp.date_id = d.date_id
+GROUP BY m.mine_name, d.full_date;</code></pre>
+        <div class="card-orange card">
+            <strong>Внимание:</strong> UNLOGGED таблицы <span class="highlight-orange">теряют данные</span> при аварийном перезапуске сервера (crash recovery). Используйте только для данных, которые можно восстановить.
+        </div>
+    </section>
+
+    <!-- Сравнительная таблица -->
+    <section>
+        <h2>TEMP vs UNLOGGED vs CTE vs обычная таблица</h2>
+        <table>
+            <thead>
+                <tr><th></th><th>CTE</th><th>TEMP TABLE</th><th>UNLOGGED TABLE</th><th>Обычная таблица</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Время жизни</strong></td>
+                    <td>1 запрос</td>
+                    <td>Сессия</td>
+                    <td>Постоянно</td>
+                    <td>Постоянно</td>
+                </tr>
+                <tr>
+                    <td><strong>Видимость</strong></td>
+                    <td>1 запрос</td>
+                    <td>1 сессия</td>
+                    <td>Все сессии</td>
+                    <td>Все сессии</td>
+                </tr>
+                <tr>
+                    <td><strong>Индексы</strong></td>
+                    <td class="highlight-orange">Нет</td>
+                    <td class="highlight-green">Да</td>
+                    <td class="highlight-green">Да</td>
+                    <td class="highlight-green">Да</td>
+                </tr>
+                <tr>
+                    <td><strong>DML</strong></td>
+                    <td class="highlight-orange">Нет</td>
+                    <td class="highlight-green">Да</td>
+                    <td class="highlight-green">Да</td>
+                    <td class="highlight-green">Да</td>
+                </tr>
+                <tr>
+                    <td><strong>WAL-запись</strong></td>
+                    <td>&mdash;</td>
+                    <td>Минимальная</td>
+                    <td class="highlight-orange">Нет</td>
+                    <td>Полная</td>
+                </tr>
+                <tr>
+                    <td><strong>Crash-safe</strong></td>
+                    <td>&mdash;</td>
+                    <td>&mdash;</td>
+                    <td class="highlight-orange">Нет</td>
+                    <td class="highlight-green">Да</td>
+                </tr>
+                <tr>
+                    <td><strong>Autovacuum</strong></td>
+                    <td>&mdash;</td>
+                    <td class="highlight-orange">Нет</td>
+                    <td class="highlight-green">Да</td>
+                    <td class="highlight-green">Да</td>
+                </tr>
+                <tr>
+                    <td><strong>Скорость записи</strong></td>
+                    <td>&mdash;</td>
+                    <td>Быстрая</td>
+                    <td>Очень быстрая</td>
+                    <td>Стандартная</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Пример ETL-процесса -->
+    <section>
+        <h2>Пример: ETL-загрузка данных &laquo;Руда+&raquo;</h2>
+        <pre><code class="language-sql">-- Шаг 1: Загрузка сырых данных во временную таблицу
+CREATE TEMP TABLE tmp_raw_production AS
+SELECT * FROM external_data_source;  -- CSV, API и т.д.
+
+-- Шаг 2: Очистка и валидация
+DELETE FROM tmp_raw_production
+WHERE tons_mined < 0 OR tons_mined > 10000;
+
+ANALYZE tmp_raw_production;
+
+-- Шаг 3: Обогащение — подтягиваем ключи измерений
+CREATE TEMP TABLE tmp_enriched AS
+SELECT
+    m.mine_id, d.date_id, e.equipment_id,
+    r.tons_mined, r.trips_count
+FROM tmp_raw_production r
+JOIN dim_mine m      ON r.mine_name = m.mine_name
+JOIN dim_date d      ON r.shift_date = d.full_date
+JOIN dim_equipment e ON r.inv_number = e.inventory_number;
+
+CREATE INDEX idx_tmp_enr_date ON tmp_enriched(date_id);
+
+-- Шаг 4: Вставка в целевую таблицу фактов
+INSERT INTO fact_production (mine_id, date_id, equipment_id,
+                             tons_mined, trips_count)
+SELECT mine_id, date_id, equipment_id,
+       tons_mined, trips_count
+FROM tmp_enriched;</code></pre>
+    </section>
+
+    <!-- Вопрос для обсуждения -->
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="card-orange card">
+            <h3>Что выбрать для задачи?</h3>
+            <p>Обсудите в парах (3 минуты):</p>
+            <ul>
+                <li>Вам нужно подготовить ежедневный отчёт, который использует промежуточную агрегацию в <strong>3 последующих запросах</strong> с разными фильтрами</li>
+                <li>Промежуточный результат &mdash; ~500 000 строк</li>
+                <li>Нужна фильтрация по дате и шахте</li>
+            </ul>
+            <p><strong>CTE, TEMP TABLE, MATERIALIZED VIEW или UNLOGGED TABLE?</strong></p>
+        </div>
+        <div class="fragment card-green card">
+            <strong>Ответ:</strong> TEMP TABLE &mdash; результат нужен в нескольких запросах (CTE не подходит), можно создать индексы по дате и шахте (500K строк &mdash; индекс критичен), данные нужны только в текущей сессии (MV и UNLOGGED избыточны).
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 6: SQL vs DAX                                            -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 6. SQL vs DAX: табличные выражения</h2>
+        <p>Как те же задачи решаются в DAX?</p>
+    </section>
+
+    <!-- VIEW vs DAX: Measures / Calculated Tables -->
+    <section>
+        <h2>SQL VIEW &harr; DAX подходы</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- VIEW = сохранённый запрос
+CREATE VIEW v_production AS
+SELECT
+    m.mine_name,
+    d.year_month,
+    SUM(fp.tons_mined) AS tons
+FROM fact_production fp
+JOIN dim_mine m
+    ON fp.mine_id = m.mine_id
+JOIN dim_date d
+    ON fp.date_id = d.date_id
+GROUP BY m.mine_name,
+         d.year_month;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX (Power BI)</h3>
+                <pre><code class="language-dax">// Вычисляемая таблица (Calculated Table)
+// Аналог VIEW в Power BI
+Production Summary =
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_mine[mine_name],
+        dim_date[year_month]
+    ),
+    "Tons",
+    CALCULATE(
+        SUM(
+          fact_production[tons_mined]
+        )
+    )
+)</code></pre>
+            </div>
+        </div>
+        <div class="card">
+            <strong>Различие:</strong> VIEW не хранит данные, DAX Calculated Table &mdash; материализуется в памяти (аналог MATERIALIZED VIEW).
+        </div>
+    </section>
+
+    <!-- CTE vs DAX VAR -->
+    <section>
+        <h2>SQL CTE &harr; DAX VAR</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (CTE)</h3>
+                <pre><code class="language-sql">WITH daily AS (
+    SELECT date_id,
+       SUM(tons_mined) AS tons
+    FROM fact_production
+    WHERE mine_id = 1
+    GROUP BY date_id
+),
+stats AS (
+    SELECT
+        AVG(tons) AS avg_tons,
+        MAX(tons) AS max_tons
+    FROM daily
+)
+SELECT avg_tons, max_tons,
+       max_tons - avg_tons AS delta
+FROM stats;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX (VAR)</h3>
+                <pre><code class="language-dax">EVALUATE
+VAR DailyTons =
+    ADDCOLUMNS(
+        VALUES(dim_date[date_id]),
+        "Tons",
+        CALCULATE(
+            SUM(
+              fact_production[tons_mined]
+            ),
+            dim_mine[mine_id] = 1
+        )
+    )
+VAR AvgTons = AVERAGEX(DailyTons, [Tons])
+VAR MaxTons = MAXX(DailyTons, [Tons])
+RETURN
+ROW(
+    "AvgTons", AvgTons,
+    "MaxTons", MaxTons,
+    "Delta", MaxTons - AvgTons
+)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Рекурсия: SQL vs DAX PATH -->
+    <section>
+        <h2>Рекурсия: SQL vs DAX</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (WITH RECURSIVE)</h3>
+                <pre><code class="language-sql">WITH RECURSIVE loc_tree AS (
+    SELECT location_id,
+           location_name,
+           location_name::TEXT
+               AS full_path
+    FROM dim_location_hierarchy
+    WHERE parent_id IS NULL
+    UNION ALL
+    SELECT c.location_id,
+           c.location_name,
+           t.full_path || ' → '
+               || c.location_name
+    FROM dim_location_hierarchy c
+    JOIN loc_tree t
+        ON c.parent_id = t.location_id
+)
+SELECT * FROM loc_tree;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX (PATH / PATHITEM)</h3>
+                <pre><code class="language-dax">// DAX: встроенные функции
+// для иерархий parent-child
+
+// Вычисляемый столбец:
+FullPath =
+PATH(
+    dim_location[location_id],
+    dim_location[parent_id]
+)
+// Результат: "1|3|7|15"
+
+// Извлечение уровня:
+Level2Name =
+LOOKUPVALUE(
+    dim_location[location_name],
+    dim_location[location_id],
+    PATHITEM(
+        dim_location[FullPath],
+        2, INTEGER
+    )
+)
+
+// Глубина:
+Depth = PATHLENGTH(
+    dim_location[FullPath]
+)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Сравнительная таблица -->
+    <section>
+        <h2>Сводная таблица: SQL vs DAX</h2>
+        <table>
+            <tr>
+                <th>Концепция</th>
+                <th>SQL (PostgreSQL)</th>
+                <th>DAX (Power BI)</th>
+            </tr>
+            <tr>
+                <td><strong>Именованный запрос</strong></td>
+                <td>CREATE VIEW</td>
+                <td>Calculated Table / Measure</td>
+            </tr>
+            <tr>
+                <td><strong>Материализация</strong></td>
+                <td>MATERIALIZED VIEW</td>
+                <td>Calculated Table (всегда в RAM)</td>
+            </tr>
+            <tr>
+                <td><strong>Параметризация</strong></td>
+                <td>Табличная функция</td>
+                <td>CALCULATE + фильтры</td>
+            </tr>
+            <tr>
+                <td><strong>Промежуточные вычисления</strong></td>
+                <td>CTE (WITH)</td>
+                <td>VAR ... RETURN</td>
+            </tr>
+            <tr>
+                <td><strong>Подзапрос в FROM</strong></td>
+                <td>Производная таблица</td>
+                <td>ADDCOLUMNS(SUMMARIZE(...))</td>
+            </tr>
+            <tr>
+                <td><strong>Иерархии</strong></td>
+                <td>WITH RECURSIVE</td>
+                <td>PATH / PATHITEM / PATHLENGTH</td>
+            </tr>
+            <tr>
+                <td><strong>Генерация дат</strong></td>
+                <td>generate_series / рекурсивный CTE</td>
+                <td>CALENDAR / CALENDARAUTO</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- DAX: SUMMARIZE + ADDCOLUMNS подробнее -->
+    <section>
+        <h2>DAX: табличные выражения подробнее</h2>
+        <pre><code class="language-dax">// SUMMARIZE — аналог GROUP BY
+// Создаёт таблицу уникальных комбинаций
+EVALUATE
+SUMMARIZE(
+    fact_production,
+    dim_mine[mine_name],
+    dim_shift[shift_name]
+)
+
+// ADDCOLUMNS — добавляет вычисляемые столбцы
+// Аналог SELECT с подзапросами / CTE
+EVALUATE
+ADDCOLUMNS(
+    SUMMARIZE(
+        fact_production,
+        dim_mine[mine_name]
+    ),
+    "Total Tons", CALCULATE(SUM(fact_production[tons_mined])),
+    "Avg Trips", CALCULATE(AVERAGE(fact_production[trips_count])),
+    "Downtime Hours",
+        CALCULATE(
+            SUM(fact_equipment_downtime[duration_min]) / 60
+        )
+)
+ORDER BY [Total Tons] DESC</code></pre>
+    </section>
+
+    <!-- DAX: CALENDAR для генерации дат -->
+    <section>
+        <h2>DAX: генерация календаря</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (рекурсивный CTE)</h3>
+                <pre><code class="language-sql">WITH RECURSIVE dates AS (
+    SELECT DATE '2024-01-01' AS dt
+    UNION ALL
+    SELECT dt + INTERVAL '1 day'
+    FROM dates
+    WHERE dt < DATE '2024-12-31'
+)
+SELECT dt,
+  EXTRACT(DOW FROM dt) AS dow,
+  EXTRACT(MONTH FROM dt) AS mon
+FROM dates;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX (CALENDAR)</h3>
+                <pre><code class="language-dax">// Встроенная функция CALENDAR
+EVALUATE
+ADDCOLUMNS(
+    CALENDAR(
+        DATE(2024, 1, 1),
+        DATE(2024, 12, 31)
+    ),
+    "Day of Week",
+        WEEKDAY([Date]),
+    "Month",
+        MONTH([Date]),
+    "Month Name",
+        FORMAT([Date], "MMMM")
+)
+
+// CALENDARAUTO — автоматический
+// диапазон по данным модели
+// CalendarTable = CALENDARAUTO()</code></pre>
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ГРУППОВАЯ РАБОТА                                              -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Работа в группах</h2>
+        <div class="card-orange card">
+            <h3>Кейс: проектирование аналитических объектов для MES &laquo;Руда+&raquo;</h3>
+            <p>Разделитесь на 3 группы. Каждая группа проектирует набор VIEW/CTE для своей задачи:</p>
+            <ul>
+                <li><strong>Группа 1:</strong> Мониторинг качества руды &mdash; VIEW для ежедневных сводок, CTE для тренда содержания Fe по месяцам</li>
+                <li><strong>Группа 2:</strong> Анализ простоев &mdash; MATERIALIZED VIEW для топ причин, рекурсивный CTE для иерархии причин</li>
+                <li><strong>Группа 3:</strong> Эффективность оборудования &mdash; табличная функция с параметром mine_id, CTE для расчёта OEE</li>
+            </ul>
+            <p><strong>Время: 10 минут. Результат:</strong> SQL-скрипт + описание (зачем, для кого, как часто обновляется).</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>Обсуждение результатов</h2>
+        <table>
+            <tr>
+                <th>Группа</th>
+                <th>Объект</th>
+                <th>Тип</th>
+                <th>Обновление</th>
+            </tr>
+            <tr>
+                <td><strong>1. Качество</strong></td>
+                <td>v_daily_ore_quality</td>
+                <td>VIEW / MVIEW</td>
+                <td>Раз в сутки (MVIEW)</td>
+            </tr>
+            <tr>
+                <td><strong>2. Простои</strong></td>
+                <td>mv_top_downtime_reasons</td>
+                <td>MATERIALIZED VIEW</td>
+                <td>Раз в час</td>
+            </tr>
+            <tr>
+                <td><strong>3. Эффективность</strong></td>
+                <td>fn_mine_oee(mine_id, period)</td>
+                <td>Табличная функция</td>
+                <td>По запросу (runtime)</td>
+            </tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Вопрос для всех:</strong> Какой объект вы бы выбрали для дашборда руководства шахты, обновляемого каждые 5 минут?
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- КВИЗ                                                          -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Квиз: проверим знания</h2>
+        <p>Ответьте на вопросы по материалу модуля</p>
+    </section>
+
+    <section>
+        <h2>Вопрос 1</h2>
+        <p><strong>Какое ключевое отличие MATERIALIZED VIEW от обычного VIEW?</strong></p>
+        <div class="quiz-option">A) MATERIALIZED VIEW не поддерживает JOIN</div>
+        <div class="quiz-option">B) MATERIALIZED VIEW физически хранит результат запроса на диске</div>
+        <div class="quiz-option">C) MATERIALIZED VIEW автоматически обновляется при изменении данных</div>
+        <div class="quiz-option">D) MATERIALIZED VIEW может содержать только агрегатные функции</div>
+        <div class="fragment card-green card">
+            <strong>Ответ: B</strong> &mdash; MATERIALIZED VIEW хранит результат на диске. Обновляется только по команде REFRESH.
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос 2</h2>
+        <p><strong>Что позволяет WITH CHECK OPTION в представлении?</strong></p>
+        <div class="quiz-option">A) Проверить, существует ли представление</div>
+        <div class="quiz-option">B) Гарантировать, что INSERT/UPDATE через VIEW соответствуют условию WHERE</div>
+        <div class="quiz-option">C) Запретить DROP VIEW</div>
+        <div class="quiz-option">D) Включить автоматическую проверку данных</div>
+        <div class="fragment card-green card">
+            <strong>Ответ: B</strong> &mdash; WITH CHECK OPTION запрещает вставку/обновление строк, которые не удовлетворяют WHERE-условию представления.
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос 3</h2>
+        <p><strong>Какой DAX-аналог SQL CTE (WITH)?</strong></p>
+        <div class="quiz-option">A) CALCULATE</div>
+        <div class="quiz-option">B) SUMMARIZE</div>
+        <div class="quiz-option">C) VAR ... RETURN</div>
+        <div class="quiz-option">D) FILTER</div>
+        <div class="fragment card-green card">
+            <strong>Ответ: C</strong> &mdash; конструкция VAR/RETURN в DAX позволяет определить промежуточные вычисления, аналогично CTE в SQL.
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос 4</h2>
+        <p><strong>Рекурсивный CTE обязательно содержит:</strong></p>
+        <div class="quiz-option">A) CROSS JOIN и LATERAL</div>
+        <div class="quiz-option">B) Якорный запрос + UNION ALL + рекурсивный запрос</div>
+        <div class="quiz-option">C) Только UNION (без ALL)</div>
+        <div class="quiz-option">D) Подзапрос в WHERE</div>
+        <div class="fragment card-green card">
+            <strong>Ответ: B</strong> &mdash; рекурсивный CTE = якорь (начальные данные) + UNION ALL + рекурсивная часть (ссылается сама на себя).
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос 5</h2>
+        <p><strong>Главное преимущество табличной функции перед VIEW:</strong></p>
+        <div class="quiz-option">A) Быстрее выполняется</div>
+        <div class="quiz-option">B) Принимает параметры</div>
+        <div class="quiz-option">C) Можно обновлять данные</div>
+        <div class="quiz-option">D) Поддерживает индексы</div>
+        <div class="fragment card-green card">
+            <strong>Ответ: B</strong> &mdash; табличная функция принимает аргументы, что позволяет параметризовать запрос (VIEW &mdash; фиксированный запрос).
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос 6</h2>
+        <p><strong>Какая DAX-функция используется для обхода иерархий parent-child?</strong></p>
+        <div class="quiz-option">A) TREATAS</div>
+        <div class="quiz-option">B) PATH / PATHITEM</div>
+        <div class="quiz-option">C) HIERARCHIZE</div>
+        <div class="quiz-option">D) RECURSIVE</div>
+        <div class="fragment card-green card">
+            <strong>Ответ: B</strong> &mdash; PATH строит строку с полным путём от корня, PATHITEM извлекает элемент по позиции, PATHLENGTH &mdash; глубину.
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Части 3–5 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 3 — Табличные функции, Часть 4 — CTE и рекурсивные CTE, Часть 5 — DAX-аналоги</p>
+        <p><strong>Задание:</strong> Создайте табличные функции, постройте рекурсивный CTE для иерархии шахт, сравните с DAX-конструкциями (DEFINE, VAR).</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 15–20 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на табличные выражения: Views, CTE, табличные функции</p>
+        <p><strong>Формат:</strong> SQL и DAX, создание представлений и CTE для аналитики «Руда+»</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <section>
+        <h2>Итоги модуля</h2>
+        <div class="card">
+            <strong>VIEW</strong> &mdash; именованный запрос для упрощения и безопасности. MATERIALIZED VIEW &mdash; кеширование результатов на диске.
+        </div>
+        <div class="card-orange card">
+            <strong>Табличные функции</strong> &mdash; параметризованные &laquo;VIEW&raquo;. RETURNS TABLE / SETOF &mdash; два синтаксиса в PostgreSQL.
+        </div>
+        <div class="card">
+            <strong>Производные таблицы</strong> &mdash; подзапросы в FROM. Удобны для простых случаев, но теряют читаемость при вложенности.
+        </div>
+        <div class="card-green card">
+            <strong>CTE (WITH)</strong> &mdash; главный инструмент для сложных аналитических запросов. Рекурсивные CTE &mdash; для иерархий и последовательностей.
+        </div>
+    </section>
+
+    <section>
+        <h2>Что дальше?</h2>
+        <ul>
+            <li><strong>Практическая работа:</strong> создание VIEW, табличных функций и CTE для &laquo;Руда+&raquo;</li>
+            <li><strong>Лабораторная работа:</strong> рекурсивные CTE, материализованные представления, DAX-аналоги</li>
+            <li><strong>Модуль 12:</strong> следующая тема курса</li>
+        </ul>
+        <div class="card" style="margin-top: 20px;">
+            <strong>Ресурсы:</strong><br>
+            PostgreSQL: <a href="https://www.postgresql.org/docs/current/queries-with.html">WITH Queries (CTE)</a> |
+            <a href="https://www.postgresql.org/docs/current/sql-createview.html">CREATE VIEW</a> |
+            <a href="https://www.postgresql.org/docs/current/sql-creatematerializedview.html">CREATE MATERIALIZED VIEW</a><br>
+            DAX: <a href="https://dax.guide/path/">PATH</a> |
+            <a href="https://dax.guide/var/">VAR</a> |
+            <a href="https://dax.guide/summarize/">SUMMARIZE</a>
+        </div>
+    </section>
+</section>
+
+</div><!-- slides -->
+</div><!-- reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.05,
+        transition: 'slide',
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>

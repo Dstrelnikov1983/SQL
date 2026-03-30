@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 5 — Использование DML для изменения данных</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .warning-box { background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 14px 18px; margin: 10px 0; text-align: left; font-size: 0.82em; }
+        .danger-box { background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; padding: 14px 18px; margin: 10px 0; text-align: left; font-size: 0.82em; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 5</h1>
+    <h2 style="border: none;">Использование DML<br>для изменения данных</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие &laquo;Руда+&raquo; &mdash; добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">INSERT</span>
+        <span class="icon-box orange">UPDATE</span>
+        <span class="icon-box green">MERGE</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 2 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>INSERT:</strong> добавление данных в таблицы <span class="small-text">(25 мин)</span></li>
+        <li><strong>UPDATE:</strong> изменение существующих данных <span class="small-text">(20 мин)</span></li>
+        <li><strong>DELETE / TRUNCATE:</strong> удаление данных <span class="small-text">(15 мин)</span></li>
+        <li><strong>MERGE / UPSERT:</strong> слияние данных <span class="small-text">(20 мин)</span></li>
+        <li><strong>SQL DML vs DAX:</strong> сравнение подходов <span class="small-text">(10 мин)</span></li>
+        <li><strong>Кейс:</strong> загрузка и обновление данных MES <span class="small-text">(15 мин)</span></li>
+        <li><strong>Квиз и обсуждение</strong> <span class="small-text">(15 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL (SQL) | Power BI + DAX Studio (DAX)
+    </div>
+</section>
+
+<!-- ==================== ВСТУПЛЕНИЕ: DML ==================== -->
+<section>
+    <h2>Что такое DML?</h2>
+    <div class="key-concept">
+        <h3>Data Manipulation Language</h3>
+        <p>Подмножество SQL для <strong>изменения данных</strong> в таблицах</p>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Оператор</th><th>Назначение</th><th>Аналогия</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>INSERT</strong></td><td>Добавить новые строки</td><td>Записать новый рейс в журнал</td></tr>
+            <tr><td><strong>UPDATE</strong></td><td>Изменить существующие строки</td><td>Обновить статус оборудования</td></tr>
+            <tr><td><strong>DELETE</strong></td><td>Удалить строки</td><td>Убрать ошибочные записи</td></tr>
+            <tr><td><strong>MERGE</strong></td><td>Слить данные (вставить или обновить)</td><td>Синхронизация с датчиками</td></tr>
+        </tbody>
+    </table>
+    <div class="card-orange card" style="margin-top:10px;">
+        <strong>Важно:</strong> DML-операции изменяют данные. Всегда используйте транзакции (BEGIN / COMMIT / ROLLBACK)!
+    </div>
+</section>
+
+<!-- ==================== ВОПРОС ДЛЯ ОБСУЖДЕНИЯ ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card" style="font-size: 1em; padding: 20px;">
+        <p>На предприятии &laquo;Руда+&raquo; за смену создаётся около <strong>500 записей</strong> о добыче, <strong>10 000 показаний</strong> телеметрии и <strong>50 записей</strong> о простоях.</p>
+        <br>
+        <p><strong>Как загрузить эти данные в аналитическую БД?</strong></p>
+        <br>
+        <p>Какие сценарии требуют INSERT, какие UPDATE, а какие MERGE?</p>
+    </div>
+    <p class="small-text" style="margin-top: 20px;">Обсудите в парах (2 минуты), затем поделитесь идеями</p>
+</section>
+
+<!-- ==================== РАЗДЕЛ 1: INSERT ==================== -->
+<section>
+    <h2>1. INSERT &mdash; Добавление данных</h2>
+    <h3>Базовый синтаксис</h3>
+    <pre><code class="language-sql">-- Синтаксис INSERT
+INSERT INTO таблица (столбец1, столбец2, ...)
+VALUES (значение1, значение2, ...);</code></pre>
+    <div class="card">
+        <strong>Правило:</strong> Порядок значений должен соответствовать порядку указанных столбцов.
+        Столбцы с DEFAULT или SERIAL можно не указывать.
+    </div>
+</section>
+
+<!-- INSERT: одна строка -->
+<section>
+    <h2>INSERT: Одна строка</h2>
+    <h3>Добавляем новую причину простоя</h3>
+    <pre><code class="language-sql">INSERT INTO dim_downtime_reason (
+    reason_name, reason_code, category, description
+)
+VALUES (
+    'Замена конвейерной ленты',
+    'CONV_BELT',
+    'плановый',
+    'Плановая замена изношенной конвейерной ленты'
+);</code></pre>
+    <div class="card-green card">
+        <strong>SERIAL:</strong> Столбец <code>reason_id</code> заполнится автоматически из последовательности.
+    </div>
+</section>
+
+<!-- INSERT: несколько строк -->
+<section>
+    <h2>INSERT: Несколько строк</h2>
+    <h3>Добавляем новые сорта руды</h3>
+    <pre><code class="language-sql">INSERT INTO dim_ore_grade (
+    grade_name, grade_code, fe_content_min, fe_content_max, description
+)
+VALUES
+    ('Премиум',     'PREM', 65.00, 72.00, 'Руда высшего качества'),
+    ('Стандарт',    'STD',  55.00, 64.99, 'Руда стандартного качества'),
+    ('Низкосортная','LOW',  40.00, 54.99, 'Руда пониженного качества');
+</code></pre>
+    <div class="card">
+        <strong>Преимущество:</strong> Один оператор вместо трёх &mdash; меньше накладных расходов на транзакции и сетевые обращения.
+    </div>
+</section>
+
+<!-- INSERT: SERIAL и IDENTITY -->
+<section>
+    <h2>Автогенерация ключей</h2>
+    <h3>SERIAL vs GENERATED ALWAYS AS IDENTITY</h3>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SERIAL (классический)</h3>
+            <pre><code class="language-sql">CREATE TABLE example_serial (
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- Можно вставить вручную:
+INSERT INTO example_serial (id, name)
+VALUES (999, 'Ручной ID');</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">IDENTITY (современный)</h3>
+            <pre><code class="language-sql">CREATE TABLE example_identity (
+    id   INT GENERATED ALWAYS
+         AS IDENTITY PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- Ручная вставка запрещена!
+-- Но можно через OVERRIDING:
+INSERT INTO example_identity
+    (id, name)
+OVERRIDING SYSTEM VALUE
+VALUES (999, 'Ручной ID');</code></pre>
+        </div>
+    </div>
+    <div class="card-orange card">
+        <strong>Рекомендация PostgreSQL 10+:</strong> Используйте GENERATED ALWAYS AS IDENTITY вместо SERIAL для новых проектов.
+    </div>
+</section>
+
+<!-- SERIAL vs IDENTITY: Что под капотом -->
+<section>
+    <h2>Что происходит «под капотом»</h2>
+    <h3>SERIAL — синтаксический сахар</h3>
+    <pre><code class="language-sql">-- Когда вы пишете:
+CREATE TABLE example (id SERIAL PRIMARY KEY);
+
+-- PostgreSQL на самом деле выполняет:
+CREATE SEQUENCE example_id_seq;
+CREATE TABLE example (
+    id INTEGER NOT NULL DEFAULT nextval('example_id_seq')
+);
+ALTER SEQUENCE example_id_seq OWNED BY example.id;</code></pre>
+    <div class="card card-orange">
+        <strong>⚠️ Проблемы SERIAL:</strong>
+        <ul>
+            <li>Последовательность — <strong>отдельный объект</strong>, не привязанный жёстко к столбцу</li>
+            <li>При <code>DROP COLUMN</code> последовательность <strong>не удаляется</strong> автоматически → мусор в БД</li>
+            <li>Права на последовательность нужно выдавать <strong>отдельно</strong></li>
+            <li>Нет защиты от ручной вставки — можно сломать уникальность</li>
+        </ul>
+    </div>
+</section>
+
+<!-- SERIAL vs IDENTITY: GENERATED BY DEFAULT -->
+<section>
+    <h2>Два варианта IDENTITY</h2>
+    <h3>GENERATED ALWAYS vs GENERATED BY DEFAULT</h3>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">GENERATED ALWAYS</h3>
+            <pre><code class="language-sql">id INT GENERATED ALWAYS
+       AS IDENTITY PRIMARY KEY
+
+-- Ручная вставка → ОШИБКА:
+INSERT INTO t (id, name)
+VALUES (1, 'test');
+-- ERROR: cannot insert
+-- a non-DEFAULT value
+
+-- Обход (явный):
+INSERT INTO t (id, name)
+OVERRIDING SYSTEM VALUE
+VALUES (1, 'test');</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">GENERATED BY DEFAULT</h3>
+            <pre><code class="language-sql">id INT GENERATED BY DEFAULT
+       AS IDENTITY PRIMARY KEY
+
+-- Ручная вставка разрешена:
+INSERT INTO t (id, name)
+VALUES (1, 'test');
+-- OK!
+
+-- Работает как SERIAL,
+-- но по стандарту SQL
+-- и с правильным управлением
+-- последовательностью</code></pre>
+        </div>
+    </div>
+    <div class="card card-green">
+        <strong>💡 Когда что использовать:</strong> GENERATED ALWAYS — для суррогатных ключей (защита от ошибок). GENERATED BY DEFAULT — когда нужна миграция данных с существующими ID.
+    </div>
+</section>
+
+<!-- SERIAL vs IDENTITY: Сравнительная таблица -->
+<section>
+    <h2>Сравнение подходов</h2>
+    <h3>SERIAL vs IDENTITY — итоговая таблица</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Характеристика</th>
+                <th>SERIAL</th>
+                <th>GENERATED ALWAYS</th>
+                <th>GENERATED BY DEFAULT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Стандарт SQL</td>
+                <td><span class="highlight-orange">Нет</span> (только PostgreSQL)</td>
+                <td><span class="highlight-green">Да</span> (SQL:2003)</td>
+                <td><span class="highlight-green">Да</span> (SQL:2003)</td>
+            </tr>
+            <tr>
+                <td>Ручная вставка ID</td>
+                <td>Разрешена</td>
+                <td><span class="highlight-green">Запрещена</span></td>
+                <td>Разрешена</td>
+            </tr>
+            <tr>
+                <td>Удаление sequence при DROP COLUMN</td>
+                <td><span class="highlight-orange">Нет</span></td>
+                <td><span class="highlight-green">Да</span></td>
+                <td><span class="highlight-green">Да</span></td>
+            </tr>
+            <tr>
+                <td>Управление правами</td>
+                <td>Отдельно на sequence</td>
+                <td>Наследуется от таблицы</td>
+                <td>Наследуется от таблицы</td>
+            </tr>
+            <tr>
+                <td>Поддержка ALTER COLUMN</td>
+                <td><span class="highlight-orange">Ограничена</span></td>
+                <td><span class="highlight-green">Полная</span></td>
+                <td><span class="highlight-green">Полная</span></td>
+            </tr>
+            <tr>
+                <td>Рекомендация PostgreSQL</td>
+                <td><span class="highlight-orange">Устаревший</span></td>
+                <td><span class="highlight-green">Рекомендуемый</span></td>
+                <td>Допустимый</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="card card-green">
+        <strong>✅ Вывод:</strong> Для нового кода всегда используйте <code>GENERATED ALWAYS AS IDENTITY</code>. <code>SERIAL</code> сохраняется только для обратной совместимости.
+    </div>
+</section>
+
+<!-- SERIAL vs IDENTITY: Вопрос для обсуждения -->
+<section>
+    <h2>🤔 Вопрос для обсуждения</h2>
+    <h3>SERIAL vs IDENTITY в контексте «Руда+»</h3>
+    <div class="card">
+        <p>В системе MES предприятия «Руда+» таблица <code>dim_equipment</code> использует <code>SERIAL</code> для генерации ID оборудования.</p>
+        <p>При миграции данных из старой системы оператор вручную вставил ID, совпавший с будущим значением последовательности.</p>
+        <p><strong>Что произойдёт при следующей автоматической вставке?</strong></p>
+    </div>
+    <div class="fragment">
+        <div class="card card-orange">
+            <strong>Ответ:</strong> Произойдёт ошибка <code>duplicate key value violates unique constraint</code>, потому что SERIAL не знает о ручных вставках. С <code>GENERATED ALWAYS AS IDENTITY</code> такая ситуация невозможна — ручная вставка была бы заблокирована изначально.
+        </div>
+    </div>
+</section>
+
+<!-- INSERT ... DEFAULT VALUES -->
+<section>
+    <h2>INSERT: Значения по умолчанию</h2>
+    <h3>DEFAULT и DEFAULT VALUES</h3>
+    <pre><code class="language-sql">-- Использование DEFAULT для отдельных столбцов
+INSERT INTO dim_equipment (
+    equipment_type_id, mine_id, equipment_name,
+    inventory_number, status
+)
+VALUES (
+    1, 1, 'ПДМ-19', 'INV-LHD-019', DEFAULT  -- status = 'active'
+);
+
+-- Все столбцы заполняются значениями по умолчанию
+-- (полезно для таблиц-логов с timestamp)
+INSERT INTO dim_date DEFAULT VALUES; -- ошибка, если нет DEFAULT у NOT NULL</code></pre>
+    <div class="card">
+        <strong>Когда использовать DEFAULT:</strong> для столбцов со значениями по умолчанию
+        (status, created_at, loaded_at и др.)
+    </div>
+</section>
+
+<!-- INSERT ... SELECT -->
+<section>
+    <h2>INSERT ... SELECT</h2>
+    <h3>Добавление данных из запроса</h3>
+    <pre><code class="language-sql">-- Скопировать записи о добыче из временной staging-таблицы
+-- в основную факт-таблицу
+INSERT INTO fact_production (
+    date_id, shift_id, mine_id, shaft_id,
+    equipment_id, operator_id, location_id, ore_grade_id,
+    tons_mined, tons_transported, trips_count,
+    distance_km, fuel_consumed_l, operating_hours
+)
+SELECT
+    s.date_id, s.shift_id, s.mine_id, s.shaft_id,
+    s.equipment_id, s.operator_id, s.location_id, s.ore_grade_id,
+    s.tons_mined, s.tons_transported, s.trips_count,
+    s.distance_km, s.fuel_consumed_l, s.operating_hours
+FROM staging_production s
+WHERE s.is_validated = TRUE
+  AND NOT EXISTS (
+      SELECT 1 FROM fact_production fp
+      WHERE fp.date_id = s.date_id
+        AND fp.shift_id = s.shift_id
+        AND fp.equipment_id = s.equipment_id
+        AND fp.operator_id = s.operator_id
+  );</code></pre>
+    <div class="card-green card">
+        <strong>ETL-паттерн:</strong> INSERT...SELECT &mdash; основной способ перемещения данных между staging и аналитическими таблицами.
+    </div>
+</section>
+
+<!-- INSERT ... RETURNING -->
+<section>
+    <h2>INSERT ... RETURNING</h2>
+    <h3>Получение вставленных данных</h3>
+    <pre><code class="language-sql">-- Добавить новое оборудование и получить присвоенный ID
+INSERT INTO dim_equipment (
+    equipment_type_id, mine_id, equipment_name,
+    inventory_number, manufacturer, model,
+    year_manufactured, status,
+    has_video_recorder, has_navigation
+)
+VALUES (
+    1, 1, 'ПДМ-20 «Титан»',
+    'INV-LHD-020', 'Atlas Copco', 'Scooptram ST18',
+    2025, 'active', TRUE, TRUE
+)
+RETURNING equipment_id, equipment_name, inventory_number;</code></pre>
+    <table style="width: 60%; margin: 10px auto;">
+        <thead><tr><th>equipment_id</th><th>equipment_name</th><th>inventory_number</th></tr></thead>
+        <tbody><tr><td>19</td><td>ПДМ-20 &laquo;Титан&raquo;</td><td>INV-LHD-020</td></tr></tbody>
+    </table>
+    <div class="card">
+        <strong>Преимущество PostgreSQL:</strong> RETURNING избавляет от дополнительного SELECT после INSERT.
+        Можно возвращать вычисляемые выражения: <code>RETURNING *, NOW() AS inserted_at</code>
+    </div>
+</section>
+
+<!-- Практика: Часть 1 — INSERT -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — INSERT (шаги 1.1–1.4)</p>
+        <p><strong>Задание:</strong> Добавьте новое оборудование, вставьте несколько строк, используйте INSERT...SELECT и INSERT...RETURNING на practice-таблицах.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10 минут</em></p>
+</section>
+
+<!-- ==================== РАЗДЕЛ 2: UPDATE ==================== -->
+<section>
+    <h2>2. UPDATE &mdash; Изменение данных</h2>
+    <h3>Базовый синтаксис</h3>
+    <pre><code class="language-sql">UPDATE таблица
+SET столбец1 = значение1,
+    столбец2 = значение2
+WHERE условие;</code></pre>
+    <div class="danger-box">
+        <strong>ВНИМАНИЕ:</strong> UPDATE без WHERE обновит <strong>ВСЕ</strong> строки таблицы!
+        Всегда проверяйте условие WHERE перед выполнением.
+    </div>
+</section>
+
+<!-- UPDATE: базовый пример -->
+<section>
+    <h2>UPDATE: Базовый пример</h2>
+    <h3>Обновление статуса оборудования</h3>
+    <pre><code class="language-sql">-- Перевести оборудование на техобслуживание
+UPDATE dim_equipment
+SET status = 'maintenance'
+WHERE equipment_id = 5;
+
+-- Обновить несколько столбцов
+UPDATE dim_equipment
+SET status = 'active',
+    has_navigation = TRUE,
+    has_video_recorder = TRUE
+WHERE inventory_number = 'INV-LHD-005';</code></pre>
+    <div class="card">
+        <strong>Совет:</strong> Перед UPDATE выполните SELECT с тем же WHERE, чтобы убедиться,
+        какие строки будут затронуты.
+    </div>
+</section>
+
+<!-- UPDATE с подзапросом -->
+<section>
+    <h2>UPDATE с подзапросом</h2>
+    <h3>Массовое обновление на основе связанных данных</h3>
+    <pre><code class="language-sql">-- Перевести в 'maintenance' всё оборудование,
+-- у которого были внеплановые простои > 120 минут за последнюю неделю
+UPDATE dim_equipment
+SET status = 'maintenance'
+WHERE equipment_id IN (
+    SELECT DISTINCT d.equipment_id
+    FROM fact_equipment_downtime d
+    JOIN dim_date dd ON d.date_id = dd.date_id
+    WHERE d.is_planned = FALSE
+      AND d.duration_min > 120
+      AND dd.full_date >= CURRENT_DATE - INTERVAL '7 days'
+);</code></pre>
+    <div class="card-orange card">
+        <strong>Бизнес-логика:</strong> Если самосвал простоял внепланово более 2 часов &mdash;
+        его нужно отправить на диагностику.
+    </div>
+</section>
+
+<!-- UPDATE ... FROM (PostgreSQL) -->
+<section>
+    <h2>UPDATE ... FROM</h2>
+    <h3>Расширение PostgreSQL для UPDATE с JOIN</h3>
+    <pre><code class="language-sql">-- Обновить сорт руды в записях о добыче
+-- на основе результатов лабораторного анализа
+UPDATE fact_production fp
+SET ore_grade_id = oq.ore_grade_id
+FROM fact_ore_quality oq
+WHERE fp.date_id = oq.date_id
+  AND fp.shift_id = oq.shift_id
+  AND fp.shaft_id = oq.shaft_id
+  AND fp.ore_grade_id IS NULL
+  AND oq.ore_grade_id IS NOT NULL;</code></pre>
+    <div class="card">
+        <strong>UPDATE ... FROM</strong> &mdash; специфика PostgreSQL.
+        В стандартном SQL используют коррелированные подзапросы.
+    </div>
+    <pre><code class="language-sql">-- Стандартный SQL (также работает в PostgreSQL)
+UPDATE fact_production fp
+SET ore_grade_id = (
+    SELECT oq.ore_grade_id
+    FROM fact_ore_quality oq
+    WHERE fp.date_id = oq.date_id AND fp.shift_id = oq.shift_id
+      AND fp.shaft_id = oq.shaft_id AND oq.ore_grade_id IS NOT NULL
+    LIMIT 1
+)
+WHERE fp.ore_grade_id IS NULL;</code></pre>
+</section>
+
+<!-- UPDATE ... RETURNING -->
+<section>
+    <h2>UPDATE ... RETURNING</h2>
+    <h3>Получение изменённых данных</h3>
+    <pre><code class="language-sql">-- Перевести все ПДМ шахты «Северная» в статус обслуживания
+-- и получить список затронутого оборудования
+UPDATE dim_equipment e
+SET status = 'maintenance'
+FROM dim_equipment_type et
+WHERE e.equipment_type_id = et.equipment_type_id
+  AND et.type_code = 'LHD'
+  AND e.mine_id = 1
+  AND e.status = 'active'
+RETURNING e.equipment_id,
+          e.equipment_name,
+          e.inventory_number,
+          e.status AS new_status;</code></pre>
+    <div class="card-green card">
+        <strong>Применение:</strong> Логирование изменений, аудит, формирование отчёта
+        о проведённых обновлениях.
+    </div>
+</section>
+
+<!-- ==================== РАЗДЕЛ 3: DELETE ==================== -->
+<section>
+    <h2>3. DELETE &mdash; Удаление данных</h2>
+    <h3>Базовый синтаксис</h3>
+    <pre><code class="language-sql">DELETE FROM таблица
+WHERE условие;</code></pre>
+    <div class="danger-box">
+        <strong>ВНИМАНИЕ:</strong> DELETE без WHERE удалит <strong>ВСЕ</strong> строки таблицы!
+        Это необратимо без транзакции (ROLLBACK).
+    </div>
+    <pre><code class="language-sql">-- Удалить ошибочные записи телеметрии
+-- с плохим флагом качества данных
+DELETE FROM fact_equipment_telemetry
+WHERE quality_flag = 'ERROR'
+  AND date_id = 20240315;</code></pre>
+</section>
+
+<!-- DELETE с подзапросом -->
+<section>
+    <h2>DELETE с подзапросом</h2>
+    <h3>Удаление по связанным данным</h3>
+    <pre><code class="language-sql">-- Удалить записи о добыче за выходные дни
+-- (ошибочно загруженные данные)
+DELETE FROM fact_production
+WHERE date_id IN (
+    SELECT date_id
+    FROM dim_date
+    WHERE is_weekend = TRUE
+      AND year = 2024
+      AND month = 3
+);
+
+-- DELETE ... USING (аналог UPDATE ... FROM в PostgreSQL)
+DELETE FROM fact_equipment_telemetry t
+USING dim_sensor s
+WHERE t.sensor_id = s.sensor_id
+  AND s.status = 'replaced'
+  AND t.date_id >= 20240301;</code></pre>
+    <div class="card">
+        <strong>DELETE ... USING</strong> &mdash; расширение PostgreSQL для удаления с JOIN.
+    </div>
+</section>
+
+<!-- DELETE ... RETURNING -->
+<section>
+    <h2>DELETE ... RETURNING</h2>
+    <h3>Удаление с возвратом данных</h3>
+    <pre><code class="language-sql">-- Удалить устаревшие записи телеметрии и вернуть их
+-- (для архивирования)
+DELETE FROM fact_equipment_telemetry
+WHERE date_id < 20230101
+  AND quality_flag = 'ERROR'
+RETURNING telemetry_id, date_id, sensor_id, sensor_value;</code></pre>
+    <div class="card-green card">
+        <strong>Паттерн архивации:</strong>
+        <code>INSERT INTO archive_table SELECT ... FROM DELETE ... RETURNING</code> &mdash;
+        удаление с одновременным архивированием (через CTE).
+    </div>
+    <pre><code class="language-sql">-- Удаление + архивирование в одной транзакции (CTE)
+WITH deleted AS (
+    DELETE FROM fact_equipment_telemetry
+    WHERE date_id < 20230101 AND quality_flag = 'ERROR'
+    RETURNING *
+)
+INSERT INTO archive_telemetry
+SELECT * FROM deleted;</code></pre>
+</section>
+
+<!-- TRUNCATE vs DELETE -->
+<section>
+    <h2>TRUNCATE vs DELETE</h2>
+    <h3>Когда что использовать?</h3>
+    <table>
+        <thead>
+            <tr><th>Характеристика</th><th>DELETE</th><th>TRUNCATE</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Условие WHERE</td><td class="highlight-green">Да</td><td class="highlight-orange">Нет</td></tr>
+            <tr><td>Скорость (большие таблицы)</td><td>Медленно</td><td class="highlight-green">Очень быстро</td></tr>
+            <tr><td>Триггеры</td><td class="highlight-green">Срабатывают</td><td class="highlight-orange">Не срабатывают</td></tr>
+            <tr><td>RETURNING</td><td class="highlight-green">Да</td><td class="highlight-orange">Нет</td></tr>
+            <tr><td>ROLLBACK</td><td class="highlight-green">Да</td><td class="highlight-green">Да (в PostgreSQL)</td></tr>
+            <tr><td>Сброс SERIAL/IDENTITY</td><td class="highlight-orange">Нет</td><td>Опционально (RESTART IDENTITY)</td></tr>
+            <tr><td>Блокировки</td><td>Построчные</td><td>На всю таблицу (ACCESS EXCLUSIVE)</td></tr>
+        </tbody>
+    </table>
+    <pre><code class="language-sql">-- Очистить staging-таблицу перед новой загрузкой
+TRUNCATE TABLE staging_production RESTART IDENTITY;</code></pre>
+</section>
+
+<!-- Практика: Части 2–4 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 2 — UPDATE (шаги 2.1–2.5), Часть 3 — DELETE (шаги 3.1–3.4), Часть 4 — MERGE и UPSERT</p>
+        <p><strong>Задание:</strong> Выполните UPDATE с подзапросами, DELETE с архивированием через RETURNING, TRUNCATE vs DELETE, MERGE для синхронизации справочника.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 15–20 минут</em></p>
+</section>
+
+<!-- Вопрос для обсуждения -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card" style="font-size: 1em; padding: 20px;">
+        <p>В MES-системе &laquo;Руда+&raquo; при загрузке данных телеметрии
+        иногда приходят <strong>дубли</strong> (повторные показания датчиков)
+        и <strong>ошибочные значения</strong> (выход за диапазон).</p>
+        <br>
+        <p><strong>Как построить процесс ETL, чтобы:</strong></p>
+        <ol>
+            <li>Новые данные добавлялись (INSERT)</li>
+            <li>Повторные &mdash; обновлялись (UPDATE)</li>
+            <li>Ошибочные &mdash; помечались флагом?</li>
+        </ol>
+    </div>
+    <p class="small-text">Обсудите в группах (3 минуты)</p>
+</section>
+
+<!-- ==================== РАЗДЕЛ 4: MERGE ==================== -->
+<section>
+    <h2>4. MERGE &mdash; Слияние данных</h2>
+    <h3>PostgreSQL 15+ (SQL:2003 стандарт)</h3>
+    <pre><code class="language-sql">MERGE INTO целевая_таблица t
+USING исходная_таблица s
+    ON условие_соединения
+WHEN MATCHED THEN
+    UPDATE SET столбец = значение
+WHEN NOT MATCHED THEN
+    INSERT (столбцы) VALUES (значения);</code></pre>
+    <div class="key-concept">
+        <h3>MERGE = условный INSERT + UPDATE + DELETE в одном операторе</h3>
+        <p>Если запись существует &mdash; обновить. Если нет &mdash; вставить. Можно также удалять.</p>
+    </div>
+</section>
+
+<!-- MERGE: пример -->
+<section>
+    <h2>MERGE: Синхронизация справочника</h2>
+    <h3>Обновление статусов оборудования из внешней системы</h3>
+    <pre><code class="language-sql">-- Данные от системы мониторинга приходят в staging-таблицу
+MERGE INTO dim_equipment AS target
+USING staging_equipment_status AS source
+    ON target.inventory_number = source.inventory_number
+WHEN MATCHED AND source.status IS DISTINCT FROM target.status THEN
+    UPDATE SET
+        status = source.status,
+        has_navigation = source.has_navigation,
+        has_video_recorder = source.has_video_recorder
+WHEN NOT MATCHED THEN
+    INSERT (equipment_type_id, mine_id, equipment_name,
+            inventory_number, manufacturer, model,
+            year_manufactured, status,
+            has_video_recorder, has_navigation)
+    VALUES (source.equipment_type_id, source.mine_id,
+            source.equipment_name, source.inventory_number,
+            source.manufacturer, source.model,
+            source.year_manufactured, source.status,
+            source.has_video_recorder, source.has_navigation);</code></pre>
+</section>
+
+<!-- MERGE с тремя ветками -->
+<section>
+    <h2>MERGE: Три ветки</h2>
+    <h3>WHEN MATCHED / NOT MATCHED / NOT MATCHED BY SOURCE</h3>
+    <pre><code class="language-sql">-- Полная синхронизация справочника причин простоев
+MERGE INTO dim_downtime_reason AS target
+USING staging_downtime_reasons AS source
+    ON target.reason_code = source.reason_code
+
+WHEN MATCHED THEN
+    UPDATE SET
+        reason_name = source.reason_name,
+        category    = source.category,
+        description = source.description
+
+WHEN NOT MATCHED THEN
+    INSERT (reason_name, reason_code, category, description)
+    VALUES (source.reason_name, source.reason_code,
+            source.category, source.description);</code></pre>
+    <div class="card-orange card">
+        <strong>Примечание:</strong> <code>WHEN NOT MATCHED BY SOURCE</code> с DELETE
+        поддерживается в PostgreSQL 17+. В более ранних версиях удаление
+        &laquo;лишних&raquo; записей выполняется отдельным DELETE.
+    </div>
+</section>
+
+<!-- UPSERT: INSERT ... ON CONFLICT -->
+<section>
+    <h2>UPSERT: INSERT ... ON CONFLICT</h2>
+    <h3>Альтернатива MERGE (PostgreSQL 9.5+)</h3>
+    <pre><code class="language-sql">-- Добавить показание датчика. Если такой уже есть — обновить значение.
+INSERT INTO fact_equipment_telemetry (
+    date_id, time_id, equipment_id, sensor_id,
+    location_id, sensor_value, is_alarm, quality_flag
+)
+VALUES (
+    20240315, 1430, 3, 12, 5, 87.5, FALSE, 'OK'
+)
+ON CONFLICT (telemetry_id) DO UPDATE SET
+    sensor_value = EXCLUDED.sensor_value,
+    is_alarm     = EXCLUDED.is_alarm,
+    quality_flag = EXCLUDED.quality_flag,
+    loaded_at    = NOW();</code></pre>
+    <div class="card">
+        <strong>EXCLUDED</strong> &mdash; специальная псевдотаблица, содержащая значения,
+        которые предполагалось вставить.
+    </div>
+</section>
+
+<!-- ON CONFLICT: DO NOTHING -->
+<section>
+    <h2>ON CONFLICT DO NOTHING</h2>
+    <h3>Вставить только если записи нет</h3>
+    <pre><code class="language-sql">-- Добавить оператора, если такой табельный номер не существует
+INSERT INTO dim_operator (
+    tab_number, last_name, first_name, middle_name,
+    position, qualification, hire_date, mine_id
+)
+VALUES (
+    'TAB-042', 'Козлов', 'Андрей', 'Петрович',
+    'Машинист ПДМ', '5 разряд', '2025-01-15', 1
+)
+ON CONFLICT (tab_number) DO NOTHING;</code></pre>
+    <div class="card-green card">
+        <strong>Когда использовать:</strong> Идемпотентная загрузка справочных данных.
+        Повторный запуск скрипта не создаст дубликатов.
+    </div>
+</section>
+
+<!-- MERGE vs ON CONFLICT -->
+<section>
+    <h2>MERGE vs ON CONFLICT</h2>
+    <h3>Когда что выбрать?</h3>
+    <table>
+        <thead>
+            <tr><th>Характеристика</th><th>MERGE</th><th>ON CONFLICT</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Стандарт SQL</td><td class="highlight-green">SQL:2003</td><td class="highlight-orange">PostgreSQL</td></tr>
+            <tr><td>Минимальная версия PG</td><td>15</td><td>9.5</td></tr>
+            <tr><td>Источник данных</td><td>Любая таблица/подзапрос</td><td>VALUES / SELECT</td></tr>
+            <tr><td>UPDATE + INSERT</td><td class="highlight-green">Да</td><td class="highlight-green">Да</td></tr>
+            <tr><td>DELETE при совпадении</td><td class="highlight-green">Да (PG17+)</td><td class="highlight-orange">Нет</td></tr>
+            <tr><td>Множественные условия WHEN</td><td class="highlight-green">Да</td><td class="highlight-orange">Нет</td></tr>
+            <tr><td>Конкурентные вставки</td><td>Возможны конфликты</td><td class="highlight-green">Атомарно</td></tr>
+        </tbody>
+    </table>
+    <div class="card">
+        <strong>Вывод:</strong> Для простого &laquo;вставить или обновить&raquo; &mdash; ON CONFLICT.
+        Для сложной ETL-логики с несколькими ветками &mdash; MERGE.
+    </div>
+</section>
+
+<!-- ==================== РАЗДЕЛ 5: SQL vs DAX ==================== -->
+<section>
+    <h2>5. SQL DML vs DAX</h2>
+    <h3>Принципиальное различие</h3>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">SQL (PostgreSQL)</h3>
+            <ul>
+                <li><strong>Полный DML:</strong> INSERT, UPDATE, DELETE, MERGE</li>
+                <li>Изменяет данные &laquo;на месте&raquo;</li>
+                <li>Транзакционный контроль (ACID)</li>
+                <li>Используется в ETL-процессах</li>
+            </ul>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX (Power BI)</h3>
+            <ul>
+                <li><strong>Только чтение:</strong> DML отсутствует</li>
+                <li>Данные загружаются при обновлении модели</li>
+                <li>Power Query (M) для трансформации</li>
+                <li>Инкрементальное обновление</li>
+            </ul>
+        </div>
+    </div>
+    <div class="key-concept" style="margin-top: 15px;">
+        <h3>DAX &mdash; аналитический язык, не язык управления данными</h3>
+        <p>В Power BI данные модифицируются через ETL-конвейер (Power Query / Dataflow), а не через запросы.</p>
+    </div>
+</section>
+
+<!-- Power BI: Как данные попадают в модель -->
+<section>
+    <h2>Power BI: Жизненный цикл данных</h2>
+    <h3>Вместо DML &mdash; обновление модели</h3>
+    <table>
+        <thead>
+            <tr><th>Этап</th><th>SQL (PostgreSQL)</th><th>Power BI</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Добавление данных</td><td><code>INSERT INTO ...</code></td><td>Scheduled Refresh / Dataflow</td></tr>
+            <tr><td>Обновление данных</td><td><code>UPDATE ... SET</code></td><td>Full / Incremental Refresh</td></tr>
+            <tr><td>Удаление данных</td><td><code>DELETE FROM ...</code></td><td>Фильтрация в Power Query</td></tr>
+            <tr><td>Слияние данных</td><td><code>MERGE ... USING</code></td><td>Merge Queries (Power Query)</td></tr>
+            <tr><td>Транзакции</td><td><code>BEGIN / COMMIT</code></td><td>Атомарность обновления</td></tr>
+        </tbody>
+    </table>
+    <div class="card-orange card">
+        <strong>Ключевая разница:</strong> SQL изменяет данные &laquo;точечно&raquo; (построчно).
+        Power BI перезагружает весь набор данных (или партицию при инкрементальном обновлении).
+    </div>
+</section>
+
+<!-- Power BI: Инкрементальное обновление -->
+<section>
+    <h2>Power BI: Инкрементальное обновление</h2>
+    <h3>Аналог INSERT для больших таблиц</h3>
+    <div class="card">
+        <strong>Сценарий &laquo;Руда+&raquo;:</strong> fact_equipment_telemetry содержит миллионы строк.
+        Полная перезагрузка &mdash; слишком долго.
+    </div>
+    <ol>
+        <li>Настроить <strong>Incremental Refresh</strong> в Power BI Desktop</li>
+        <li>Указать параметры <code>RangeStart</code> и <code>RangeEnd</code> (дата)</li>
+        <li>Power BI загружает только новые/изменённые партиции</li>
+        <li>Старые партиции не перезагружаются</li>
+    </ol>
+    <pre><code class="language-plaintext">-- Параметры Power Query (M-язык)
+let
+    Source = PostgreSQL.Database("rc1a-xxx.mdb.yandexcloud.net", "ruda_plus"),
+    filtered = Table.SelectRows(Source,
+        each [full_date] >= RangeStart and [full_date] < RangeEnd)
+in
+    filtered</code></pre>
+    <div class="card-green card">
+        <strong>Результат:</strong> При ежедневном обновлении загружаются только данные за последний день,
+        а не вся таблица.
+    </div>
+</section>
+
+<!-- Вопрос для обсуждения -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card" style="font-size: 1em; padding: 20px;">
+        <p>На предприятии &laquo;Руда+&raquo; диспетчер обнаружил, что для
+        <strong>3 единиц оборудования</strong> ошибочно указан статус &laquo;active&raquo;,
+        хотя они находятся на ремонте.</p>
+        <br>
+        <p><strong>Задание:</strong></p>
+        <ol>
+            <li>Как исправить это в <strong>PostgreSQL</strong>? (напишите UPDATE)</li>
+            <li>Как это отразится в <strong>Power BI</strong>? Когда аналитик увидит изменения?</li>
+            <li>Что произойдёт, если обновление Power BI настроено раз в сутки?</li>
+        </ol>
+    </div>
+    <p class="small-text">Обсудите в парах (3 минуты)</p>
+</section>
+
+<!-- ==================== РАЗДЕЛ 6: КЕЙС ==================== -->
+<section>
+    <h2>6. Кейс: ETL-процесс загрузки данных MES</h2>
+    <h3>Сценарий &laquo;Руда+&raquo;</h3>
+    <div class="card">
+        <strong>Задача:</strong> Каждую смену данные от датчиков оборудования, навигационной системы
+        и операторов поступают в staging-зону. Нужно:
+    </div>
+    <ol>
+        <li><span class="highlight-blue">INSERT</span> &mdash; Загрузить новые записи о добыче</li>
+        <li><span class="highlight-orange">UPDATE</span> &mdash; Обновить статусы оборудования</li>
+        <li><span class="highlight-green">MERGE</span> &mdash; Синхронизировать показания датчиков</li>
+        <li><span class="highlight-orange">DELETE</span> &mdash; Удалить ошибочные данные телеметрии</li>
+    </ol>
+</section>
+
+<!-- Кейс: Полный пример ETL -->
+<section>
+    <h2>Кейс: ETL в одной транзакции</h2>
+    <pre><code class="language-sql">BEGIN;
+
+-- 1. Загрузка новых записей о добыче
+INSERT INTO fact_production (
+    date_id, shift_id, mine_id, shaft_id,
+    equipment_id, operator_id, tons_mined, trips_count
+)
+SELECT date_id, shift_id, mine_id, shaft_id,
+       equipment_id, operator_id, tons_mined, trips_count
+FROM staging_production
+WHERE NOT EXISTS (
+    SELECT 1 FROM fact_production fp
+    WHERE fp.date_id = staging_production.date_id
+      AND fp.equipment_id = staging_production.equipment_id
+      AND fp.shift_id = staging_production.shift_id
+);
+
+-- 2. Обновить статусы оборудования
+UPDATE dim_equipment e
+SET status = s.new_status
+FROM staging_equipment_status s
+WHERE e.inventory_number = s.inventory_number
+  AND e.status != s.new_status;
+
+-- 3. Очистить staging
+TRUNCATE staging_production, staging_equipment_status;
+
+COMMIT;</code></pre>
+</section>
+
+<!-- ==================== ГРУППОВОЕ ЗАДАНИЕ ==================== -->
+<section>
+    <h2>Групповое задание</h2>
+    <h3>Проектирование ETL-процесса (10 минут)</h3>
+    <div class="card" style="font-size: 0.9em;">
+        <p><strong>Сценарий:</strong> На шахте &laquo;Северная&raquo; установили 5 новых датчиков вибрации
+        на ПДМ. Данные от них приходят каждые 5 минут.</p>
+        <br>
+        <p><strong>Задание для каждой группы:</strong></p>
+        <ol>
+            <li>Спроектируйте staging-таблицу для приёма данных датчиков</li>
+            <li>Напишите MERGE-запрос для загрузки в <code>fact_equipment_telemetry</code></li>
+            <li>Предусмотрите обработку дубликатов и ошибочных значений</li>
+            <li>Добавьте DELETE для очистки staging после загрузки</li>
+        </ol>
+    </div>
+    <div class="card-orange card">
+        <strong>Результат:</strong> Каждая группа представляет свой ETL-скрипт (5 минут на группу)
+    </div>
+</section>
+
+<!-- ==================== КВИЗ ==================== -->
+<section>
+    <h2>Мини-квиз</h2>
+    <h3>Вопрос 1</h3>
+    <p>Какой оператор используется для добавления данных из одной таблицы в другую?</p>
+    <div class="quiz-option">A) INSERT INTO ... VALUES (SELECT ...)</div>
+    <div class="quiz-option">B) INSERT INTO ... SELECT ...</div>
+    <div class="quiz-option">C) COPY INTO ... FROM SELECT ...</div>
+    <div class="quiz-option">D) SELECT INTO ... FROM ...</div>
+    <p class="fragment small-text" style="color: var(--accent6); font-weight: bold; font-size: 0.85em;">
+        Ответ: B) INSERT INTO ... SELECT ... &mdash; стандартный способ вставки из запроса
+    </p>
+</section>
+
+<section>
+    <h2>Мини-квиз</h2>
+    <h3>Вопрос 2</h3>
+    <p>Что произойдёт при выполнении <code>UPDATE dim_equipment SET status = 'maintenance'</code> без WHERE?</p>
+    <div class="quiz-option">A) Ошибка синтаксиса</div>
+    <div class="quiz-option">B) Обновится только первая строка</div>
+    <div class="quiz-option">C) Обновятся ВСЕ строки таблицы</div>
+    <div class="quiz-option">D) Ничего не произойдёт</div>
+    <p class="fragment small-text" style="color: var(--accent6); font-weight: bold; font-size: 0.85em;">
+        Ответ: C) Обновятся ВСЕ строки таблицы &mdash; это частая и опасная ошибка!
+    </p>
+</section>
+
+<section>
+    <h2>Мини-квиз</h2>
+    <h3>Вопрос 3</h3>
+    <p>Чем TRUNCATE TABLE отличается от DELETE FROM?</p>
+    <div class="quiz-option">A) TRUNCATE быстрее, не поддерживает WHERE, не вызывает триггеры</div>
+    <div class="quiz-option">B) TRUNCATE и DELETE идентичны</div>
+    <div class="quiz-option">C) TRUNCATE работает только с пустыми таблицами</div>
+    <div class="quiz-option">D) DELETE быстрее TRUNCATE на больших таблицах</div>
+    <p class="fragment small-text" style="color: var(--accent6); font-weight: bold; font-size: 0.85em;">
+        Ответ: A) TRUNCATE быстрее, не поддерживает WHERE, не вызывает строчные триггеры
+    </p>
+</section>
+
+<section>
+    <h2>Мини-квиз</h2>
+    <h3>Вопрос 4</h3>
+    <p>Что означает <code>EXCLUDED</code> в конструкции <code>INSERT ... ON CONFLICT DO UPDATE</code>?</p>
+    <div class="quiz-option">A) Строки, которые были удалены</div>
+    <div class="quiz-option">B) Строки, которые не прошли фильтрацию</div>
+    <div class="quiz-option">C) Значения, которые предполагалось вставить (конфликтная строка)</div>
+    <div class="quiz-option">D) Текущие значения в целевой таблице</div>
+    <p class="fragment small-text" style="color: var(--accent6); font-weight: bold; font-size: 0.85em;">
+        Ответ: C) EXCLUDED содержит значения из VALUES, которые вызвали конфликт
+    </p>
+</section>
+
+<section>
+    <h2>Мини-квиз</h2>
+    <h3>Вопрос 5</h3>
+    <p>Можно ли в DAX выполнить INSERT, UPDATE или DELETE?</p>
+    <div class="quiz-option">A) Да, с помощью специальных функций</div>
+    <div class="quiz-option">B) Только INSERT через ADDROW()</div>
+    <div class="quiz-option">C) Нет, DAX &mdash; язык только для чтения и аналитики</div>
+    <div class="quiz-option">D) Да, через DAX Studio</div>
+    <p class="fragment small-text" style="color: var(--accent6); font-weight: bold; font-size: 0.85em;">
+        Ответ: C) DAX не поддерживает DML. Данные загружаются через Power Query или Dataflow.
+    </p>
+</section>
+
+<!-- ==================== ЛУЧШИЕ ПРАКТИКИ ==================== -->
+<section>
+    <h2>Лучшие практики DML</h2>
+    <h3>Рекомендации для &laquo;Руда+&raquo;</h3>
+    <ol>
+        <li><strong>Всегда используйте транзакции</strong> (BEGIN / COMMIT / ROLLBACK)</li>
+        <li><strong>Проверяйте WHERE</strong> перед UPDATE и DELETE через SELECT</li>
+        <li><strong>Используйте RETURNING</strong> для аудита и логирования</li>
+        <li><strong>Предпочитайте ON CONFLICT</strong> для конкурентных upsert-операций</li>
+        <li><strong>Используйте staging-таблицы</strong> для ETL-загрузки</li>
+        <li><strong>TRUNCATE для staging</strong> вместо DELETE (быстрее)</li>
+        <li><strong>Тестируйте на копиях</strong> перед выполнением на production</li>
+    </ol>
+</section>
+
+<!-- Лабораторная работа -->
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на INSERT, UPDATE, DELETE, MERGE и UPSERT</p>
+        <p><strong>Формат:</strong> Все операции выполняются на practice-таблицах. Используйте транзакции и RETURNING для контроля результатов.</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <h2>Итоги модуля</h2>
+    <table>
+        <thead><tr><th>Оператор</th><th>Назначение</th><th>Ключевая особенность</th></tr></thead>
+        <tbody>
+            <tr><td><span class="highlight-blue">INSERT</span></td><td>Добавление строк</td><td>VALUES, SELECT, RETURNING</td></tr>
+            <tr><td><span class="highlight-orange">UPDATE</span></td><td>Изменение строк</td><td>FROM, подзапросы, RETURNING</td></tr>
+            <tr><td><span class="highlight-orange">DELETE</span></td><td>Удаление строк</td><td>USING, RETURNING, CTE-архивация</td></tr>
+            <tr><td><span class="highlight-green">MERGE</span></td><td>Условное слияние</td><td>MATCHED / NOT MATCHED (PG 15+)</td></tr>
+            <tr><td><span class="highlight-blue">ON CONFLICT</span></td><td>UPSERT</td><td>DO UPDATE / DO NOTHING (PG 9.5+)</td></tr>
+            <tr><td><span class="highlight-orange">TRUNCATE</span></td><td>Быстрая очистка</td><td>RESTART IDENTITY, без триггеров</td></tr>
+        </tbody>
+    </table>
+    <div class="card-green card" style="margin-top: 15px;">
+        <strong>Главный вывод:</strong> SQL &mdash; полноценный язык управления данными (DML).
+        DAX &mdash; аналитический язык без DML. В Power BI данные обновляются через ETL (Power Query).
+    </div>
+</section>
+
+<!-- Домашнее задание -->
+<section>
+    <h2>Домашнее задание</h2>
+    <div class="card" style="font-size: 0.9em;">
+        <ol>
+            <li>Выполните <strong>лабораторную работу</strong> (файл <code>lab.md</code>)</li>
+            <li>Изучите документацию PostgreSQL: разделы INSERT, UPDATE, DELETE, MERGE</li>
+            <li>Подумайте: как бы вы организовали ежедневную загрузку данных телеметрии
+                (>10 000 записей в смену)?</li>
+        </ol>
+    </div>
+    <div class="card-green card" style="font-size: 0.9em; margin-top: 15px;">
+        <strong>Следующий модуль:</strong> Мы перейдём к агрегатным функциям и группировке данных,
+        где DML-знания пригодятся для подготовки тестовых данных.
+    </div>
+</section>
+
+</div><!-- /.slides -->
+</div><!-- /.reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>

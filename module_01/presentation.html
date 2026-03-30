@@ -1,0 +1,2612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 1 — Введение в язык SQL и СУБД PostgreSQL</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --bg-light: #f7f9fc;
+            --text-dark: #2c3e50;
+        }
+        .reveal {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 28px;
+            color: var(--text-dark);
+        }
+        .reveal h1, .reveal h2 {
+            color: var(--accent1);
+            font-weight: 700;
+            text-transform: none;
+            letter-spacing: -0.02em;
+        }
+        .reveal h3 {
+            color: var(--accent1);
+            font-weight: 600;
+            text-transform: none;
+        }
+        .reveal h1 { font-size: 1.8em; }
+        .reveal h2 { font-size: 1.4em; }
+        .reveal h3 { font-size: 1.15em; }
+
+        .title-slide h1 {
+            font-size: 2em;
+            margin-bottom: 0.2em;
+        }
+        .title-slide .subtitle {
+            color: var(--accent2);
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 0.5em;
+        }
+        .title-slide .meta {
+            color: #666;
+            font-size: 0.7em;
+        }
+
+        .highlight-orange { color: var(--accent2); font-weight: 600; }
+        .highlight-blue   { color: var(--accent1); font-weight: 600; }
+        .highlight-green  { color: var(--accent6); font-weight: 600; }
+
+        .reveal pre {
+            width: 100%;
+            font-size: 0.6em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            border-radius: 8px;
+        }
+        .reveal pre code {
+            padding: 16px 20px;
+            max-height: 520px;
+        }
+
+        .reveal ul, .reveal ol {
+            display: block;
+            text-align: left;
+            margin-left: 1em;
+        }
+        .reveal li { margin-bottom: 0.35em; }
+
+        .two-col {
+            display: flex;
+            gap: 2em;
+            align-items: flex-start;
+        }
+        .two-col > div { flex: 1; }
+
+        .info-box {
+            background: linear-gradient(135deg, #eaf0fb 0%, #f0f4ff 100%);
+            border-left: 5px solid var(--accent1);
+            padding: 18px 22px;
+            border-radius: 6px;
+            margin: 0.6em 0;
+            text-align: left;
+            font-size: 0.85em;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed 0%, #fff3e0 100%);
+            border-left: 5px solid var(--accent2);
+            padding: 18px 22px;
+            border-radius: 6px;
+            margin: 0.6em 0;
+            text-align: left;
+            font-size: 0.85em;
+        }
+        .success-box {
+            background: linear-gradient(135deg, #edf7ed 0%, #e8f5e9 100%);
+            border-left: 5px solid var(--accent6);
+            padding: 18px 22px;
+            border-radius: 6px;
+            margin: 0.6em 0;
+            text-align: left;
+            font-size: 0.85em;
+        }
+
+        .discussion-slide {
+            background: linear-gradient(135deg, #fff7ed 0%, #fffaf5 100%) !important;
+        }
+        .discussion-slide h2::before {
+            content: "\1F4AC ";
+        }
+
+        .quiz-slide {
+            background: linear-gradient(135deg, #edf7ed 0%, #f5faf5 100%) !important;
+        }
+
+        .timeline-table {
+            font-size: 0.65em;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .timeline-table th {
+            background: var(--accent1);
+            color: white;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .timeline-table td {
+            padding: 6px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .timeline-table tr:nth-child(even) {
+            background: #f5f7fa;
+        }
+
+        .arch-diagram {
+            font-family: 'Courier New', monospace;
+            font-size: 0.48em;
+            line-height: 1.35;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre;
+        }
+        .arch-diagram .hl-blue   { color: #89b4fa; }
+        .arch-diagram .hl-orange { color: #fab387; }
+        .arch-diagram .hl-green  { color: #a6e3a1; }
+        .arch-diagram .hl-yellow { color: #f9e2af; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 600;
+            color: white;
+            margin: 2px;
+        }
+        .badge-blue   { background: var(--accent1); }
+        .badge-orange { background: var(--accent2); }
+        .badge-green  { background: var(--accent6); }
+
+        .snowflake-diagram {
+            font-family: 'Courier New', monospace;
+            font-size: 0.42em;
+            line-height: 1.3;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre;
+        }
+
+        .reveal .slide-number {
+            color: var(--accent1);
+            font-weight: 600;
+        }
+
+        .reveal .progress span {
+            background: var(--accent2);
+        }
+
+        .fragment.current-visible.visible:not(.current-fragment) {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 1: ТИТУЛЬНЫЙ -->
+<!-- ============================================================ -->
+<section class="title-slide" data-background-gradient="linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #fff7ed 100%)">
+    <h1>Анализ данных на языке SQL</h1>
+    <div class="subtitle">Модуль 1: Введение в язык SQL и СУБД PostgreSQL</div>
+    <p class="meta">
+        Уровень 2 &bull; Продолжительность: 30 минут<br>
+        Платформа: Yandex Managed Service for PostgreSQL
+    </p>
+    <aside class="notes">
+        Приветствуем слушателей. Модуль вводный — задаём контекст курса, знакомимся с PostgreSQL
+        и учебным примером предприятия «Руда+». Важно выяснить уровень подготовки аудитории.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 2: ПЛАН МОДУЛЯ -->
+<!-- ============================================================ -->
+<section>
+    <h2>План модуля</h2>
+    <div class="two-col" style="font-size: 0.85em;">
+        <div>
+            <ol>
+                <li class="fragment">Общие сведения о языке SQL — история и стандарты</li>
+                <li class="fragment">Диалекты SQL: T-SQL, PL/pgSQL, PL/SQL</li>
+                <li class="fragment">Архитектура PostgreSQL. Yandex Managed Service</li>
+                <li class="fragment">Элементы SQL: Expression, Clause, Statement, Command, Batch</li>
+                <li class="fragment">Ограничения пакетов и транзакций</li>
+            </ol>
+        </div>
+        <div>
+            <ol start="6">
+                <li class="fragment">Процедурные блоки vs декларативный SQL</li>
+                <li class="fragment">Типы блоков: DO, FUNCTION, PROCEDURE, TRIGGER</li>
+                <li class="fragment">Метаданные: information_schema и pg_catalog</li>
+                <li class="fragment">Где хранить SQL-код. Git и СУБД</li>
+                <li class="fragment">Учебный кейс <span class="highlight-orange">«Руда+»</span>. Практика и квиз</li>
+            </ol>
+        </div>
+    </div>
+    <aside class="notes">
+        Обзор плана. Модуль вводный, но базовые понятия важны для дальнейших модулей.
+        Много тем — но каждая будет раскрыта подробнее в следующих модулях.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 3: ЧТО ТАКОЕ SQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Что такое SQL?</h2>
+    <div class="info-box">
+        <strong>SQL</strong> (Structured Query Language) — декларативный язык для управления данными
+        в реляционных базах данных.
+    </div>
+    <div class="two-col" style="margin-top: 0.8em;">
+        <div>
+            <h3>Ключевые свойства</h3>
+            <ul>
+                <li class="fragment"><strong>Декларативный</strong> — описываем <em>что</em>, а не <em>как</em></li>
+                <li class="fragment"><strong>Стандартизированный</strong> — ANSI/ISO стандарт</li>
+                <li class="fragment"><strong>Универсальный</strong> — работает во всех РСУБД</li>
+                <li class="fragment"><strong>Множественный</strong> — оперирует наборами строк</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Подъязыки SQL</h3>
+            <ul>
+                <li><span class="badge badge-blue">DDL</span> CREATE, ALTER, DROP</li>
+                <li><span class="badge badge-orange">DML</span> SELECT, INSERT, UPDATE, DELETE</li>
+                <li><span class="badge badge-green">DCL</span> GRANT, REVOKE</li>
+                <li><span class="badge badge-blue">TCL</span> BEGIN, COMMIT, ROLLBACK</li>
+            </ul>
+        </div>
+    </div>
+    <aside class="notes">
+        Спросить аудиторию: «Кто уже работал с SQL? С какими СУБД?»
+        Декларативность — ключевое отличие от процедурных языков (Python, Java).
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 4: ИСТОРИЯ SQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>История SQL: от SEQUEL до SQL:2023</h2>
+    <table class="timeline-table">
+        <thead>
+            <tr><th>Год</th><th>Событие</th><th>Значение</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1970</td><td>Э. Кодд — реляционная модель</td><td>Теоретический фундамент</td></tr>
+            <tr><td>1974</td><td>SEQUEL — IBM Research</td><td>Первый прототип языка</td></tr>
+            <tr><td>1979</td><td>Oracle V2 — первый коммерческий SQL</td><td>Начало рынка РСУБД</td></tr>
+            <tr class="fragment highlight-current-blue"><td>1986</td><td><strong>SQL-86</strong> — первый стандарт ANSI</td><td>Унификация синтаксиса</td></tr>
+            <tr><td>1992</td><td><strong>SQL-92</strong></td><td>JOIN, CASE, подзапросы</td></tr>
+            <tr><td>1999</td><td><strong>SQL:1999</strong></td><td>CTE, рекурсия, триггеры</td></tr>
+            <tr><td>2003</td><td><strong>SQL:2003</strong></td><td>Оконные функции, XML</td></tr>
+            <tr class="fragment highlight-current-blue"><td>2016</td><td><strong>SQL:2016</strong></td><td>JSON, полиморфные функции</td></tr>
+            <tr><td>2023</td><td><strong>SQL:2023</strong></td><td>Графовые запросы, JSON улучшения</td></tr>
+        </tbody>
+    </table>
+    <aside class="notes">
+        Важно подчеркнуть: SQL — живой стандарт, который развивается более 50 лет.
+        PostgreSQL — одна из СУБД, наиболее полно реализующих стандарт.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 5: ДИАЛЕКТЫ SQL — ОБЗОР -->
+<!-- ============================================================ -->
+<section>
+    <h2>Диалекты SQL: один стандарт — много реализаций</h2>
+    <div class="info-box">
+        Каждая СУБД реализует стандарт ANSI SQL по-своему и добавляет собственные расширения.
+        Эти расширения называют <strong>диалектами SQL</strong>.
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.8em; margin-top: 0.8em; justify-content: center;">
+        <div class="fragment" style="background: var(--accent1); color: white; padding: 14px 22px; border-radius: 10px; min-width: 200px; text-align: center;">
+            <strong>T-SQL</strong><br><small>Microsoft SQL Server</small>
+        </div>
+        <div class="fragment" style="background: var(--accent2); color: white; padding: 14px 22px; border-radius: 10px; min-width: 200px; text-align: center;">
+            <strong>PL/SQL</strong><br><small>Oracle Database</small>
+        </div>
+        <div class="fragment" style="background: var(--accent6); color: white; padding: 14px 22px; border-radius: 10px; min-width: 200px; text-align: center;">
+            <strong>PL/pgSQL</strong><br><small>PostgreSQL</small>
+        </div>
+        <div class="fragment" style="background: #7b68ee; color: white; padding: 14px 22px; border-radius: 10px; min-width: 200px; text-align: center;">
+            <strong>MySQL SQL</strong><br><small>MySQL / MariaDB</small>
+        </div>
+    </div>
+    <div class="warning-box" style="font-size: 0.75em; margin-top: 0.8em;">
+        <strong>Важно:</strong> базовый SQL (SELECT, JOIN, GROUP BY) работает одинаково везде.
+        Отличия проявляются в процедурных расширениях, встроенных функциях и синтаксическом «сахаре».
+    </div>
+    <aside class="notes">
+        Спросить аудиторию: «С какими СУБД и диалектами вы уже сталкивались?»
+        Подчеркнуть: знание стандартного SQL — универсальная база, диалект — надстройка.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 6: СРАВНЕНИЕ ДИАЛЕКТОВ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Сравнение ключевых диалектов SQL</h2>
+    <table class="timeline-table" style="font-size: 0.55em;">
+        <thead>
+            <tr>
+                <th>Особенность</th>
+                <th style="color: #89b4fa;">T-SQL (MS SQL)</th>
+                <th style="color: #fab387;">PL/SQL (Oracle)</th>
+                <th style="color: #a6e3a1;">PL/pgSQL (PostgreSQL)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Разработчик</strong></td>
+                <td>Microsoft</td>
+                <td>Oracle</td>
+                <td>Сообщество (Open Source)</td>
+            </tr>
+            <tr>
+                <td><strong>Процедурный язык</strong></td>
+                <td>Встроен в T-SQL</td>
+                <td>PL/SQL — отдельный язык</td>
+                <td>PL/pgSQL + подключаемые (Python, Perl, JS)</td>
+            </tr>
+            <tr>
+                <td><strong>Ограничение выборки</strong></td>
+                <td><code>TOP N</code></td>
+                <td><code>ROWNUM</code> / <code>FETCH FIRST</code></td>
+                <td><code>LIMIT N</code> (стандарт SQL:2008)</td>
+            </tr>
+            <tr>
+                <td><strong>Автоинкремент</strong></td>
+                <td><code>IDENTITY</code></td>
+                <td><code>SEQUENCE</code> + триггер</td>
+                <td><code>SERIAL</code> / <code>GENERATED ALWAYS</code></td>
+            </tr>
+            <tr>
+                <td><strong>Конкатенация строк</strong></td>
+                <td><code>+</code></td>
+                <td><code>||</code></td>
+                <td><code>||</code> (стандарт ANSI)</td>
+            </tr>
+            <tr>
+                <td><strong>Обработка NULL</strong></td>
+                <td><code>ISNULL()</code></td>
+                <td><code>NVL()</code></td>
+                <td><code>COALESCE()</code> (стандарт ANSI)</td>
+            </tr>
+            <tr>
+                <td><strong>Пакеты / блоки</strong></td>
+                <td><code>BEGIN...END</code>, разделитель <code>GO</code></td>
+                <td><code>DECLARE BEGIN...END;</code></td>
+                <td><code>DO $$ BEGIN...END $$;</code></td>
+            </tr>
+            <tr>
+                <td><strong>Соответствие стандарту</strong></td>
+                <td>Среднее</td>
+                <td>Среднее</td>
+                <td>Высокое</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="success-box" style="font-size: 0.75em; margin-top: 0.6em;">
+        <strong>PostgreSQL</strong> — наиболее близок к стандарту ANSI/ISO SQL.
+        Навыки, полученные на PostgreSQL, легко переносятся на другие СУБД.
+    </div>
+    <aside class="notes">
+        Показать на примере: один и тот же запрос может выглядеть по-разному в разных СУБД.
+        Но ядро языка (SELECT, JOIN, WHERE, GROUP BY) — общее для всех.
+        PostgreSQL — отличный выбор для обучения, т.к. максимально соответствует стандарту.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 7: ПРИМЕРЫ РАЗЛИЧИЙ В СИНТАКСИСЕ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Один запрос — три диалекта</h2>
+    <p style="font-size: 0.8em; color: #666;">Получить <strong>5 единиц оборудования</strong> с наибольшим временем работы:</p>
+    <div class="two-col" style="font-size: 0.85em;">
+        <div>
+            <h3 style="color: var(--accent6);">PostgreSQL</h3>
+            <pre><code class="language-sql">SELECT equipment_name,
+       operating_hours
+FROM dim_equipment
+ORDER BY operating_hours DESC
+LIMIT 5;</code></pre>
+            <h3 style="color: var(--accent1); margin-top: 0.5em;">T-SQL (MS SQL Server)</h3>
+            <pre><code class="language-sql">SELECT TOP 5
+       equipment_name,
+       operating_hours
+FROM dim_equipment
+ORDER BY operating_hours DESC;</code></pre>
+        </div>
+        <div>
+            <h3 style="color: var(--accent2);">PL/SQL (Oracle)</h3>
+            <pre><code class="language-sql">-- Oracle 12c+
+SELECT equipment_name,
+       operating_hours
+FROM dim_equipment
+ORDER BY operating_hours DESC
+FETCH FIRST 5 ROWS ONLY;
+
+-- Oracle (старый стиль)
+SELECT * FROM (
+  SELECT equipment_name,
+         operating_hours
+  FROM dim_equipment
+  ORDER BY operating_hours DESC
+) WHERE ROWNUM <= 5;</code></pre>
+        </div>
+    </div>
+    <aside class="notes">
+        Наглядная демонстрация: задача одна, а синтаксис разный.
+        FETCH FIRST — это стандарт SQL:2008, который поддерживают PostgreSQL и Oracle 12c+.
+        LIMIT — расширение PostgreSQL/MySQL, ставшее де-факто стандартом.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 8: SQL vs DAX — первое знакомство -->
+<!-- ============================================================ -->
+<section>
+    <h2>SQL и DAX — два мира аналитики</h2>
+    <div class="two-col">
+        <div>
+            <h3 style="color: var(--accent1);">SQL</h3>
+            <ul>
+                <li>Реляционная модель</li>
+                <li>Декларативный, множественный</li>
+                <li>Работает на сервере СУБД</li>
+                <li>Стандарт ANSI/ISO</li>
+                <li>Любые задачи с данными</li>
+            </ul>
+            <pre><code class="language-sql">SELECT mine_name,
+       COUNT(*) AS total_equipment
+FROM dim_equipment e
+JOIN dim_mine m
+  ON e.mine_id = m.mine_id
+GROUP BY mine_name;</code></pre>
+        </div>
+        <div>
+            <h3 style="color: var(--accent2);">DAX</h3>
+            <ul>
+                <li>Табличная модель (Vertipaq)</li>
+                <li>Функциональный, контекстный</li>
+                <li>Работает в Power BI / SSAS</li>
+                <li>Проприетарный (Microsoft)</li>
+                <li>Аналитика и визуализация</li>
+            </ul>
+            <pre><code class="language-dax">Total Equipment =
+COUNTROWS(dim_equipment)
+
+-- Мера с фильтром:
+Equipment By Mine =
+CALCULATE(
+    COUNTROWS(dim_equipment),
+    dim_mine[mine_name] = "Шахта Северная"
+)</code></pre>
+        </div>
+    </div>
+    <div class="warning-box" style="margin-top: 0.5em; font-size: 0.75em;">
+        На протяжении курса мы будем сравнивать подходы SQL и DAX к решению одинаковых задач.
+    </div>
+    <aside class="notes">
+        Первое сравнение SQL и DAX. Подробнее вернёмся к DAX в модуле по агрегациям.
+        DAX — язык формул для Power BI; SQL — универсальный язык запросов.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 6: АРХИТЕКТУРА POSTGRESQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Базовая архитектура PostgreSQL</h2>
+    <div class="arch-diagram"><span class="hl-yellow">                     Клиенты</span>
+          <span class="hl-blue">psql</span>    <span class="hl-blue">DBeaver</span>    <span class="hl-blue">Power BI</span>    <span class="hl-blue">Приложение</span>
+            |         |           |              |
+            v         v           v              v
+    +--------------------------------------------------+
+    |          <span class="hl-orange">Postmaster (главный процесс)</span>          |
+    |  Управляет подключениями, запускает backend'ы    |
+    +--------------------------------------------------+
+            |              |              |
+            v              v              v
+    +--------------+ +--------------+ +--------------+
+    |<span class="hl-green"> Backend #1</span>   | |<span class="hl-green"> Backend #2</span>   | |<span class="hl-green"> Backend #N</span>   |
+    | Parser       | | Parser       | | Parser       |
+    | Planner      | | Planner      | | Planner      |
+    | Executor     | | Executor     | | Executor     |
+    +--------------+ +--------------+ +--------------+
+            |              |              |
+            v              v              v
+    +--------------------------------------------------+
+    |             <span class="hl-blue">Shared Memory</span>                      |
+    |  +----------------+  +-------------------------+ |
+    |  | <span class="hl-orange">Shared Buffers</span> |  | <span class="hl-orange">WAL Buffers</span>             | |
+    |  +----------------+  +-------------------------+ |
+    +--------------------------------------------------+
+            |                          |
+            v                          v
+    +------------------+    +---------------------+
+    | <span class="hl-green">Файлы данных</span>     |    | <span class="hl-green">WAL (журнал)</span>        |
+    | (таблицы, индексы)|    | (Write-Ahead Log)   |
+    +------------------+    +---------------------+</div>
+    <aside class="notes">
+        Каждое клиентское подключение = отдельный backend-процесс.
+        Shared Buffers — кэш страниц данных в оперативной памяти.
+        WAL — журнал предварительной записи, обеспечивает надёжность (ACID).
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 7: ОБРАБОТКА ЗАПРОСА -->
+<!-- ============================================================ -->
+<section>
+    <h2>Как PostgreSQL обрабатывает запрос</h2>
+    <div class="info-box" style="font-size: 0.8em;">
+        Путь SQL-запроса от текста до результата:
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 0.3em; margin: 1em 0; font-size: 0.75em;">
+        <div style="background: var(--accent1); color: white; padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <strong>1. Parser</strong><br>Разбор<br>SQL-текста
+        </div>
+        <div style="font-size: 1.5em; color: var(--accent2);">&rarr;</div>
+        <div style="background: var(--accent2); color: white; padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <strong>2. Analyzer</strong><br>Проверка<br>семантики
+        </div>
+        <div style="font-size: 1.5em; color: var(--accent2);">&rarr;</div>
+        <div style="background: var(--accent1); color: white; padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <strong>3. Rewriter</strong><br>Переписывание<br>(VIEW, правила)
+        </div>
+        <div style="font-size: 1.5em; color: var(--accent2);">&rarr;</div>
+        <div style="background: var(--accent6); color: white; padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <strong>4. Planner</strong><br>Построение<br>плана
+        </div>
+        <div style="font-size: 1.5em; color: var(--accent2);">&rarr;</div>
+        <div style="background: var(--accent6); color: white; padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <strong>5. Executor</strong><br>Выполнение<br>плана
+        </div>
+    </div>
+    <pre><code class="language-sql">-- Пример: запрос по нашей базе "Руда+"
+EXPLAIN
+SELECT m.mine_name, COUNT(e.equipment_id) AS cnt
+FROM dim_mine m
+JOIN dim_equipment e ON m.mine_id = e.mine_id
+WHERE m.status = 'active'
+GROUP BY m.mine_name;</code></pre>
+    <div class="success-box" style="font-size: 0.75em;">
+        <strong>EXPLAIN</strong> — команда PostgreSQL для просмотра плана выполнения запроса.
+        Мы будем часто использовать её в дальнейших модулях.
+    </div>
+    <aside class="notes">
+        Parser — синтаксический разбор и построение дерева разбора.
+        Planner — выбор оптимального плана (cost-based optimizer).
+        EXPLAIN — инструмент, с которым познакомимся подробнее в модуле по оптимизации.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 8: ВЕРСИИ POSTGRESQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Версии и редакции PostgreSQL</h2>
+    <div class="two-col">
+        <div>
+            <h3>Актуальные версии</h3>
+            <table class="timeline-table" style="font-size: 0.6em;">
+                <thead><tr><th>Версия</th><th>Год</th><th>Ключевые новшества</th></tr></thead>
+                <tbody>
+                    <tr><td>13</td><td>2020</td><td>Параллельная вакуумизация, инкрем. сортировка</td></tr>
+                    <tr><td>14</td><td>2021</td><td>Улучшения производительности, MULTIRANGE</td></tr>
+                    <tr><td>15</td><td>2022</td><td>MERGE, JSON_TABLE (частично)</td></tr>
+                    <tr style="background: #edf7ed;"><td><strong>16</strong></td><td>2023</td><td>Логическая репликация, параллелизм</td></tr>
+                    <tr style="background: #e8f5e9;"><td><strong>17</strong></td><td>2024</td><td>Инкрем. бэкап, JSON_TABLE полный</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h3>Экосистема</h3>
+            <ul style="font-size: 0.85em;">
+                <li><span class="highlight-blue">Community</span> — свободная версия (наш фокус)</li>
+                <li><span class="highlight-orange">Yandex Managed Service</span> — облачный PostgreSQL</li>
+                <li>Postgres Pro (РФ) — enterprise-версия</li>
+                <li>Amazon RDS for PostgreSQL</li>
+                <li>Azure Database for PostgreSQL</li>
+                <li>Supabase, Neon — serverless</li>
+            </ul>
+        </div>
+    </div>
+    <div class="info-box" style="font-size: 0.75em; margin-top: 0.6em;">
+        PostgreSQL — <strong>бесплатная, открытая</strong> СУБД с самой полной поддержкой стандарта SQL.
+        Развивается глобальным сообществом с 1996 года (история проекта — с 1986 года, Berkeley).
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 9: YANDEX MANAGED SERVICE -->
+<!-- ============================================================ -->
+<section>
+    <h2>Yandex Managed Service for PostgreSQL</h2>
+    <div class="two-col">
+        <div>
+            <h3>Что это?</h3>
+            <ul style="font-size: 0.85em;">
+                <li>Полностью управляемый PostgreSQL в облаке Yandex Cloud</li>
+                <li>Автоматическое резервное копирование</li>
+                <li>Мониторинг и алерты из коробки</li>
+                <li>Масштабирование без простоя</li>
+                <li>Поддержка версий 13 — 17</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Преимущества для курса</h3>
+            <ul style="font-size: 0.85em;">
+                <li class="highlight-green">Не нужно устанавливать СУБД локально</li>
+                <li>Единая среда для всех слушателей</li>
+                <li>Доступ из любого клиента (psql, DBeaver, DataGrip)</li>
+                <li>Серверы в российских ЦОД</li>
+            </ul>
+        </div>
+    </div>
+    <div class="warning-box" style="font-size: 0.75em; margin-top: 0.6em;">
+        <strong>Для подключения вам потребуется:</strong> хост кластера, порт (6432), имя базы данных,
+        логин и пароль. Параметры подключения будут выданы перед практической работой.
+    </div>
+    <aside class="notes">
+        Убедиться, что у всех слушателей есть доступ к кластеру.
+        Показать подключение через psql или DBeaver.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 10: ЭЛЕМЕНТЫ ЯЗЫКА SQL — ОБЗОР -->
+<!-- ============================================================ -->
+<section>
+    <h2>Элементы языка SQL</h2>
+    <div class="info-box">
+        SQL состоит из чётко определённых структурных элементов. Понимание терминологии —
+        основа грамотной работы с документацией и коллегами.
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.8em; margin-top: 0.8em; justify-content: center;">
+        <div class="fragment" style="background: var(--accent1); color: white; padding: 14px 22px; border-radius: 10px; min-width: 180px; text-align: center;">
+            <strong>Expression</strong><br><small>Выражение</small>
+        </div>
+        <div class="fragment" style="background: var(--accent2); color: white; padding: 14px 22px; border-radius: 10px; min-width: 180px; text-align: center;">
+            <strong>Clause</strong><br><small>Предложение</small>
+        </div>
+        <div class="fragment" style="background: var(--accent6); color: white; padding: 14px 22px; border-radius: 10px; min-width: 180px; text-align: center;">
+            <strong>Statement</strong><br><small>Инструкция</small>
+        </div>
+        <div class="fragment" style="background: #7b68ee; color: white; padding: 14px 22px; border-radius: 10px; min-width: 180px; text-align: center;">
+            <strong>Command</strong><br><small>Команда</small>
+        </div>
+        <div class="fragment" style="background: #e74c3c; color: white; padding: 14px 22px; border-radius: 10px; min-width: 180px; text-align: center;">
+            <strong>Batch</strong><br><small>Пакет</small>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 11: EXPRESSION -->
+<!-- ============================================================ -->
+<section>
+    <h2>Expression — Выражение</h2>
+    <div class="info-box">
+        <strong>Expression (выражение)</strong> — конструкция, которая вычисляется и возвращает
+        <em>одно значение</em> определённого типа данных.
+    </div>
+    <pre><code class="language-sql">-- Литеральные выражения
+42                              -- целое число
+'Шахта Северная'                -- строка
+TRUE                            -- логическое значение
+CURRENT_DATE                    -- текущая дата
+
+-- Арифметические выражения
+tons_mined * 1.05               -- увеличение на 5%
+operating_hours / 12.0 * 100    -- процент загрузки смены
+
+-- Выражения с функциями
+ROUND(fe_content, 1)            -- округление содержания Fe
+COALESCE(end_time, NOW())       -- подстановка текущего времени
+
+-- Условные выражения
+CASE
+    WHEN fe_content >= 60 THEN 'Высший сорт'
+    WHEN fe_content >= 45 THEN 'Первый сорт'
+    ELSE 'Требует обогащения'
+END</code></pre>
+    <aside class="notes">
+        Выражение — «атом» языка SQL. Может использоваться в SELECT, WHERE, HAVING, ORDER BY и т. д.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 12: CLAUSE -->
+<!-- ============================================================ -->
+<section>
+    <h2>Clause — Предложение (секция)</h2>
+    <div class="info-box">
+        <strong>Clause (предложение)</strong> — именованная секция SQL-инструкции,
+        начинающаяся с ключевого слова. Каждое предложение выполняет свою функцию.
+    </div>
+    <pre><code class="language-sql">SELECT                               -- clause: список столбцов
+    m.mine_name,
+    COUNT(e.equipment_id) AS cnt
+FROM dim_mine m                      -- clause: источник данных
+JOIN dim_equipment e                 -- clause: соединение
+    ON m.mine_id = e.mine_id
+WHERE m.status = 'active'            -- clause: фильтрация строк
+GROUP BY m.mine_name                 -- clause: группировка
+HAVING COUNT(e.equipment_id) > 5     -- clause: фильтрация групп
+ORDER BY cnt DESC                    -- clause: сортировка
+LIMIT 10;                            -- clause: ограничение</code></pre>
+    <div class="warning-box" style="font-size: 0.75em;">
+        <strong>Порядок секций фиксирован:</strong>
+        SELECT &rarr; FROM &rarr; WHERE &rarr; GROUP BY &rarr; HAVING &rarr; ORDER BY &rarr; LIMIT
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 13: STATEMENT И COMMAND -->
+<!-- ============================================================ -->
+<section>
+    <h2>Statement и Command</h2>
+    <div class="two-col">
+        <div>
+            <h3 style="color: var(--accent6);">Statement (инструкция)</h3>
+            <p style="font-size: 0.8em;">Полная синтаксическая конструкция, которую СУБД может выполнить.
+            Состоит из одного или нескольких предложений (clause).</p>
+            <pre><code class="language-sql">-- Один statement (инструкция SELECT)
+SELECT mine_name, max_depth_m
+FROM dim_mine
+WHERE status = 'active'
+ORDER BY max_depth_m DESC;</code></pre>
+        </div>
+        <div>
+            <h3 style="color: #7b68ee;">Command (команда)</h3>
+            <p style="font-size: 0.8em;">Тип действия, определяемый ключевым словом в начале инструкции.
+            Определяет к какому подъязыку относится инструкция.</p>
+            <pre><code class="language-sql">-- Команды DDL
+CREATE TABLE ...
+ALTER TABLE ...
+DROP TABLE ...
+
+-- Команды DML
+SELECT ... FROM ...
+INSERT INTO ... VALUES ...
+UPDATE ... SET ...
+DELETE FROM ...</code></pre>
+        </div>
+    </div>
+    <div class="success-box" style="font-size: 0.75em; margin-top: 0.4em;">
+        <strong>Соотношение:</strong> Command определяет <em>тип</em> действия;
+        Statement — <em>конкретная инструкция</em> с заполненными параметрами.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 14: BATCH -->
+<!-- ============================================================ -->
+<section>
+    <h2>Batch — Пакет инструкций</h2>
+    <div class="info-box">
+        <strong>Batch (пакет)</strong> — набор SQL-инструкций, отправляемых серверу
+        как единое целое для последовательного выполнения.
+    </div>
+    <pre><code class="language-sql">-- Пакет из нескольких инструкций
+-- Каждая инструкция завершается точкой с запятой (;)
+
+BEGIN;  -- Начало транзакции
+
+INSERT INTO dim_mine (mine_name, mine_code, region, city, max_depth_m, status)
+VALUES ('Шахта "Восточная"', 'MINE_E', 'Курская область',
+        'г. Курск', 380.00, 'active');
+
+INSERT INTO dim_shaft (mine_id, shaft_name, shaft_code, shaft_type, depth_m)
+VALUES (currval('dim_mine_mine_id_seq'),
+        'Ствол №1', 'E_MAIN', 'вертикальный', 380.00);
+
+COMMIT;  -- Фиксация транзакции</code></pre>
+    <div class="warning-box" style="font-size: 0.75em;">
+        <strong>В PostgreSQL:</strong> разделитель инструкций — точка с запятой (<code>;</code>).
+        В отличие от MS SQL Server, в PostgreSQL нет оператора <code>GO</code> для разделения пакетов.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 15: СВОДНАЯ СХЕМА ЭЛЕМЕНТОВ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Иерархия элементов SQL</h2>
+    <div style="text-align: center; margin: 0.5em 0;">
+        <div style="display: inline-block; text-align: left; font-size: 0.75em; line-height: 1.8;">
+            <div style="background: #e74c3c; color: white; padding: 8px 60px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
+                <strong>Batch</strong> — пакет инструкций
+            </div>
+            <div style="margin-left: 30px;">
+                <div style="background: var(--accent6); color: white; padding: 8px 50px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
+                    <strong>Statement</strong> — инструкция
+                </div>
+                <div style="margin-left: 30px;">
+                    <div style="background: var(--accent2); color: white; padding: 8px 40px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
+                        <strong>Clause</strong> — предложение (SELECT, FROM, WHERE...)
+                    </div>
+                    <div style="margin-left: 30px;">
+                        <div style="background: var(--accent1); color: white; padding: 8px 30px; border-radius: 8px; text-align: center;">
+                            <strong>Expression</strong> — выражение (значения, функции, операции)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <pre style="margin-top: 0.6em;"><code class="language-sql">-- Batch (пакет)
+  -- Statement (инструкция)
+    SELECT mine_name,                -- Clause: SELECT
+           max_depth_m * 3.281 AS depth_ft  -- Expression: арифметика
+    FROM dim_mine                    -- Clause: FROM
+    WHERE status = 'active';         -- Clause: WHERE, Expression: сравнение
+  -- Statement (инструкция)
+    SELECT COUNT(*) FROM dim_equipment;</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 16: ОГРАНИЧЕНИЯ ПАКЕТОВ В POSTGRESQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Что можно комбинировать в пакете?</h2>
+    <div class="success-box" style="font-size: 0.8em;">
+        <strong>PostgreSQL — либеральный подход:</strong> в одном пакете можно свободно
+        смешивать DDL, DML, DCL инструкции без ограничений.
+    </div>
+    <pre><code class="language-sql">-- Всё это — один пакет, и всё работает
+CREATE TABLE test_ore (id SERIAL, grade NUMERIC);
+INSERT INTO test_ore (grade) VALUES (62.5), (58.3), (71.0);
+SELECT AVG(grade) FROM test_ore;
+ALTER TABLE test_ore ADD COLUMN sample_date DATE;
+DROP TABLE test_ore;</code></pre>
+    <div class="info-box" style="font-size: 0.75em; margin-top: 0.4em;">
+        Каждая следующая инструкция «видит» результат предыдущей —
+        <code>INSERT</code> работает с только что созданной таблицей.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 17: ОГРАНИЧЕНИЯ ТРАНЗАКЦИЙ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Ограничения транзакционного контекста</h2>
+    <p style="font-size: 0.8em;">
+        В PostgreSQL ограничения пакетов связаны не с комбинацией инструкций,
+        а с <strong>транзакционным контекстом</strong>.
+    </p>
+    <div class="warning-box" style="font-size: 0.75em;">
+        Следующие инструкции <strong>нельзя</strong> выполнять внутри блока
+        <code>BEGIN ... COMMIT</code>:
+    </div>
+    <table style="font-size: 0.7em; width: 100%; margin-top: 0.3em;">
+        <thead><tr>
+            <th>Инструкция</th><th>Причина</th>
+        </tr></thead>
+        <tbody>
+            <tr><td><code>CREATE DATABASE</code> / <code>DROP DATABASE</code></td>
+                <td>Операции с базой данных не транзакционны</td></tr>
+            <tr><td><code>VACUUM</code>, <code>CLUSTER</code></td>
+                <td>Требуют эксклюзивного доступа вне транзакции</td></tr>
+            <tr><td><code>CREATE INDEX CONCURRENTLY</code></td>
+                <td>Использует особую многофазную схему блокировок</td></tr>
+        </tbody>
+    </table>
+    <pre style="margin-top: 0.3em;"><code class="language-sql">-- Ошибка: CREATE DATABASE не может выполняться внутри транзакции
+BEGIN;
+CREATE DATABASE analytics_db;  -- ERROR!
+COMMIT;
+
+-- Без транзакции — работает
+CREATE DATABASE analytics_db;  -- OK</code></pre>
+    <div class="info-box" style="font-size: 0.65em; margin-top: 0.3em;">
+        <em>Подробнее о транзакциях поговорим в следующих модулях.</em>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ДЕКЛАРАТИВНЫЙ SQL VS ПРОЦЕДУРНЫЕ БЛОКИ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Два мира PostgreSQL: SQL и PL/pgSQL</h2>
+    <div class="info-box" style="font-size: 0.8em;">
+        В PostgreSQL код делится на <strong>декларативные SQL-команды</strong>
+        и <strong>процедурные блоки</strong>. Это две разные парадигмы.
+    </div>
+    <div class="two-col" style="font-size: 0.75em;">
+        <div>
+            <h3 style="color: var(--accent1);">Декларативный SQL</h3>
+            <p>Описываем <strong>что</strong> нужно получить.<br>
+            Оптимизатор решает <strong>как</strong>.</p>
+            <pre><code class="language-sql">-- Нет переменных, нет циклов, нет IF
+SELECT mine_name, max_depth_m
+FROM dim_mine
+WHERE status = 'active'
+ORDER BY max_depth_m DESC;
+
+UPDATE dim_equipment
+SET status = 'decommissioned'
+WHERE install_date < '2010-01-01';
+
+CREATE INDEX idx_mine_status
+ON dim_mine (status);</code></pre>
+        </div>
+        <div>
+            <h3 style="color: var(--accent2);">Процедурный PL/pgSQL</h3>
+            <p>Описываем <strong>как</strong> выполнять —<br>
+            шаг за шагом.</p>
+            <pre><code class="language-sql">DO $$
+DECLARE
+    rec RECORD;
+    total NUMERIC := 0;
+BEGIN
+    FOR rec IN
+        SELECT max_depth_m
+        FROM dim_mine
+    LOOP
+        total := total + rec.max_depth_m;
+        IF rec.max_depth_m > 400 THEN
+            RAISE NOTICE 'Глубокая!';
+        END IF;
+    END LOOP;
+END;
+$$;</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СРАВНИТЕЛЬНАЯ ТАБЛИЦА ПАРАДИГМ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Декларативный SQL vs процедурный код</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th></th>
+            <th>Декларативный SQL</th>
+            <th>Процедурный блок (PL/pgSQL)</th>
+        </tr></thead>
+        <tbody>
+            <tr><td><strong>Парадигма</strong></td><td><strong>Что</strong> нужно</td><td><strong>Как</strong> делать</td></tr>
+            <tr><td><strong>Переменные</strong></td><td style="color: #e74c3c;">Нет</td><td style="color: var(--accent6);"><code>DECLARE x INT;</code></td></tr>
+            <tr><td><strong>Ветвление</strong></td><td><code>CASE WHEN</code> (в выражениях)</td><td><code>IF / ELSIF / ELSE</code></td></tr>
+            <tr><td><strong>Циклы</strong></td><td style="color: #e74c3c;">Нет (работа с множествами)</td><td style="color: var(--accent6);"><code>FOR</code>, <code>WHILE</code>, <code>LOOP</code></td></tr>
+            <tr><td><strong>Обработка ошибок</strong></td><td>Вся инструкция падает</td><td><code>EXCEPTION WHEN ... THEN</code></td></tr>
+            <tr><td><strong>Оптимизация</strong></td><td style="color: var(--accent6);">Оптимизатор видит всё целиком</td><td>Каждый SQL оптимизируется отдельно</td></tr>
+            <tr><td><strong>Подъязыки</strong></td><td>DML, DDL, DCL, TCL</td><td>PL/pgSQL, PL/Python, PL/Perl, PL/v8</td></tr>
+        </tbody>
+    </table>
+    <div class="warning-box" style="font-size: 0.75em; margin-top: 0.4em;">
+        <strong>Важно:</strong> процедурный блок <strong>не заменяет</strong> SQL — он его <strong>оборачивает</strong>.
+        Внутри блока вы всё равно пишете обычные SQL-команды.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SQL ВНУТРИ PL/pgSQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>SQL внутри процедурного блока</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_mine_id INT;               -- процедурное: переменная
+BEGIN
+    -- декларативное: обычный SQL-запрос
+    SELECT mine_id INTO v_mine_id
+    FROM dim_mine
+    WHERE mine_name = 'Северная';
+
+    -- процедурное: ветвление
+    IF v_mine_id IS NULL THEN
+        -- декларативное: INSERT
+        INSERT INTO dim_mine (mine_name, status)
+        VALUES ('Северная', 'active')
+        RETURNING mine_id INTO v_mine_id;
+
+        RAISE NOTICE 'Создана шахта, id = %', v_mine_id;
+    ELSE
+        RAISE NOTICE 'Шахта уже существует, id = %', v_mine_id;
+    END IF;
+END;
+$$;</code></pre>
+    <div class="info-box" style="font-size: 0.75em; margin-top: 0.3em;">
+        <span style="color: var(--accent1);">Синим</span> выделена процедурная обёртка (DECLARE, IF, RAISE),
+        а SQL-команды (SELECT, INSERT) остаются декларативными.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- КОГДА ЧТО ИСПОЛЬЗОВАТЬ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Когда SQL, а когда процедурный блок?</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr><th>Задача</th><th>Подход</th><th>Почему</th></tr></thead>
+        <tbody>
+            <tr><td>Выборка, фильтрация, агрегация</td><td style="color: var(--accent6);"><strong>Чистый SQL</strong></td><td>Оптимизатор работает на полную</td></tr>
+            <tr><td>Массовое обновление</td><td style="color: var(--accent6);"><strong>Чистый SQL</strong> (<code>UPDATE...WHERE</code>)</td><td>Одна операция вместо N</td></tr>
+            <tr><td>Создание / изменение структуры</td><td style="color: var(--accent6);"><strong>DDL</strong></td><td>Декларативные команды</td></tr>
+            <tr><td>«Если нет — создай»</td><td style="color: var(--accent2);"><strong>Процедурный блок</strong></td><td>Нужно ветвление</td></tr>
+            <tr><td>Обработка ошибок с продолжением</td><td style="color: var(--accent2);"><strong>Процедурный блок</strong></td><td><code>EXCEPTION</code></td></tr>
+            <tr><td>ETL с пошаговой фиксацией</td><td style="color: var(--accent2);"><strong>PROCEDURE</strong></td><td>Управление транзакциями</td></tr>
+        </tbody>
+    </table>
+    <div class="warning-box" style="font-size: 0.7em; margin-top: 0.4em;">
+        <strong>Антипаттерн:</strong> цикл вместо одного SQL-запроса
+    </div>
+    <div class="two-col" style="font-size: 0.7em;">
+        <div>
+            <pre><code class="language-sql">-- ПЛОХО: построчный цикл
+DO $$
+DECLARE rec RECORD;
+BEGIN
+  FOR rec IN SELECT equipment_id
+    FROM dim_equipment
+    WHERE status = 'active'
+  LOOP
+    UPDATE dim_equipment
+    SET last_check = NOW()
+    WHERE equipment_id = rec.equipment_id;
+  END LOOP;
+END;
+$$;</code></pre>
+        </div>
+        <div>
+            <pre><code class="language-sql">-- ХОРОШО: один декларативный UPDATE
+UPDATE dim_equipment
+SET last_check = NOW()
+WHERE status = 'active';
+
+
+
+
+-- Оптимизатор сам использует
+-- индексы и параллелизм.
+-- В разы быстрее цикла!</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ПЕРЕМЕННЫЕ И PL/pgSQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Переменные в пакете: блоки PL/pgSQL</h2>
+    <div class="warning-box" style="font-size: 0.8em;">
+        В PostgreSQL <strong>нет сессионных переменных</strong> на уровне SQL.
+        Переменные существуют только внутри блоков <code>DO</code> и функций PL/pgSQL.
+    </div>
+    <div class="two-col">
+        <div>
+            <h3 style="color: var(--accent6); font-size: 0.85em;">Блок DO — анонимный PL/pgSQL</h3>
+            <pre><code class="language-sql">DO $$
+DECLARE
+    avg_depth NUMERIC;
+BEGIN
+    SELECT AVG(max_depth_m)
+      INTO avg_depth
+      FROM dim_mine
+     WHERE status = 'active';
+
+    RAISE NOTICE
+      'Средняя глубина: % м',
+      avg_depth;
+END;
+$$;</code></pre>
+        </div>
+        <div>
+            <h3 style="color: #7b68ee; font-size: 0.85em;">Обходные пути</h3>
+            <pre><code class="language-sql">-- 1. Параметры сессии (GUC)
+SET my.mine = 'Северная';
+SELECT current_setting('my.mine');
+
+-- 2. Временная таблица
+CREATE TEMP TABLE vars AS
+SELECT 42 AS mine_id;
+
+SELECT m.mine_name
+FROM dim_mine m
+JOIN vars v ON m.mine_id = v.mine_id;
+
+-- 3. CTE (внутри одного statement)
+WITH params AS (SELECT 42 AS id)
+SELECT * FROM dim_mine
+WHERE mine_id = (SELECT id FROM params);
+</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТИПЫ БЛОКОВ В POSTGRESQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Типы блоков в PostgreSQL</h2>
+    <div class="info-box" style="font-size: 0.8em;">
+        Процедурный код в PostgreSQL оформляется в виде <strong>блоков</strong>.
+        Блоки различаются по сохраняемости, способу вызова и возможностям.
+    </div>
+    <table style="font-size: 0.6em; width: 100%; margin-top: 0.4em;">
+        <thead><tr>
+            <th>Тип блока</th>
+            <th>Сохраняется</th>
+            <th>Возвращает значение</th>
+            <th>Транзакции внутри</th>
+            <th>Вызов</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><code>DO $$...$$</code></td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td>Выполняется сразу</td>
+            </tr>
+            <tr>
+                <td><code>FUNCTION</code></td>
+                <td style="color: var(--accent6);">Да</td>
+                <td style="color: var(--accent6);">Да</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td><code>SELECT func()</code></td>
+            </tr>
+            <tr>
+                <td><code>PROCEDURE</code> (PG 11+)</td>
+                <td style="color: var(--accent6);">Да</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: var(--accent6);">Да</td>
+                <td><code>CALL proc()</code></td>
+            </tr>
+            <tr>
+                <td>Триггерная функция</td>
+                <td style="color: var(--accent6);">Да</td>
+                <td><code>TRIGGER</code></td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td>Автоматически (событие)</td>
+            </tr>
+            <tr>
+                <td>Вложенный блок</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td>Часть родительского</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- АНОНИМНЫЙ БЛОК DO -->
+<!-- ============================================================ -->
+<section>
+    <h2>Анонимный блок DO</h2>
+    <p style="font-size: 0.8em;">Выполняется один раз и не сохраняется на сервере.
+    Удобен для разовых скриптов, миграций, административных задач.</p>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    mine_count INT;
+    active_count INT;
+BEGIN
+    SELECT COUNT(*) INTO mine_count FROM dim_mine;
+    SELECT COUNT(*) INTO active_count
+      FROM dim_mine WHERE status = 'active';
+
+    RAISE NOTICE 'Всего шахт: %, активных: %',
+                  mine_count, active_count;
+
+    IF active_count = 0 THEN
+        RAISE WARNING 'Нет активных шахт!';
+    END IF;
+END;
+$$;</code></pre>
+    <div class="warning-box" style="font-size: 0.75em; margin-top: 0.3em;">
+        <strong>Ограничение:</strong> блок <code>DO</code> не может возвращать результат
+        в виде таблицы. Для вывода используется <code>RAISE NOTICE</code>
+        или запись во временную таблицу.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ФУНКЦИЯ FUNCTION -->
+<!-- ============================================================ -->
+<section>
+    <h2>Функция (FUNCTION)</h2>
+    <p style="font-size: 0.8em;">Сохраняется на сервере, возвращает значение.
+    Можно вызывать в <code>SELECT</code>, <code>WHERE</code>, <code>JOIN</code> — как часть SQL-выражения.</p>
+    <pre><code class="language-sql">-- Скалярная функция: возвращает одно значение
+CREATE FUNCTION get_mine_depth(p_mine_id INT)
+RETURNS NUMERIC AS $$
+BEGIN
+    RETURN (SELECT max_depth_m FROM dim_mine
+            WHERE mine_id = p_mine_id);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Табличная функция: возвращает набор строк
+CREATE FUNCTION get_equipment_by_mine(p_mine_id INT)
+RETURNS TABLE(equip_name TEXT, equip_type TEXT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT e.equipment_name::TEXT, et.type_name::TEXT
+    FROM dim_equipment e
+    JOIN dim_equipment_type et
+         ON e.equipment_type_id = et.equipment_type_id
+    WHERE e.mine_id = p_mine_id;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+    <pre><code class="language-sql">-- Вызов скалярной
+SELECT mine_name, get_mine_depth(mine_id) FROM dim_mine;
+-- Вызов табличной
+SELECT * FROM get_equipment_by_mine(1);</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- ПРОЦЕДУРА PROCEDURE -->
+<!-- ============================================================ -->
+<section>
+    <h2>Процедура (PROCEDURE) — PostgreSQL 11+</h2>
+    <div class="info-box" style="font-size: 0.8em;">
+        Главное отличие от функции: процедура может <strong>управлять транзакциями</strong>
+        (<code>COMMIT</code> / <code>ROLLBACK</code> внутри). Функция — нет.
+    </div>
+    <pre><code class="language-sql">CREATE PROCEDURE deactivate_old_equipment(p_years INT)
+LANGUAGE plpgsql AS $$
+DECLARE
+    affected INT;
+BEGIN
+    UPDATE dim_equipment
+    SET status = 'decommissioned'
+    WHERE install_date < CURRENT_DATE - (p_years * INTERVAL '1 year')
+      AND status = 'active';
+
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RAISE NOTICE 'Списано единиц: %', affected;
+
+    COMMIT;  -- фиксация внутри процедуры
+END;
+$$;
+
+-- Вызов: через CALL, не через SELECT!
+CALL deactivate_old_equipment(15);</code></pre>
+    <div class="two-col" style="font-size: 0.7em; margin-top: 0.3em;">
+        <div class="success-box">
+            <strong>Когда FUNCTION:</strong> нужно вернуть значение,
+            использовать в SELECT/WHERE/JOIN
+        </div>
+        <div class="warning-box">
+            <strong>Когда PROCEDURE:</strong> нужно выполнить действие,
+            управлять транзакциями, не нужен возврат в SQL
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТРИГГЕРНАЯ ФУНКЦИЯ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Триггерная функция</h2>
+    <p style="font-size: 0.8em;">Вызывается автоматически при INSERT / UPDATE / DELETE.
+    Имеет доступ к специальным переменным <code>OLD</code> и <code>NEW</code>.</p>
+    <pre><code class="language-sql">-- 1. Создаём функцию с возвратом TRIGGER
+CREATE FUNCTION audit_mine_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO mine_audit_log(
+        mine_id, action, old_status, new_status, changed_at
+    ) VALUES (
+        NEW.mine_id, TG_OP, OLD.status, NEW.status, NOW()
+    );
+    RETURN NEW;  -- обязательно для BEFORE-триггеров
+END;
+$$ LANGUAGE plpgsql;
+
+-- 2. Привязываем к таблице
+CREATE TRIGGER trg_mine_audit
+    AFTER UPDATE ON dim_mine
+    FOR EACH ROW
+    WHEN (OLD.status IS DISTINCT FROM NEW.status)
+    EXECUTE FUNCTION audit_mine_changes();</code></pre>
+    <table style="font-size: 0.65em; width: 100%; margin-top: 0.3em;">
+        <thead><tr><th>Момент</th><th>BEFORE</th><th>AFTER</th></tr></thead>
+        <tbody>
+            <tr><td>Когда срабатывает</td><td>До изменения данных</td><td>После изменения данных</td></tr>
+            <tr><td>Может изменить данные</td><td>Да (через RETURN NEW)</td><td>Нет (данные уже записаны)</td></tr>
+            <tr><td>Типичное применение</td><td>Валидация, автозаполнение</td><td>Аудит, логирование, уведомления</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВЛОЖЕННЫЕ БЛОКИ И ОБРАБОТКА ИСКЛЮЧЕНИЙ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Вложенные блоки и обработка исключений</h2>
+    <p style="font-size: 0.8em;">Блоки можно вкладывать. Каждый вложенный блок имеет свою область видимости
+    и может перехватывать исключения, не прерывая родительский блок.</p>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    total INT;
+BEGIN
+    SELECT COUNT(*) INTO total FROM dim_mine;
+
+    -- Вложенный блок: своя область видимости + свой EXCEPTION
+    DECLARE
+        active INT;
+    BEGIN
+        SELECT COUNT(*) INTO active
+          FROM dim_mine WHERE status = 'active';
+        RAISE NOTICE 'Активных: % из %', active, total;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'Ошибка во внутреннем блоке: %', SQLERRM;
+    END;
+
+    -- active здесь уже НЕ видна, total — видна
+    RAISE NOTICE 'Всего шахт: %', total;
+END;
+$$;</code></pre>
+    <div class="info-box" style="font-size: 0.7em; margin-top: 0.3em;">
+        <strong>Зачем вложенные блоки?</strong>
+        Изолировать ошибку: если <code>EXCEPTION</code> перехватил ошибку во внутреннем блоке,
+        внешний блок продолжает выполнение.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ПРОЦЕДУРНЫЕ ЯЗЫКИ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Процедурные языки PostgreSQL</h2>
+    <p style="font-size: 0.8em;">PL/pgSQL — основной, но не единственный язык для написания блоков и функций.</p>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th>Язык</th><th>Статус</th><th>Когда использовать</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>PL/pgSQL</strong></td>
+                <td>Встроенный</td>
+                <td>Основной выбор: работа с данными, триггеры, процедуры</td>
+            </tr>
+            <tr>
+                <td><strong>SQL</strong></td>
+                <td>Встроенный</td>
+                <td>Простые функции без процедурной логики (быстрее PL/pgSQL)</td>
+            </tr>
+            <tr>
+                <td><strong>PL/Python</strong></td>
+                <td>Расширение</td>
+                <td>Сложные вычисления, ML-модели, интеграция с Python-библиотеками</td>
+            </tr>
+            <tr>
+                <td><strong>PL/Perl</strong></td>
+                <td>Расширение</td>
+                <td>Обработка текста, регулярные выражения</td>
+            </tr>
+            <tr>
+                <td><strong>PL/Tcl</strong></td>
+                <td>Расширение</td>
+                <td>Легковесные скрипты</td>
+            </tr>
+            <tr>
+                <td><strong>PL/v8</strong></td>
+                <td>Расширение</td>
+                <td>JavaScript внутри PostgreSQL, работа с JSON</td>
+            </tr>
+        </tbody>
+    </table>
+    <pre style="margin-top: 0.3em;"><code class="language-sql">-- Функция на чистом SQL (без процедурной логики)
+CREATE FUNCTION active_mines()
+RETURNS SETOF dim_mine
+LANGUAGE sql AS $$
+    SELECT * FROM dim_mine WHERE status = 'active';
+$$;
+
+-- Функция на PL/Python (нужно расширение plpython3u)
+CREATE FUNCTION py_avg(arr NUMERIC[])
+RETURNS NUMERIC
+LANGUAGE plpython3u AS $$
+    return sum(arr) / len(arr) if arr else None
+$$;</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТРАНЗАКЦИИ И БЛОКИ: КРАТКИЙ ОБЗОР -->
+<!-- ============================================================ -->
+<section>
+    <h2>Транзакции и процедурные блоки (обзор)</h2>
+    <p style="font-size: 0.8em;">Транзакции — это <strong>декларативные команды TCL</strong>.
+    Подробный разбор — в следующих модулях. Сейчас — ключевые ограничения.</p>
+    <table style="font-size: 0.65em; width: 100%; margin-top: 0.3em;">
+        <thead><tr>
+            <th>Контекст</th>
+            <th>BEGIN / COMMIT / ROLLBACK</th>
+            <th>EXCEPTION (неявный SAVEPOINT)</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>Чистый SQL</strong> (вне блоков)</td>
+                <td style="color: var(--accent6);">Да</td>
+                <td style="color: #e74c3c;">Нет</td>
+            </tr>
+            <tr>
+                <td><strong>DO $$...$$</strong></td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: var(--accent6);">Да</td>
+            </tr>
+            <tr>
+                <td><strong>FUNCTION</strong></td>
+                <td style="color: #e74c3c;">Нет</td>
+                <td style="color: var(--accent6);">Да</td>
+            </tr>
+            <tr>
+                <td><strong>PROCEDURE</strong> (PG 11+)</td>
+                <td style="color: var(--accent6);">Да</td>
+                <td style="color: var(--accent6);">Да</td>
+            </tr>
+        </tbody>
+    </table>
+    <pre style="margin-top: 0.3em;"><code class="language-sql">-- В функции COMMIT запрещён:
+CREATE FUNCTION bad() RETURNS void AS $$
+BEGIN
+    COMMIT;  -- ERROR: invalid transaction termination
+END; $$ LANGUAGE plpgsql;
+
+-- В процедуре — разрешён:
+CREATE PROCEDURE good() LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO dim_mine (mine_name, status) VALUES ('Тест', 'active');
+    COMMIT;  -- OK: промежуточная фиксация
+END; $$;</code></pre>
+    <div class="info-box" style="font-size: 0.7em; margin-top: 0.3em;">
+        <strong>Auto-commit:</strong> настройка <em>клиента</em> (DBeaver, psql), а не сервера.
+        В DBeaver — кнопка на панели. Проверяйте перед <code>DELETE</code> / <code>UPDATE</code>.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СРАВНЕНИЕ С MS SQL SERVER -->
+<!-- ============================================================ -->
+<section>
+    <h2>Сравнение: пакеты в PostgreSQL и MS SQL Server</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th></th><th>PostgreSQL</th><th>MS SQL Server</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>Разделитель пакетов</strong></td>
+                <td>Нет (только <code>;</code> между инструкциями)</td>
+                <td><code>GO</code> — директива клиента</td>
+            </tr>
+            <tr>
+                <td><strong>DDL + DML в одном пакете</strong></td>
+                <td>Свободно</td>
+                <td>Свободно</td>
+            </tr>
+            <tr>
+                <td><strong>CREATE VIEW / PROC / TRIGGER</strong></td>
+                <td>Можно с другими инструкциями</td>
+                <td>Должны быть <strong>единственной</strong> инструкцией в пакете</td>
+            </tr>
+            <tr>
+                <td><strong>Переменные</strong></td>
+                <td>Только в блоках PL/pgSQL (<code>DO $$...$$</code>)</td>
+                <td><code>DECLARE @x</code> — видны до конца пакета (до <code>GO</code>)</td>
+            </tr>
+            <tr>
+                <td><strong>Обработка ошибок</strong></td>
+                <td>Ошибка прерывает оставшиеся инструкции</td>
+                <td>Зависит от типа ошибки и <code>SET XACT_ABORT</code></td>
+            </tr>
+        </tbody>
+    </table>
+    <pre><code class="language-sql">-- MS SQL Server: переменные живут до GO
+DECLARE @mine_name NVARCHAR(100) = N'Северная';
+SELECT * FROM dim_mine WHERE mine_name = @mine_name;  -- OK
+GO
+SELECT @mine_name;  -- Ошибка! Переменная больше не существует
+GO
+
+-- MS SQL Server: CREATE VIEW требует отдельного пакета
+CREATE VIEW v_active_mines AS
+SELECT * FROM dim_mine WHERE status = 'active';
+GO  -- обязательный разделитель
+SELECT * FROM v_active_mines;
+GO</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 20: ВОПРОС ДЛЯ ОБСУЖДЕНИЯ #1 -->
+<!-- ============================================================ -->
+<section class="discussion-slide">
+    <h2>Вопрос для обсуждения</h2>
+    <div style="font-size: 1.1em; margin: 1em 0; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <p><strong>Почему SQL остаётся главным языком работы с данными<br>уже более 50 лет?</strong></p>
+        <p style="font-size: 0.75em; color: #666; margin-top: 1em;">
+            Подумайте: какие альтернативы SQL вы знаете?<br>
+            Почему они не заменили SQL полностью?
+        </p>
+    </div>
+    <div class="fragment">
+        <div class="success-box" style="font-size: 0.8em;">
+            <strong>Ключевые факторы:</strong> декларативность, стандартизация,
+            огромная экосистема, математическая основа (реляционная алгебра),
+            инвестиции индустрии в реляционные СУБД.
+        </div>
+    </div>
+    <aside class="notes">
+        Дать аудитории 2 минуты на обсуждение в парах, затем собрать ответы.
+        Упомянуть: NoSQL-движение 2010-х годов — и возвращение SQL (NewSQL, SQL-on-Hadoop).
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 17: ВОПРОС ДЛЯ ОБСУЖДЕНИЯ #2 -->
+<!-- ============================================================ -->
+<section class="discussion-slide">
+    <h2>Вопрос для обсуждения</h2>
+    <div style="font-size: 1.1em; margin: 1em 0; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <p><strong>Представьте, что вы — инженер на горнодобывающем предприятии.</strong></p>
+        <p style="font-size: 0.85em; margin-top: 0.8em;">
+            Какие данные, по вашему мнению, наиболее критичны для контроля?
+        </p>
+        <ul style="font-size: 0.75em; color: #555; margin-top: 0.5em;">
+            <li>Производительность оборудования?</li>
+            <li>Качество добываемой руды?</li>
+            <li>Простои и их причины?</li>
+            <li>Безопасность персонала?</li>
+        </ul>
+    </div>
+    <div class="fragment">
+        <div class="info-box" style="font-size: 0.8em;">
+            Именно эти задачи решает <strong>MES-система</strong> (Manufacturing Execution System)
+            предприятия <span class="highlight-orange">«Руда+»</span> — наш учебный пример на протяжении всего курса.
+        </div>
+    </div>
+    <aside class="notes">
+        Важный момент для вовлечения аудитории. Связать их ответы с учебным примером.
+        MES = система управления производством, уровень между ERP и SCADA.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 18: КЕЙС «РУДА+» — ОПИСАНИЕ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Учебный кейс: предприятие «Руда+»</h2>
+    <div class="two-col" style="font-size: 0.85em;">
+        <div>
+            <h3 style="color: var(--accent2);">О предприятии</h3>
+            <ul>
+                <li><strong>Отрасль:</strong> добыча железной руды</li>
+                <li><strong>Шахты:</strong> «Северная» (Курская обл.), «Южная» (Белгородская обл.)</li>
+                <li><strong>Оборудование:</strong> 18 единиц — ПДМ, самосвалы, вагонетки, скиповые подъёмники</li>
+                <li><strong>Персонал:</strong> 10 операторов</li>
+                <li><strong>Навигация:</strong> подземная навигационная система</li>
+                <li><strong>Датчики:</strong> температура, вибрация, скорость, масса груза, топливо, давление, обороты</li>
+            </ul>
+        </div>
+        <div>
+            <h3 style="color: var(--accent6);">Цели MES-системы</h3>
+            <ul>
+                <li>Анализ <strong>качества</strong> добываемой руды (содержание Fe, SiO2, влажность)</li>
+                <li>Контроль <strong>простоев</strong> оборудования и их причин</li>
+                <li>Оценка <strong>общей эффективности</strong> производственного процесса (OEE)</li>
+                <li>Мониторинг <strong>телеметрии</strong> в реальном времени</li>
+                <li><strong>Отчётность</strong> для руководства</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 19: СХЕМА «СНЕЖИНКА» -->
+<!-- ============================================================ -->
+<section>
+    <h2>Модель БД «Руда+» — схема «Снежинка»</h2>
+    <div class="snowflake-diagram"><span class="hl-yellow">                        ФАКТ-ТАБЛИЦЫ (центр снежинки)</span>
+
+  <span class="hl-green">dim_equipment_type</span>     <span class="hl-orange">fact_production</span>            <span class="hl-green">dim_ore_grade</span>
+         |              /    |    |    \    \              |
+  <span class="hl-green">dim_sensor_type</span>    /     |    |     \    \
+         |          /      |    |      \    \
+  <span class="hl-blue">dim_equipment</span>----+       |    |       +----<span class="hl-blue">dim_operator</span>
+         |                 |    |
+  <span class="hl-blue">dim_sensor</span>          <span class="hl-blue">dim_mine</span>  <span class="hl-blue">dim_shift</span>        <span class="hl-blue">dim_date</span>  <span class="hl-blue">dim_time</span>
+                           |
+                      <span class="hl-blue">dim_shaft</span>           <span class="hl-orange">fact_equipment_telemetry</span>
+                           |                  |    |    |    |
+                      <span class="hl-blue">dim_location</span>    equip sensor loc  date/time
+
+  <span class="hl-orange">fact_equipment_downtime</span>           <span class="hl-orange">fact_ore_quality</span>
+     |    |    |    |    |              |    |    |    |    |
+   date shift equip reason loc       date  time shift mine shaft
+
+  <span class="hl-yellow">Измерения:</span> 13 таблиц     <span class="hl-yellow">Факты:</span> 4 таблицы     <span class="hl-yellow">Схема:</span> Снежинка</div>
+    <div class="info-box" style="font-size: 0.7em; margin-top: 0.5em;">
+        <strong>Снежинка</strong> = нормализованные измерения (dim_equipment &rarr; dim_equipment_type, dim_shaft &rarr; dim_mine).
+        Отличие от «звезды» — измерения имеют подтаблицы (иерархии).
+    </div>
+    <aside class="notes">
+        Подробный разбор модели будет в модуле по хранилищам данных.
+        Сейчас важно показать общую структуру и связь с бизнес-задачами.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 20: ПЕРВЫЕ ЗАПРОСЫ К БД «РУДА+» -->
+<!-- ============================================================ -->
+<section>
+    <h2>Первые запросы к БД «Руда+»</h2>
+    <pre><code class="language-sql">-- 1. Какие шахты есть в системе?
+SELECT mine_name, region, city, max_depth_m, status
+FROM dim_mine;
+
+-- 2. Сколько оборудования на каждой шахте?
+SELECT m.mine_name,
+       et.type_name,
+       COUNT(*) AS equipment_count
+FROM dim_equipment e
+JOIN dim_mine m ON e.mine_id = m.mine_id
+JOIN dim_equipment_type et ON e.equipment_type_id = et.equipment_type_id
+GROUP BY m.mine_name, et.type_name
+ORDER BY m.mine_name, et.type_name;
+
+-- 3. Каковы возможные причины простоев?
+SELECT reason_name, category
+FROM dim_downtime_reason
+ORDER BY category, reason_name;</code></pre>
+    <div class="success-box" style="font-size: 0.75em;">
+        Эти запросы мы выполним в практической работе.
+        Убедитесь, что у вас есть доступ к базе данных.
+    </div>
+</section>
+
+<!-- Практика: подключение и первые запросы -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Шаги 1–4 — Подключение к БД и первые SQL-запросы</p>
+        <p><strong>Задание:</strong> Подключитесь к Yandex Managed PostgreSQL через DBeaver, выполните первые запросы к таблицам dim_mine, dim_equipment, dim_downtime_reason.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 15–20 минут</em></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- МЕТАДАННЫЕ В POSTGRESQL -->
+<!-- ============================================================ -->
+<section>
+    <h2>Метаданные: данные о данных</h2>
+    <div class="info-box" style="font-size: 0.85em;">
+        <strong>Метаданные</strong> — это информация о структуре базы данных:
+        таблицы, столбцы, типы данных, ограничения, индексы, права доступа.
+    </div>
+    <div class="two-col" style="font-size: 0.8em;">
+        <div>
+            <h3 style="color: var(--accent1);">Зачем работать с метаданными?</h3>
+            <ul>
+                <li>Изучить структуру незнакомой БД</li>
+                <li>Найти нужные таблицы и столбцы</li>
+                <li>Проверить типы данных и ограничения</li>
+                <li>Документирование и аудит</li>
+                <li>Автоматическая генерация кода</li>
+            </ul>
+        </div>
+        <div>
+            <h3 style="color: var(--accent2);">Два способа доступа</h3>
+            <ul>
+                <li><strong>information_schema</strong> — стандарт SQL (портируемый)</li>
+                <li><strong>pg_catalog</strong> — системный каталог PostgreSQL (полный)</li>
+            </ul>
+            <div class="success-box" style="font-size: 0.85em; margin-top: 0.5em;">
+                Для повседневных задач обычно хватает <code>information_schema</code>.
+                Для специфики PostgreSQL нужен <code>pg_catalog</code>.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- INFORMATION_SCHEMA -->
+<!-- ============================================================ -->
+<section>
+    <h2>information_schema — стандарт SQL</h2>
+    <p style="font-size: 0.8em;">Набор представлений (views), определённых стандартом SQL.
+    Работает одинаково в PostgreSQL, MySQL, SQL Server.</p>
+    <pre><code class="language-sql">-- Список всех таблиц в схеме public
+SELECT table_name, table_type
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+
+-- Столбцы конкретной таблицы с типами данных
+SELECT column_name,
+       data_type,
+       is_nullable,
+       column_default
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'dim_mine'
+ORDER BY ordinal_position;
+
+-- Все ограничения (constraints) таблицы
+SELECT constraint_name, constraint_type
+FROM information_schema.table_constraints
+WHERE table_name = 'fact_production';</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- INFORMATION_SCHEMA: ПОЛЕЗНЫЕ ПРЕДСТАВЛЕНИЯ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Ключевые представления information_schema</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th>Представление</th><th>Содержимое</th><th>Пример использования</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><code>tables</code></td>
+                <td>Все таблицы и представления</td>
+                <td>Найти таблицы по имени или типу</td>
+            </tr>
+            <tr>
+                <td><code>columns</code></td>
+                <td>Столбцы всех таблиц</td>
+                <td>Узнать тип данных, nullable, default</td>
+            </tr>
+            <tr>
+                <td><code>table_constraints</code></td>
+                <td>PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK</td>
+                <td>Проверить ограничения целостности</td>
+            </tr>
+            <tr>
+                <td><code>key_column_usage</code></td>
+                <td>Столбцы, входящие в ключи</td>
+                <td>Определить PK и FK связи</td>
+            </tr>
+            <tr>
+                <td><code>referential_constraints</code></td>
+                <td>Связи между FK и PK</td>
+                <td>Построить граф связей таблиц</td>
+            </tr>
+            <tr>
+                <td><code>views</code></td>
+                <td>Все представления и их SQL</td>
+                <td>Изучить логику представлений</td>
+            </tr>
+            <tr>
+                <td><code>routines</code></td>
+                <td>Функции и процедуры</td>
+                <td>Найти хранимые процедуры</td>
+            </tr>
+        </tbody>
+    </table>
+    <pre style="margin-top: 0.3em;"><code class="language-sql">-- Найти все столбцы, содержащие "date" в имени
+SELECT table_name, column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND column_name LIKE '%date%'
+ORDER BY table_name;</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- PG_CATALOG -->
+<!-- ============================================================ -->
+<section>
+    <h2>pg_catalog — системный каталог PostgreSQL</h2>
+    <div class="warning-box" style="font-size: 0.8em;">
+        Внутренние системные таблицы PostgreSQL. Содержат <strong>полную</strong> информацию,
+        но не переносимы между СУБД.
+    </div>
+    <pre><code class="language-sql">-- Список таблиц через pg_catalog
+SELECT relname AS table_name,
+       pg_size_pretty(pg_total_relation_size(oid)) AS total_size,
+       reltuples::BIGINT AS approx_rows
+FROM pg_catalog.pg_class
+WHERE relkind = 'r'  -- 'r' = обычная таблица
+  AND relnamespace = (SELECT oid FROM pg_namespace
+                      WHERE nspname = 'public')
+ORDER BY pg_total_relation_size(oid) DESC;
+
+-- Описание столбцов с комментариями
+SELECT a.attname AS column_name,
+       pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+       col_description(a.attrelid, a.attnum) AS comment
+FROM pg_catalog.pg_attribute a
+JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+WHERE c.relname = 'dim_mine'
+  AND a.attnum > 0
+  AND NOT a.attisdropped;</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- PG_CATALOG: КЛЮЧЕВЫЕ ТАБЛИЦЫ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Ключевые таблицы pg_catalog</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th>Таблица</th><th>Содержимое</th><th>Аналог в information_schema</th>
+        </tr></thead>
+        <tbody>
+            <tr><td><code>pg_class</code></td><td>Таблицы, индексы, представления, последовательности</td><td><code>tables</code></td></tr>
+            <tr><td><code>pg_attribute</code></td><td>Столбцы всех таблиц</td><td><code>columns</code></td></tr>
+            <tr><td><code>pg_constraint</code></td><td>Все ограничения (PK, FK, UNIQUE, CHECK)</td><td><code>table_constraints</code></td></tr>
+            <tr><td><code>pg_index</code></td><td>Индексы (нет аналога в information_schema)</td><td>—</td></tr>
+            <tr><td><code>pg_namespace</code></td><td>Схемы базы данных</td><td><code>schemata</code></td></tr>
+            <tr><td><code>pg_roles</code></td><td>Роли и пользователи</td><td>—</td></tr>
+            <tr><td><code>pg_stat_user_tables</code></td><td>Статистика использования таблиц</td><td>—</td></tr>
+        </tbody>
+    </table>
+    <div class="info-box" style="font-size: 0.75em; margin-top: 0.4em;">
+        <strong>pg_catalog</strong> даёт доступ к информации, которой нет в стандарте:
+        размер таблиц, индексы, статистика запросов, блокировки, настройки сервера.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PSQL-КОМАНДЫ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Ярлыки psql для метаданных</h2>
+    <p style="font-size: 0.8em;">В консольном клиенте <code>psql</code> есть короткие команды,
+    которые внутри обращаются к <code>pg_catalog</code>:</p>
+    <table style="font-size: 0.7em; width: 100%;">
+        <thead><tr>
+            <th>Команда psql</th><th>Описание</th><th>SQL-эквивалент (упрощённо)</th>
+        </tr></thead>
+        <tbody>
+            <tr><td><code>\dt</code></td><td>Список таблиц</td><td><code>SELECT * FROM pg_tables WHERE schemaname='public'</code></td></tr>
+            <tr><td><code>\d dim_mine</code></td><td>Структура таблицы</td><td><code>SELECT * FROM information_schema.columns WHERE table_name='dim_mine'</code></td></tr>
+            <tr><td><code>\di</code></td><td>Список индексов</td><td><code>SELECT * FROM pg_indexes WHERE schemaname='public'</code></td></tr>
+            <tr><td><code>\dv</code></td><td>Список представлений</td><td><code>SELECT * FROM pg_views WHERE schemaname='public'</code></td></tr>
+            <tr><td><code>\dn</code></td><td>Список схем</td><td><code>SELECT * FROM information_schema.schemata</code></td></tr>
+            <tr><td><code>\du</code></td><td>Список ролей</td><td><code>SELECT * FROM pg_roles</code></td></tr>
+            <tr><td><code>\df</code></td><td>Список функций</td><td><code>SELECT * FROM pg_proc</code></td></tr>
+        </tbody>
+    </table>
+    <div class="success-box" style="font-size: 0.7em; margin-top: 0.4em;">
+        <strong>Совет:</strong> в DBeaver и других GUI-клиентах эта информация доступна
+        через дерево навигации. Но знать SQL-запросы к метаданным полезно
+        для автоматизации и скриптов.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ПРАКТИЧЕСКИЙ ПРИМЕР: МЕТАДАННЫЕ «РУДА+» -->
+<!-- ============================================================ -->
+<section>
+    <h2>Практика: исследуем метаданные «Руда+»</h2>
+    <pre><code class="language-sql">-- 1. Все факт-таблицы (по соглашению начинаются с fact_)
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name LIKE 'fact_%';
+
+-- 2. Связи (FK) таблицы fact_production
+SELECT kcu.column_name AS fk_column,
+       ccu.table_name  AS referenced_table,
+       ccu.column_name AS referenced_column
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+     ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage ccu
+     ON tc.constraint_name = ccu.constraint_name
+WHERE tc.table_name = 'fact_production'
+  AND tc.constraint_type = 'FOREIGN KEY';
+
+-- 3. Размер таблиц в БД (pg_catalog)
+SELECT relname,
+       pg_size_pretty(pg_total_relation_size(oid)) AS size
+FROM pg_class
+WHERE relkind = 'r'
+  AND relnamespace = 'public'::regnamespace
+ORDER BY pg_total_relation_size(oid) DESC;</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- СРАВНЕНИЕ С MS SQL SERVER -->
+<!-- ============================================================ -->
+<section>
+    <h2>Метаданные: PostgreSQL vs MS SQL Server</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th>Задача</th><th>PostgreSQL</th><th>MS SQL Server</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td>Стандартный доступ</td>
+                <td><code>information_schema.*</code></td>
+                <td><code>INFORMATION_SCHEMA.*</code> (то же)</td>
+            </tr>
+            <tr>
+                <td>Системный каталог</td>
+                <td><code>pg_catalog.pg_class</code>, <code>pg_attribute</code>...</td>
+                <td><code>sys.tables</code>, <code>sys.columns</code>...</td>
+            </tr>
+            <tr>
+                <td>Список таблиц</td>
+                <td><code>\dt</code> (psql)</td>
+                <td><code>sp_tables</code> или <code>SELECT * FROM sys.tables</code></td>
+            </tr>
+            <tr>
+                <td>Структура таблицы</td>
+                <td><code>\d table_name</code></td>
+                <td><code>sp_columns table_name</code> или <code>sp_help table_name</code></td>
+            </tr>
+            <tr>
+                <td>Размер таблиц</td>
+                <td><code>pg_total_relation_size()</code></td>
+                <td><code>sp_spaceused 'table_name'</code></td>
+            </tr>
+            <tr>
+                <td>Зависимости объектов</td>
+                <td><code>pg_depend</code></td>
+                <td><code>sys.sql_expression_dependencies</code></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="info-box" style="font-size: 0.75em; margin-top: 0.4em;">
+        <strong>Переносимый код:</strong> если запросы к метаданным пишутся через
+        <code>information_schema</code>, они будут работать и в PostgreSQL,
+        и в SQL Server, и в MySQL без изменений.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВОПРОС ДЛЯ ОБСУЖДЕНИЯ: МЕТАДАННЫЕ -->
+<!-- ============================================================ -->
+<section class="discussion-slide">
+    <h2>Вопрос для обсуждения</h2>
+    <div style="font-size: 1.05em; margin: 1em 0; padding: 25px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <p><strong>Вы пришли на новое место работы и получили доступ
+        к производственной базе данных.</strong></p>
+        <p style="font-size: 0.85em; margin-top: 0.8em;">
+            С каких запросов к метаданным вы бы начали,<br>
+            чтобы понять структуру и назначение таблиц?
+        </p>
+    </div>
+    <div class="fragment">
+        <div class="success-box" style="font-size: 0.75em;">
+            <strong>Типичный план:</strong>
+            1) Список схем (<code>\dn</code>) →
+            2) Таблицы в каждой схеме (<code>\dt schema.*</code>) →
+            3) Размеры таблиц (где больше данных?) →
+            4) FK-связи (как таблицы связаны?) →
+            5) Комментарии (<code>col_description</code>)
+        </div>
+    </div>
+    <aside class="notes">
+        Дать 1-2 минуты на размышление. Обсудить, почему важно начинать
+        именно с метаданных, а не с SELECT * FROM random_table.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- ГДЕ ХРАНИТЬ SQL-КОД -->
+<!-- ============================================================ -->
+<section>
+    <h2>Где хранить SQL-код?</h2>
+    <div class="info-box" style="font-size: 0.8em;">
+        SQL-код может «жить» в разных местах. Выбор зависит от задачи,
+        команды и процессов разработки.
+    </div>
+    <div style="text-align: center; margin: 0.6em 0;">
+        <div style="display: inline-block; text-align: left; font-size: 0.7em; line-height: 1.8;">
+            <div style="background: var(--accent1); color: white; padding: 10px 40px; border-radius: 8px; text-align: center; margin-bottom: 6px;">
+                <strong>1. На сервере СУБД</strong><br>Хранимые процедуры, функции, представления, триггеры
+            </div>
+            <div style="background: var(--accent2); color: white; padding: 10px 40px; border-radius: 8px; text-align: center; margin-bottom: 6px;">
+                <strong>2. В коде приложения</strong><br>ORM-запросы, встроенный SQL, подготовленные выражения
+            </div>
+            <div style="background: var(--accent6); color: white; padding: 10px 40px; border-radius: 8px; text-align: center; margin-bottom: 6px;">
+                <strong>3. В файловой системе</strong><br>.sql файлы, миграции, скрипты развёртывания
+            </div>
+            <div style="background: #7b68ee; color: white; padding: 10px 40px; border-radius: 8px; text-align: center;">
+                <strong>4. В BI-инструментах</strong><br>Запросы в Power BI, Tableau, Grafana, DAX Studio
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВАРИАНТ 1: НА СЕРВЕРЕ СУБД -->
+<!-- ============================================================ -->
+<section>
+    <h2>Вариант 1: SQL-код на сервере СУБД</h2>
+    <div class="two-col" style="font-size: 0.75em;">
+        <div>
+            <h3 style="color: var(--accent6);">Что хранится на сервере</h3>
+            <pre><code class="language-sql">-- Хранимая функция
+CREATE FUNCTION get_mine_efficiency(
+    p_mine_id INT,
+    p_date DATE
+) RETURNS NUMERIC AS $$
+BEGIN
+    RETURN (
+        SELECT SUM(tonnes_produced) /
+               NULLIF(SUM(planned_tonnes), 0) * 100
+        FROM fact_production
+        WHERE mine_id = p_mine_id
+          AND production_date = p_date
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Представление (View)
+CREATE VIEW v_active_equipment AS
+SELECT e.*, m.mine_name
+FROM dim_equipment e
+JOIN dim_mine m ON e.mine_id = m.mine_id
+WHERE e.status = 'active';</code></pre>
+        </div>
+        <div>
+            <h3 style="color: var(--accent1);">Плюсы</h3>
+            <ul>
+                <li>Логика рядом с данными — минимум сетевых обращений</li>
+                <li>Повторное использование: вызов из любого клиента</li>
+                <li>Контроль доступа через <code>GRANT EXECUTE</code></li>
+                <li>Оптимизатор может кэшировать план выполнения</li>
+            </ul>
+            <h3 style="color: #e74c3c; margin-top: 0.5em;">Минусы</h3>
+            <ul>
+                <li>Сложно отследить изменения (нет истории «из коробки»)</li>
+                <li>Тестирование затруднено</li>
+                <li>Код «размазан» между БД и приложением</li>
+                <li>Отладка сложнее, чем в приложении</li>
+                <li>Миграция между средами (dev → staging → prod) требует дисциплины</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВАРИАНТ 2: В КОДЕ ПРИЛОЖЕНИЯ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Вариант 2: SQL в коде приложения</h2>
+    <div class="two-col" style="font-size: 0.75em;">
+        <div>
+            <h3 style="color: var(--accent6);">Примеры</h3>
+            <pre><code class="language-python"># Python + psycopg2 — прямой SQL
+cursor.execute("""
+    SELECT mine_name, max_depth_m
+    FROM dim_mine
+    WHERE status = %s
+""", ('active',))
+
+# Python + SQLAlchemy (ORM)
+session.query(Mine)\
+    .filter(Mine.status == 'active')\
+    .all()
+</code></pre>
+            <pre><code class="language-csharp">// C# + Entity Framework (ORM)
+var mines = context.Mines
+    .Where(m => m.Status == "active")
+    .ToList();
+
+// Dapper — прямой SQL
+var mines = connection.Query&lt;Mine&gt;(
+    "SELECT * FROM dim_mine WHERE status = @s",
+    new { s = "active" });</code></pre>
+        </div>
+        <div>
+            <h3 style="color: var(--accent1);">Плюсы</h3>
+            <ul>
+                <li>Код в одном месте — легко искать и рефакторить</li>
+                <li>Полноценное версионирование (Git)</li>
+                <li>Удобное тестирование (unit, integration)</li>
+                <li>ORM генерирует SQL автоматически</li>
+            </ul>
+            <h3 style="color: #e74c3c; margin-top: 0.5em;">Минусы</h3>
+            <ul>
+                <li>SQL «размазан» по коду — трудно анализировать отдельно</li>
+                <li>ORM может генерировать неоптимальные запросы</li>
+                <li>Каждый вызов — сетевое обращение</li>
+                <li>Дублирование логики, если несколько приложений обращаются к одной БД</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВАРИАНТ 3: ФАЙЛОВАЯ СИСТЕМА + VCS -->
+<!-- ============================================================ -->
+<section>
+    <h2>Вариант 3: SQL-файлы + система контроля версий</h2>
+    <div class="two-col" style="font-size: 0.75em;">
+        <div>
+            <h3 style="color: var(--accent6);">Типичная структура проекта</h3>
+            <pre><code class="language-bash">ruda-plus-db/
+├── migrations/
+│   ├── V001__create_dim_mine.sql
+│   ├── V002__create_dim_equipment.sql
+│   ├── V003__create_fact_production.sql
+│   └── V004__add_ore_quality_index.sql
+├── functions/
+│   ├── get_mine_efficiency.sql
+│   └── calc_oee.sql
+├── views/
+│   ├── v_active_equipment.sql
+│   └── v_daily_production.sql
+├── seeds/
+│   ├── dim_mine_data.sql
+│   └── dim_equipment_type_data.sql
+├── reports/
+│   ├── monthly_production.sql
+│   └── downtime_analysis.sql
+└── tests/
+    ├── test_mine_efficiency.sql
+    └── test_production_constraints.sql</code></pre>
+        </div>
+        <div>
+            <h3 style="color: var(--accent1);">Плюсы</h3>
+            <ul>
+                <li>Полная история изменений в Git</li>
+                <li>Code review через Pull Request</li>
+                <li>Воспроизводимость: развернуть БД с нуля</li>
+                <li>CI/CD: автоматическое применение миграций</li>
+                <li>Совместная работа команды без конфликтов</li>
+            </ul>
+            <h3 style="color: #e74c3c; margin-top: 0.5em;">Минусы</h3>
+            <ul>
+                <li>Нужна дисциплина: сервер и файлы могут рассинхронизироваться</li>
+                <li>Требуются инструменты миграций (Flyway, Liquibase, sqitch)</li>
+                <li>Дополнительный шаг: файл → применение к серверу</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ИНСТРУМЕНТЫ МИГРАЦИЙ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Инструменты управления миграциями</h2>
+    <p style="font-size: 0.8em;">Миграции решают проблему синхронизации: файлы в Git — источник истины,
+    инструмент применяет их к серверу в правильном порядке.</p>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th>Инструмент</th><th>Язык/Платформа</th><th>Подход</th><th>Особенности</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>Flyway</strong></td><td>Java / CLI</td>
+                <td>Версионные SQL-скрипты (V001__...)</td>
+                <td>Простой, популярный в enterprise</td>
+            </tr>
+            <tr>
+                <td><strong>Liquibase</strong></td><td>Java / CLI</td>
+                <td>XML/YAML/SQL changesets</td>
+                <td>Rollback, diff между БД</td>
+            </tr>
+            <tr>
+                <td><strong>sqitch</strong></td><td>Perl / CLI</td>
+                <td>Зависимости между изменениями</td>
+                <td>Нативный SQL, гибкий порядок</td>
+            </tr>
+            <tr>
+                <td><strong>Alembic</strong></td><td>Python</td>
+                <td>Python-скрипты миграций</td>
+                <td>Интеграция с SQLAlchemy</td>
+            </tr>
+            <tr>
+                <td><strong>Django migrations</strong></td><td>Python</td>
+                <td>Автогенерация из моделей</td>
+                <td>Часть Django ORM</td>
+            </tr>
+            <tr>
+                <td><strong>EF Migrations</strong></td><td>C# / .NET</td>
+                <td>Автогенерация из моделей</td>
+                <td>Часть Entity Framework</td>
+            </tr>
+        </tbody>
+    </table>
+    <pre style="margin-top: 0.3em;"><code class="language-bash"># Пример: Flyway применяет миграции к серверу
+flyway -url=jdbc:postgresql://localhost:5432/ruda_plus migrate
+
+# Результат: таблица flyway_schema_history хранит,
+# какие миграции уже применены</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- GIT + СУБД: ПРОЦЕСС РАЗРАБОТКИ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Git + СУБД: процесс разработки</h2>
+    <div style="text-align: center; font-size: 0.7em; line-height: 1.6;">
+        <div style="display: inline-block; text-align: left;">
+<pre style="background: #f8f9fa; padding: 15px 20px; border-radius: 8px; font-family: monospace;">
+                                          DEV          TEST         PROD
+ Разработчик       Git-репозиторий       (разработка)  (тест)       (продакшен)
+ ───────────       ──────────────        ──────────    ──────       ──────────
+     │                   │                    │            │             │
+     │  1. SQL-файл      │                    │            │             │
+     │──────────────────►│                    │            │             │
+     │                   │  2. CI: migrate    │            │             │
+     │  3. Push + PR     │───────────────────►│            │             │
+     │──────────────────►│                    │            │             │
+     │                   │                    │            │             │
+     │  4. Code Review   │                    │            │             │
+     │◄──────────────────│                    │            │             │
+     │                   │                    │            │             │
+     │  5. Merge→develop │  6. CD: migrate    │            │             │
+     │──────────────────►│───────────────────►│            │             │
+     │                   │                    │            │             │
+     │                   │  7. Merge→release  │            │             │
+     │                   │  CD: регресс-тесты │            │             │
+     │                   │────────────────────┼───────────►│             │
+     │                   │                    │            │             │
+     │                   │  8. Merge→main     │            │             │
+     │                   │  CD: migrate       │            │             │
+     │                   │  (с подтверждением)│            │             │
+     │                   │────────────────────┼────────────┼────────────►│
+     │                   │                    │            │             │
+</pre>
+        </div>
+    </div>
+    <div class="success-box" style="font-size: 0.75em; margin-top: 0.3em;">
+        <strong>Принцип:</strong> Git — единственный источник истины.
+        Миграции движутся: <code>DEV → TEST → PROD</code>. Ручные изменения на серверах запрещены.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СРЕДЫ РАЗВЁРТЫВАНИЯ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Среды развёртывания (environments)</h2>
+    <table style="font-size: 0.65em; width: 100%;">
+        <thead><tr>
+            <th>Среда</th><th>Назначение</th><th>Кто использует</th><th>Деплой миграций</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong style="color: var(--accent1);">DEV</strong></td>
+                <td>Разработка и эксперименты</td>
+                <td>Разработчики</td>
+                <td>Автоматически при push в ветку</td>
+            </tr>
+            <tr>
+                <td><strong style="color: var(--accent2);">TEST / STAGING</strong></td>
+                <td>Интеграционное и регрессионное тестирование</td>
+                <td>QA, аналитики</td>
+                <td>Автоматически при merge в release</td>
+            </tr>
+            <tr>
+                <td><strong style="color: #e74c3c;">PROD</strong></td>
+                <td>Боевой сервер, реальные данные</td>
+                <td>Пользователи, приложения</td>
+                <td>С ручным подтверждением (approval)</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="two-col" style="font-size: 0.75em; margin-top: 0.4em;">
+        <div class="success-box">
+            <strong>Принцип:</strong> миграции движутся в одном направлении:<br>
+            <code>DEV → TEST → PROD</code>.<br>
+            Одни и те же SQL-файлы, один и тот же Flyway/Liquibase.
+        </div>
+        <div class="warning-box">
+            <strong>Запрещено:</strong>
+            <ul style="margin: 0.3em 0 0 1em;">
+                <li>Ручные изменения на PROD</li>
+                <li>Миграции, минуя TEST</li>
+                <li>Разные версии схемы на разных серверах без причины</li>
+            </ul>
+        </div>
+    </div>
+    <aside class="notes">
+        На «Руда+»: DEV — локальный или облачный кластер для разработчика,
+        TEST — отдельный Yandex Managed PostgreSQL, PROD — кластер с реальными данными MES.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СРАВНЕНИЕ ПОДХОДОВ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Сравнение подходов: где хранить SQL</h2>
+    <table style="font-size: 0.58em; width: 100%;">
+        <thead><tr>
+            <th>Критерий</th>
+            <th>На сервере СУБД</th>
+            <th>В приложении</th>
+            <th>Файлы + Git</th>
+            <th>BI-инструменты</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>Версионирование</strong></td>
+                <td style="color: #e74c3c;">Нет*</td>
+                <td style="color: var(--accent6);">Да (Git)</td>
+                <td style="color: var(--accent6);">Да (Git)</td>
+                <td style="color: #e74c3c;">Ограничено</td>
+            </tr>
+            <tr>
+                <td><strong>Code review</strong></td>
+                <td style="color: #e74c3c;">Затруднён</td>
+                <td style="color: var(--accent6);">PR / MR</td>
+                <td style="color: var(--accent6);">PR / MR</td>
+                <td style="color: #e74c3c;">Нет</td>
+            </tr>
+            <tr>
+                <td><strong>Производительность</strong></td>
+                <td style="color: var(--accent6);">Высокая</td>
+                <td>Средняя</td>
+                <td>Средняя</td>
+                <td>Зависит</td>
+            </tr>
+            <tr>
+                <td><strong>Переиспользование</strong></td>
+                <td style="color: var(--accent6);">Любой клиент</td>
+                <td style="color: #e74c3c;">Только это приложение</td>
+                <td style="color: var(--accent6);">Через миграции</td>
+                <td style="color: #e74c3c;">Только этот BI</td>
+            </tr>
+            <tr>
+                <td><strong>Тестирование</strong></td>
+                <td>Сложно</td>
+                <td style="color: var(--accent6);">Unit / integration</td>
+                <td style="color: var(--accent6);">pgTAP, утилиты</td>
+                <td style="color: #e74c3c;">Ручное</td>
+            </tr>
+            <tr>
+                <td><strong>CI/CD</strong></td>
+                <td style="color: #e74c3c;">Ручное развёртывание</td>
+                <td style="color: var(--accent6);">Автоматическое</td>
+                <td style="color: var(--accent6);">Flyway / Liquibase</td>
+                <td style="color: #e74c3c;">Нет</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="info-box" style="font-size: 0.7em; margin-top: 0.4em;">
+        <strong>* </strong> Можно версионировать серверный код, если экспортировать определения
+        объектов в файлы (<code>pg_dump --schema-only</code>) и коммитить в Git.
+        Но это дополнительный шаг, который легко забыть.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- РЕКОМЕНДУЕМЫЙ ПОДХОД -->
+<!-- ============================================================ -->
+<section>
+    <h2>Рекомендуемый подход на практике</h2>
+    <div style="font-size: 0.8em;">
+        <div class="success-box" style="margin-bottom: 0.4em;">
+            <strong>Комбинированный подход</strong> — используйте сильные стороны каждого варианта:
+        </div>
+        <table style="font-size: 0.75em; width: 100%;">
+            <thead><tr><th>Что</th><th>Где хранить</th><th>Почему</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Схема БД (CREATE TABLE, ALTER)</td>
+                    <td>Файлы миграций + Git</td>
+                    <td>Воспроизводимость, история</td>
+                </tr>
+                <tr>
+                    <td>Сложная бизнес-логика</td>
+                    <td>Хранимые функции (тоже в Git!)</td>
+                    <td>Производительность, переиспользование</td>
+                </tr>
+                <tr>
+                    <td>Запросы приложения</td>
+                    <td>Код приложения</td>
+                    <td>Связанность с бизнес-логикой</td>
+                </tr>
+                <tr>
+                    <td>Аналитические отчёты</td>
+                    <td>SQL-файлы + Git или BI</td>
+                    <td>Совместная работа аналитиков</td>
+                </tr>
+                <tr>
+                    <td>Тестовые данные (seeds)</td>
+                    <td>SQL/CSV файлы + Git</td>
+                    <td>Воспроизводимость окружения</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="warning-box" style="font-size: 0.7em; margin-top: 0.4em;">
+        <strong>Антипаттерн:</strong> хранить SQL только на сервере без резервного копирования
+        определений. Один <code>DROP FUNCTION</code> — и код потерян навсегда.
+    </div>
+    <aside class="notes">
+        Подчеркнуть студентам: даже если функция живёт на сервере,
+        её определение ДОЛЖНО быть в Git. Сервер — это runtime, Git — источник истины.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВОПРОС ДЛЯ ОБСУЖДЕНИЯ: ХРАНЕНИЕ SQL -->
+<!-- ============================================================ -->
+<section class="discussion-slide">
+    <h2>Вопрос для обсуждения</h2>
+    <div style="font-size: 1.0em; margin: 0.8em 0; padding: 25px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <p><strong>На предприятии «Руда+» есть:</strong></p>
+        <ul style="font-size: 0.8em; margin-top: 0.5em;">
+            <li>MES-система (веб-приложение) — показывает данные операторам</li>
+            <li>Аналитический отдел — строит отчёты в Power BI</li>
+            <li>Инженер данных — поддерживает структуру БД</li>
+        </ul>
+        <p style="font-size: 0.85em; margin-top: 0.8em; color: var(--accent2);">
+            <strong>Как бы вы организовали хранение SQL-кода<br>
+            для каждой из этих ролей?</strong>
+        </p>
+    </div>
+    <div class="fragment">
+        <div class="info-box" style="font-size: 0.7em;">
+            <strong>Подсказка:</strong> MES → SQL в коде приложения;
+            Аналитики → Power BI + DAX, но сложные запросы — в представлениях на сервере;
+            Инженер → миграции в Git + CI/CD.
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВОПРОС ДЛЯ ОБСУЖДЕНИЯ #3 -->
+<!-- ============================================================ -->
+<section class="discussion-slide">
+    <h2>Работа в группах (3 минуты)</h2>
+    <div style="font-size: 0.95em; margin: 0.8em 0; padding: 25px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <p><strong>Задание:</strong> Разделитесь на группы по 3-4 человека.</p>
+        <p style="margin-top: 0.6em;">Представьте, что вам нужно ответить на вопрос руководства:</p>
+        <p style="color: var(--accent2); font-weight: 600; font-size: 1.1em; margin: 0.5em 0;">
+            «Какой процент рабочего времени оборудование простаивает<br>из-за внеплановых ремонтов?»
+        </p>
+        <p style="font-size: 0.8em; color: #666; margin-top: 0.8em;">
+            Обсудите: какие таблицы из модели «Руда+» понадобятся?<br>
+            Какие столбцы? Какие секции SQL-запроса (clause) будут использоваться?
+        </p>
+    </div>
+    <div class="fragment">
+        <div class="info-box" style="font-size: 0.75em;">
+            <strong>Подсказка:</strong> fact_equipment_downtime + dim_downtime_reason + dim_shift.
+            Понадобятся: SELECT, FROM, JOIN, WHERE, GROUP BY, агрегатные функции (SUM).
+        </div>
+    </div>
+    <aside class="notes">
+        Дать 3 минуты на обсуждение. Затем попросить одну группу озвучить свои идеи.
+        Не требуется точный SQL — достаточно логики и набора таблиц.
+    </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 22: МИНИ-КВИЗ -->
+<!-- ============================================================ -->
+<section class="quiz-slide">
+    <h2>Мини-квиз: проверим понимание</h2>
+    <div style="text-align: left; font-size: 0.85em;">
+        <p style="margin-bottom: 0.8em;"><strong>1. К какому подъязыку SQL относится команда SELECT?</strong></p>
+        <div class="fragment" style="margin-left: 1em;">
+            <span class="badge badge-orange">Ответ:</span> DML (Data Manipulation Language)
+        </div>
+
+        <p style="margin: 0.8em 0;"><strong>2. Как называется элемент SQL, который всегда возвращает одно значение?</strong></p>
+        <div class="fragment" style="margin-left: 1em;">
+            <span class="badge badge-orange">Ответ:</span> Expression (выражение)
+        </div>
+
+        <p style="margin: 0.8em 0;"><strong>3. В каком порядке идут секции в SELECT-запросе:<br>
+        &nbsp;&nbsp;&nbsp;WHERE, GROUP BY, FROM или FROM, WHERE, GROUP BY?</strong></p>
+        <div class="fragment" style="margin-left: 1em;">
+            <span class="badge badge-orange">Ответ:</span> FROM &rarr; WHERE &rarr; GROUP BY
+        </div>
+
+        <p style="margin: 0.8em 0;"><strong>4. Чем схема «снежинка» отличается от «звезды»?</strong></p>
+        <div class="fragment" style="margin-left: 1em;">
+            <span class="badge badge-orange">Ответ:</span> В «снежинке» таблицы измерений нормализованы
+            (имеют подтаблицы), а в «звезде» — денормализованы.
+        </div>
+    </div>
+</section>
+
+<!-- Лабораторная работа -->
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий для самостоятельного исследования структуры БД «Руда+»</p>
+        <p><strong>Формат:</strong> Подключитесь к PostgreSQL и выполните задания по навигации по таблицам и первым запросам</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 20–30 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 23: ЧТО ДАЛЬШЕ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Итоги модуля 1</h2>
+    <div class="two-col" style="font-size: 0.75em;">
+        <div>
+            <h3 style="color: var(--accent6);">Что изучили</h3>
+            <ul>
+                <li>SQL — стандартизированный декларативный язык (50+ лет)</li>
+                <li>PostgreSQL — архитектура и Yandex Managed Service</li>
+                <li>Элементы SQL: Expression, Clause, Statement, Command, Batch</li>
+                <li>Ограничения пакетов и транзакционного контекста</li>
+                <li>Декларативный SQL vs процедурные блоки PL/pgSQL</li>
+                <li>Типы блоков: DO, FUNCTION, PROCEDURE, триггеры</li>
+                <li>Метаданные: information_schema и pg_catalog</li>
+                <li>Где хранить SQL-код. Миграции и Git</li>
+                <li>Учебный кейс «Руда+» — модель БД «снежинка»</li>
+            </ul>
+        </div>
+        <div>
+            <h3 style="color: var(--accent2);">Далее</h3>
+            <ul>
+                <li><strong>Практическая работа:</strong> подключение к БД, обзор структуры, первые запросы</li>
+                <li><strong>Лабораторная работа:</strong> самостоятельное исследование таблиц и данных</li>
+                <li><strong>Следующий модуль:</strong> операторы SELECT, FROM, WHERE — детальный разбор</li>
+            </ul>
+            <h3 style="color: var(--accent1); margin-top: 0.5em;">Ключевые идеи</h3>
+            <ul>
+                <li>SQL — декларативный: описываем <em>что</em>, а не <em>как</em></li>
+                <li>Процедурные блоки — для логики, которая не выражается одним SQL</li>
+                <li>Git — единственный источник истины для SQL-кода</li>
+            </ul>
+        </div>
+    </div>
+    <div class="success-box" style="font-size: 0.75em; margin-top: 0.4em;">
+        <strong>Домашнее задание:</strong> Установите DBeaver (или другой SQL-клиент) и подключитесь к кластеру.
+        Просмотрите список таблиц и их столбцов. Выполните запрос к <code>information_schema.tables</code>.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- СЛАЙД 24: РЕСУРСЫ -->
+<!-- ============================================================ -->
+<section>
+    <h2>Полезные ресурсы</h2>
+    <ul style="font-size: 0.85em;">
+        <li><strong>Документация PostgreSQL:</strong> <a href="https://www.postgresql.org/docs/current/">postgresql.org/docs</a></li>
+        <li><strong>Yandex Managed Service:</strong> <a href="https://cloud.yandex.ru/docs/managed-postgresql/">cloud.yandex.ru/docs/managed-postgresql</a></li>
+        <li><strong>SQL стандарт (обзор):</strong> <a href="https://modern-sql.com/">modern-sql.com</a></li>
+        <li><strong>DAX Guide:</strong> <a href="https://dax.guide/">dax.guide</a></li>
+        <li><strong>PostgreSQL Wiki:</strong> <a href="https://wiki.postgresql.org/">wiki.postgresql.org</a></li>
+    </ul>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/notes/notes.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        showSlideNumber: 'all',
+        transition: 'slide',
+        transitionSpeed: 'default',
+        width: 1280,
+        height: 720,
+        margin: 0.06,
+        plugins: [RevealHighlight, RevealNotes]
+    });
+</script>
+</body>
+</html>

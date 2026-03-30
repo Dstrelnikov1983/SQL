@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 4 — Работа с типами данных PostgreSQL</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        /* Двухколоночный layout для SQL vs DAX */
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        /* Карточки для заданий/вопросов */
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        /* Таблицы */
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+        .type-card { background: #f8f9fa; border-radius: 8px; padding: 12px 16px; border-left: 4px solid var(--accent1); text-align: left; font-size: 0.8em; }
+        .type-card h4 { margin: 0 0 6px 0; color: var(--accent1); font-size: 1em; }
+        .type-card.highlight { border-left-color: var(--accent2); background: #fff5ec; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 4</h1>
+    <h2 style="border: none;">Работа с типами данных PostgreSQL</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">SQL</span>
+        <span style="font-size: 1.5em; vertical-align: middle;">&#8644;</span>
+        <span class="icon-box orange">DAX</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 2 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Введение в типы данных PostgreSQL</strong> <span class="small-text">(15 мин)</span></li>
+        <li><strong>Работа с символьными данными</strong> <span class="small-text">(40 мин)</span></li>
+        <li><strong>Шаблонный поиск:</strong> LIKE, SIMILAR TO, регулярные выражения <span class="small-text">(20 мин)</span></li>
+        <li><strong>Работа с датой и временем</strong> <span class="small-text">(35 мин)</span></li>
+        <li><strong>Кейс:</strong> Анализ графика ТО оборудования «Руда+» <span class="small-text">(10 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL (SQL) | Power BI + DAX Studio (DAX)
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 1: ВВЕДЕНИЕ В ТИПЫ ДАННЫХ                                -->
+<!-- ============================================================ -->
+<section>
+    <!-- 1.1 Обзор -->
+    <section>
+        <h2>Тема 1. Типы данных PostgreSQL</h2>
+        <p>PostgreSQL — одна из самых <span class="highlight-orange">типоразнообразных</span> СУБД</p>
+        <div class="type-grid">
+            <div class="type-card">
+                <h4>Числовые</h4>
+                <code>INTEGER, BIGINT, NUMERIC, REAL, DOUBLE PRECISION, SERIAL</code>
+            </div>
+            <div class="type-card">
+                <h4>Символьные</h4>
+                <code>CHAR(n), VARCHAR(n), TEXT</code>
+            </div>
+            <div class="type-card">
+                <h4>Дата и время</h4>
+                <code>DATE, TIME, TIMESTAMP, INTERVAL</code>
+            </div>
+            <div class="type-card">
+                <h4>Логический</h4>
+                <code>BOOLEAN</code> — TRUE / FALSE / NULL
+            </div>
+            <div class="type-card highlight">
+                <h4>Специальные</h4>
+                <code>JSON / JSONB, UUID, массивы, XML, hstore</code>
+            </div>
+            <div class="type-card highlight">
+                <h4>Сетевые и геометрические</h4>
+                <code>INET, CIDR, MACADDR, POINT, LINE, POLYGON</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- 1.2 Зачем знать типы данных -->
+    <section>
+        <h2>Зачем инженеру-аналитику знать типы данных?</h2>
+        <ul>
+            <li><span class="highlight-blue">Корректность запросов:</span> оператор <code>=</code> работает по-разному для числа и строки</li>
+            <li><span class="highlight-orange">Производительность:</span> <code>INTEGER</code> (4 байта) vs <code>BIGINT</code> (8 байт) vs <code>TEXT</code></li>
+            <li><span class="highlight-green">Точность вычислений:</span> <code>NUMERIC(10,2)</code> для финансовых данных vs <code>REAL</code></li>
+            <li><span class="highlight-blue">Валидация данных:</span> СУБД не позволит записать «abc» в поле <code>INTEGER</code></li>
+            <li><span class="highlight-orange">Правильные агрегации:</span> <code>SUM</code>, <code>AVG</code> требуют числовой тип</li>
+        </ul>
+        <div class="card-green card" style="margin-top: 15px;">
+            В MES-системе «Руда+» используются: <code>NUMERIC</code> для тоннажа, <code>TIMESTAMP</code> для событий, <code>BOOLEAN</code> для флагов, <code>VARCHAR</code> для кодов.
+        </div>
+    </section>
+
+    <!-- 1.3 Типы данных в схеме Руда+ -->
+    <section>
+        <h2>Типы данных в схеме «Руда+»</h2>
+        <table>
+            <thead>
+                <tr><th>Таблица</th><th>Столбец</th><th>Тип</th><th>Назначение</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>dim_equipment</td><td>equipment_name</td><td>VARCHAR(150)</td><td>Название оборудования</td></tr>
+                <tr><td>dim_equipment</td><td>inventory_number</td><td>VARCHAR(50)</td><td>Инвентарный номер</td></tr>
+                <tr><td>dim_equipment</td><td>commissioning_date</td><td>DATE</td><td>Дата ввода в эксплуатацию</td></tr>
+                <tr><td>dim_equipment</td><td>has_video_recorder</td><td>BOOLEAN</td><td>Наличие видеорегистратора</td></tr>
+                <tr><td>fact_production</td><td>tons_mined</td><td>NUMERIC(10,2)</td><td>Добыто руды, тонн</td></tr>
+                <tr><td>fact_equipment_downtime</td><td>start_time</td><td>TIMESTAMP</td><td>Начало простоя</td></tr>
+                <tr><td>fact_equipment_downtime</td><td>duration_min</td><td>NUMERIC(8,2)</td><td>Длительность, мин</td></tr>
+                <tr><td>dim_date</td><td>full_date</td><td>DATE</td><td>Полная дата</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 1.4 Сравнение типов SQL vs DAX -->
+    <section>
+        <h2>Типы данных: SQL vs DAX</h2>
+        <table>
+            <thead>
+                <tr><th>PostgreSQL</th><th>DAX (Power BI)</th><th>Комментарий</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>INTEGER, BIGINT</td><td>Whole Number (Int64)</td><td>Целые числа</td></tr>
+                <tr><td>NUMERIC, REAL, DOUBLE</td><td>Decimal Number, Fixed Decimal</td><td>Дробные числа</td></tr>
+                <tr><td>VARCHAR, TEXT</td><td>Text (String)</td><td>DAX не разделяет строковые типы</td></tr>
+                <tr><td>DATE, TIMESTAMP</td><td>DateTime</td><td>DAX хранит всё как DateTime</td></tr>
+                <tr><td>TIME</td><td><em>нет аналога</em></td><td>В DAX время — часть DateTime</td></tr>
+                <tr><td>INTERVAL</td><td><em>нет аналога</em></td><td>В DAX используют вычисления</td></tr>
+                <tr><td>BOOLEAN</td><td>TRUE/FALSE</td><td>Аналогично</td></tr>
+                <tr><td>JSON, UUID, массивы</td><td><em>нет аналогов</em></td><td>Специфика PostgreSQL</td></tr>
+            </tbody>
+        </table>
+        <div class="card-orange card">
+            DAX имеет значительно <strong>меньше</strong> типов данных. PostgreSQL предоставляет гораздо более точный контроль.
+        </div>
+    </section>
+
+    <!-- 1.5 Вопрос для обсуждения -->
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Ситуация из «Руда+»</h3>
+            <p>Инженер создаёт таблицу для хранения координат подземной навигации. Какой тип данных лучше выбрать для координат X, Y, Z?</p>
+            <ul>
+                <li>A) <code>INTEGER</code></li>
+                <li>B) <code>REAL</code></li>
+                <li>C) <code>NUMERIC(12,4)</code></li>
+                <li>D) <code>TEXT</code></li>
+            </ul>
+        </div>
+        <div class="fragment card-green card">
+            <strong>Ответ: C) NUMERIC(12,4)</strong> — точное хранение дробных координат без потерь округления. В <code>dim_location</code> именно так и сделано!
+        </div>
+    </section>
+
+    <!-- 1.6 Приведение типов -->
+    <section>
+        <h2>Приведение типов (CAST)</h2>
+        <pre><code class="language-sql">-- Стандартный синтаксис CAST
+SELECT CAST('2024-03-15' AS DATE);
+SELECT CAST(42 AS TEXT);
+SELECT CAST('123.45' AS NUMERIC(10,2));
+
+-- Синтаксис PostgreSQL (двойное двоеточие)
+SELECT '2024-03-15'::DATE;
+SELECT 42::TEXT;
+SELECT '123.45'::NUMERIC(10,2);
+
+-- Пример из «Руда+»: date_id хранится как INTEGER (20240315)
+-- Преобразуем в строку для конкатенации
+SELECT 'Отчёт за дату: ' || date_id::TEXT
+FROM fact_production
+LIMIT 5;</code></pre>
+        <div class="card">
+            Оператор <code>::</code> — это «синтаксический сахар» PostgreSQL, эквивалентен <code>CAST(... AS ...)</code>.
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Часть 1 — Строковые функции -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — Строковые функции (шаги 1.1–1.5)</p>
+        <p><strong>Задание:</strong> Исследуйте строковые данные оборудования, разберите инвентарные номера с SPLIT_PART, сформируйте полные имена операторов и агрегируйте строки с STRING_AGG.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10–15 минут</em></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 2: СИМВОЛЬНЫЕ ТИПЫ ДАННЫХ                                -->
+<!-- ============================================================ -->
+<section>
+    <!-- 2.1 Обзор символьных типов -->
+    <section>
+        <h2>Тема 2. Символьные данные</h2>
+        <p>CHAR, VARCHAR, TEXT — три символьных типа PostgreSQL</p>
+        <table>
+            <thead>
+                <tr><th>Тип</th><th>Описание</th><th>Макс. длина</th><th>Когда использовать</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>CHAR(n)</code></td>
+                    <td>Фиксированная длина, дополняется пробелами</td>
+                    <td>n символов</td>
+                    <td>Коды фиксированной длины (ISO, валюты)</td>
+                </tr>
+                <tr>
+                    <td><code>VARCHAR(n)</code></td>
+                    <td>Переменная длина с ограничением</td>
+                    <td>до n символов</td>
+                    <td>Названия, номера, коды</td>
+                </tr>
+                <tr>
+                    <td><code>TEXT</code></td>
+                    <td>Переменная длина без ограничения</td>
+                    <td>~1 ГБ</td>
+                    <td>Описания, комментарии, журналы</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="card-orange card">
+            В PostgreSQL <code>VARCHAR</code> без указания длины и <code>TEXT</code> — <strong>идентичны</strong> по производительности. Разница лишь в ограничении длины.
+        </div>
+    </section>
+
+    <!-- 2.2 Символьные типы в Руда+ -->
+    <section>
+        <h2>Символьные типы в схеме «Руда+»</h2>
+        <pre><code class="language-sql">-- Из DDL таблицы dim_equipment:
+equipment_name   VARCHAR(150)   -- Название (до 150 символов)
+inventory_number VARCHAR(50)    -- Инвентарный номер
+manufacturer     VARCHAR(150)   -- Производитель
+model            VARCHAR(100)   -- Модель
+
+-- Из DDL таблицы dim_downtime_reason:
+reason_name      VARCHAR(200)   -- Название причины простоя
+description      TEXT           -- Описание (без ограничения)
+
+-- Из DDL fact_equipment_downtime:
+comment          TEXT           -- Комментарий оператора</code></pre>
+        <div class="card">
+            <strong>Правило:</strong> используйте <code>VARCHAR(n)</code> для структурированных данных с предсказуемой длиной и <code>TEXT</code> для произвольного текста.
+        </div>
+    </section>
+
+    <!-- 2.3 Основные строковые функции -->
+    <section>
+        <h2>Основные строковые функции</h2>
+        <table>
+            <thead>
+                <tr><th>Функция</th><th>Описание</th><th>Пример</th><th>Результат</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>LENGTH(s)</code></td><td>Длина строки</td><td><code>LENGTH('Руда+')</code></td><td>5</td></tr>
+                <tr><td><code>UPPER(s)</code></td><td>В верхний регистр</td><td><code>UPPER('руда')</code></td><td>'РУДА'</td></tr>
+                <tr><td><code>LOWER(s)</code></td><td>В нижний регистр</td><td><code>LOWER('LHD')</code></td><td>'lhd'</td></tr>
+                <tr><td><code>TRIM(s)</code></td><td>Удалить пробелы</td><td><code>TRIM('  ok  ')</code></td><td>'ok'</td></tr>
+                <tr><td><code>CONCAT(a,b)</code></td><td>Конкатенация</td><td><code>CONCAT('ПДМ','-01')</code></td><td>'ПДМ-01'</td></tr>
+                <tr><td><code>SUBSTRING(s,p,n)</code></td><td>Подстрока</td><td><code>SUBSTRING('MINE_N',1,4)</code></td><td>'MINE'</td></tr>
+                <tr><td><code>POSITION(sub IN s)</code></td><td>Позиция подстроки</td><td><code>POSITION('_' IN 'MINE_N')</code></td><td>5</td></tr>
+                <tr><td><code>REPLACE(s,f,r)</code></td><td>Замена</td><td><code>REPLACE('LHD-01','LHD','ПДМ')</code></td><td>'ПДМ-01'</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 2.4 Строковые функции на примере Руда+ -->
+    <section>
+        <h2>Строковые функции: примеры «Руда+»</h2>
+        <pre><code class="language-sql">-- Извлечь тип оборудования из inventory_number
+-- Формат: "INV-LHD-001", "INV-TRUCK-002"
+SELECT inventory_number,
+       SPLIT_PART(inventory_number, '-', 2) AS type_code,
+       SPLIT_PART(inventory_number, '-', 3) AS serial_num
+FROM dim_equipment;
+
+-- Сформировать полное имя оператора
+SELECT CONCAT(last_name, ' ',
+              LEFT(first_name, 1), '.',
+              LEFT(COALESCE(middle_name, ''), 1),
+              CASE WHEN middle_name IS NOT NULL THEN '.' ELSE '' END
+       ) AS short_name
+FROM dim_operator;
+
+-- Длина описания причин простоя
+SELECT reason_name,
+       LENGTH(description) AS desc_length,
+       LEFT(description, 50) || '...' AS preview
+FROM dim_downtime_reason
+WHERE description IS NOT NULL;</code></pre>
+    </section>
+
+    <!-- 2.5 SQL vs DAX: строковые функции -->
+    <section>
+        <h2>Строковые функции: SQL vs DAX</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- Конкатенация
+SELECT CONCAT(last_name, ' ',
+              first_name)
+FROM dim_operator;
+
+-- Или через ||
+SELECT last_name || ' '
+       || first_name
+FROM dim_operator;
+
+-- Подстрока
+SELECT SUBSTRING(mine_code, 1, 4)
+FROM dim_mine;
+
+-- Верхний регистр
+SELECT UPPER(status)
+FROM dim_equipment;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">// Конкатенация
+EVALUATE
+SELECTCOLUMNS(
+    dim_operator,
+    "ФИО",
+      CONCATENATE(
+        dim_operator[last_name],
+        " " & dim_operator[first_name]
+      )
+)
+
+// Подстрока
+// MID(text, start, count)
+MID(dim_mine[mine_code], 1, 4)
+
+// Верхний регистр
+UPPER(dim_equipment[status])</code></pre>
+            </div>
+        </div>
+        <div class="card">
+            В DAX: <code>CONCATENATE</code> принимает только 2 аргумента. Для нескольких строк используйте оператор <code>&amp;</code>.
+        </div>
+    </section>
+
+    <!-- 2.6 Сравнение строковых функций: таблица -->
+    <section>
+        <h2>Строковые функции: полное сравнение</h2>
+        <table>
+            <thead>
+                <tr><th>Задача</th><th>PostgreSQL</th><th>DAX</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Длина</td><td><code>LENGTH(s)</code></td><td><code>LEN(s)</code></td></tr>
+                <tr><td>Конкатенация</td><td><code>CONCAT(a,b)</code> или <code>||</code></td><td><code>CONCATENATE(a,b)</code> или <code>&amp;</code></td></tr>
+                <tr><td>Подстрока</td><td><code>SUBSTRING(s, start, len)</code></td><td><code>MID(s, start, len)</code></td></tr>
+                <tr><td>Левая часть</td><td><code>LEFT(s, n)</code></td><td><code>LEFT(s, n)</code></td></tr>
+                <tr><td>Правая часть</td><td><code>RIGHT(s, n)</code></td><td><code>RIGHT(s, n)</code></td></tr>
+                <tr><td>Позиция</td><td><code>POSITION(sub IN s)</code></td><td><code>SEARCH(sub, s)</code></td></tr>
+                <tr><td>Замена</td><td><code>REPLACE(s, old, new)</code></td><td><code>SUBSTITUTE(s, old, new)</code></td></tr>
+                <tr><td>Верхний/нижний</td><td><code>UPPER / LOWER</code></td><td><code>UPPER / LOWER</code></td></tr>
+                <tr><td>Удаление пробелов</td><td><code>TRIM(s)</code></td><td><code>TRIM(s)</code></td></tr>
+                <tr><td>Повтор строки</td><td><code>REPEAT(s, n)</code></td><td><code>REPT(s, n)</code></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 2.7 SPLIT_PART и парсинг -->
+    <section>
+        <h2>Разбор строк: SPLIT_PART</h2>
+        <h3>Задача: разобрать инвентарный номер оборудования</h3>
+        <pre><code class="language-sql">-- Формат: "INV-LHD-001"
+-- Часть 1: "INV" (префикс), Часть 2: "LHD" (тип), Часть 3: "001" (номер)
+
+SELECT inventory_number,
+       SPLIT_PART(inventory_number, '-', 1) AS prefix,
+       SPLIT_PART(inventory_number, '-', 2) AS eq_type,
+       SPLIT_PART(inventory_number, '-', 3) AS serial_no,
+       -- Преобразуем номер в целое число (убирая ведущие нули)
+       CAST(SPLIT_PART(inventory_number, '-', 3) AS INTEGER) AS serial_int
+FROM dim_equipment;</code></pre>
+        <div class="card-orange card">
+            <code>SPLIT_PART</code> — функция PostgreSQL (нет в стандарте SQL). В DAX аналога нет — приходится комбинировать <code>LEFT</code>, <code>MID</code>, <code>SEARCH</code>.
+        </div>
+    </section>
+
+    <!-- 2.8 Дополнительные строковые функции -->
+    <section>
+        <h2>Дополнительные функции PostgreSQL</h2>
+        <pre><code class="language-sql">-- INITCAP — каждое слово с заглавной буквы
+SELECT INITCAP('погрузочно-доставочная машина');
+-- Результат: 'Погрузочно-Доставочная Машина'
+
+-- LPAD / RPAD — дополнение символами
+SELECT LPAD(equipment_id::TEXT, 5, '0') AS padded_id
+FROM dim_equipment;
+-- Результат: '00001', '00002', ...
+
+-- REVERSE — перевернуть строку
+SELECT REVERSE('Руда+');
+-- Результат: '+адуР'
+
+-- TRANSLATE — замена символов по таблице
+SELECT TRANSLATE('INV-LHD-001', '-', '/');
+-- Результат: 'INV/LHD/001'
+
+-- STRING_AGG — агрегация строк
+SELECT mine_id,
+       STRING_AGG(equipment_name, ', ' ORDER BY equipment_name)
+           AS equipment_list
+FROM dim_equipment
+GROUP BY mine_id;</code></pre>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 3: ШАБЛОННЫЙ ПОИСК                                      -->
+<!-- ============================================================ -->
+<section>
+    <!-- 3.1 Обзор шаблонного поиска -->
+    <section>
+        <h2>Тема 3. Шаблонный поиск (Pattern Matching)</h2>
+        <p>Три уровня поиска по шаблону в PostgreSQL:</p>
+        <div class="type-grid">
+            <div class="type-card">
+                <h4>LIKE / ILIKE</h4>
+                <p>Простые шаблоны: <code>%</code> (любые символы), <code>_</code> (один символ)</p>
+            </div>
+            <div class="type-card">
+                <h4>SIMILAR TO</h4>
+                <p>SQL-стандарт регулярных выражений (смесь LIKE и regex)</p>
+            </div>
+            <div class="type-card highlight">
+                <h4>~ (POSIX regex)</h4>
+                <p>Полноценные регулярные выражения. Мощнее, но сложнее</p>
+            </div>
+            <div class="type-card highlight">
+                <h4>REGEXP_MATCHES и др.</h4>
+                <p>Извлечение групп, замена по шаблону</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3.2 LIKE -->
+    <section>
+        <h2>LIKE и ILIKE</h2>
+        <pre><code class="language-sql">-- Оборудование, название которого начинается с "ПДМ"
+SELECT equipment_name, model
+FROM dim_equipment
+WHERE equipment_name LIKE 'ПДМ%';
+
+-- Оборудование, содержащее "Северная" (без учёта регистра)
+SELECT mine_name
+FROM dim_mine
+WHERE mine_name ILIKE '%северная%';
+
+-- Инвентарный номер вида INV-???-001 (точно 3 символа типа)
+SELECT inventory_number
+FROM dim_equipment
+WHERE inventory_number LIKE 'INV-___-001';
+
+-- Операторы с фамилией на "К" или "С"
+SELECT last_name, first_name
+FROM dim_operator
+WHERE last_name LIKE 'К%' OR last_name LIKE 'С%';</code></pre>
+        <div class="card">
+            <code>ILIKE</code> — расширение PostgreSQL для поиска без учёта регистра. В стандартном SQL — только <code>LIKE</code>.
+        </div>
+    </section>
+
+    <!-- 3.3 SIMILAR TO и POSIX regex -->
+    <section>
+        <h2>SIMILAR TO и POSIX regex</h2>
+        <pre><code class="language-sql">-- SIMILAR TO: инвентарные номера ПДМ или самосвалов
+SELECT inventory_number, equipment_name
+FROM dim_equipment
+WHERE inventory_number SIMILAR TO 'INV-(LHD|TRUCK)-%';
+
+-- POSIX regex (~): извлечь числовую часть из кода
+SELECT shaft_code,
+       (REGEXP_MATCH(shaft_code, '(\d+)'))[1] AS numeric_part
+FROM dim_shaft;
+
+-- Найти все локации типа "забой" с номером
+SELECT location_name
+FROM dim_location
+WHERE location_name ~ 'Забой\s*#?\d+';
+
+-- REGEXP_REPLACE: нормализовать пробелы в комментариях
+SELECT REGEXP_REPLACE(comment, '\s+', ' ', 'g') AS clean_comment
+FROM fact_equipment_downtime
+WHERE comment IS NOT NULL
+LIMIT 5;</code></pre>
+    </section>
+
+    <!-- 3.4 SQL vs DAX: поиск по шаблону -->
+    <section>
+        <h2>Шаблонный поиск: SQL vs DAX</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- LIKE
+SELECT equipment_name
+FROM dim_equipment
+WHERE equipment_name
+      LIKE 'ПДМ%';
+
+-- Регулярные выражения
+SELECT equipment_name
+FROM dim_equipment
+WHERE inventory_number
+      ~ '^INV-LHD-\d{3}$';</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">// CONTAINSSTRING (LIKE '%...%')
+EVALUATE
+FILTER(
+    dim_equipment,
+    CONTAINSSTRING(
+        dim_equipment[equipment_name],
+        "ПДМ"
+    )
+)
+
+// Нет встроенных regex!
+// Приходится комбинировать
+// LEFT, MID, SEARCH, и т.д.</code></pre>
+            </div>
+        </div>
+        <div class="card-orange card">
+            <strong>Важно:</strong> DAX <strong>не поддерживает</strong> регулярные выражения. PostgreSQL значительно мощнее в обработке текста.
+        </div>
+    </section>
+
+    <!-- 3.5 Квиз по строкам -->
+    <section>
+        <h2>Мини-квиз: строки и шаблоны</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Вопрос 1</h3>
+            <p>Что вернёт запрос?</p>
+            <pre><code class="language-sql">SELECT POSITION('_' IN 'MINE_NORTH');</code></pre>
+            <div class="quiz-option">A) 0</div>
+            <div class="quiz-option">B) 4</div>
+            <div class="quiz-option">C) 5</div>
+            <div class="quiz-option">D) NULL</div>
+        </div>
+        <div class="fragment card-green card">
+            <strong>Ответ: C) 5</strong> — символ <code>_</code> находится на 5-й позиции (нумерация с 1).
+        </div>
+    </section>
+
+    <section>
+        <h2>Мини-квиз: строки и шаблоны</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Вопрос 2</h3>
+            <p>Какой оператор PostgreSQL используется для поиска без учёта регистра?</p>
+            <div class="quiz-option">A) LIKE</div>
+            <div class="quiz-option">B) SIMILAR TO</div>
+            <div class="quiz-option">C) ILIKE</div>
+            <div class="quiz-option">D) ~*</div>
+        </div>
+        <div class="fragment card-green card">
+            <strong>Ответ: C и D</strong> — <code>ILIKE</code> для простых шаблонов, <code>~*</code> для POSIX regex без учёта регистра.
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Часть 2 — Шаблонный поиск -->
+<section>
+    <div style="background: #FFF3E0; border-left: 4px solid #ED7D31; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 0.8em;">
+        📋 <strong>Практика:</strong> practice.md → Часть 2 — Шаблонный поиск (шаги 2.1–2.2): LIKE, ILIKE, SIMILAR TO, регулярные выражения
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 4: ДАТА И ВРЕМЯ                                          -->
+<!-- ============================================================ -->
+<section>
+    <!-- 4.1 Обзор типов даты/времени -->
+    <section>
+        <h2>Тема 4. Дата и время</h2>
+        <p>Четыре основных типа в PostgreSQL:</p>
+        <table>
+            <thead>
+                <tr><th>Тип</th><th>Размер</th><th>Описание</th><th>Пример</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>DATE</code></td><td>4 байта</td><td>Только дата</td><td><code>'2024-03-15'</code></td></tr>
+                <tr><td><code>TIME</code></td><td>8 байт</td><td>Только время</td><td><code>'14:30:00'</code></td></tr>
+                <tr><td><code>TIMESTAMP</code></td><td>8 байт</td><td>Дата + время</td><td><code>'2024-03-15 14:30:00'</code></td></tr>
+                <tr><td><code>INTERVAL</code></td><td>16 байт</td><td>Промежуток</td><td><code>'2 hours 30 min'</code></td></tr>
+            </tbody>
+        </table>
+        <div class="card">
+            <strong>TIMESTAMP WITH TIME ZONE (TIMESTAMPTZ)</strong> — рекомендуется для распределённых систем. Хранит UTC, отображает в локальной зоне.
+        </div>
+    </section>
+
+    <!-- 4.2 Дата/время в схеме Руда+ -->
+    <section>
+        <h2>Дата и время в «Руда+»</h2>
+        <pre><code class="language-sql">-- dim_date: полная дата
+full_date       DATE        -- '2024-03-15'
+
+-- dim_time: полное время
+full_time       TIME        -- '14:30:00'
+
+-- dim_shift: время начала/окончания смены
+start_time      TIME        -- '06:00:00'
+end_time        TIME        -- '14:00:00'
+
+-- fact_equipment_downtime: временные метки событий
+start_time      TIMESTAMP   -- '2024-03-15 10:23:00'
+end_time        TIMESTAMP   -- '2024-03-15 11:45:00'
+
+-- dim_equipment: дата ввода в эксплуатацию
+commissioning_date  DATE    -- '2020-06-15'
+
+-- dim_sensor: дата калибровки
+calibration_date    DATE    -- '2024-01-20'</code></pre>
+    </section>
+
+    <!-- 4.3 Получение текущей даты -->
+    <section>
+        <h2>Текущая дата и время</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- Текущая дата
+SELECT CURRENT_DATE;
+-- 2024-03-15
+
+-- Текущее время
+SELECT CURRENT_TIME;
+-- 14:30:00.123456+03
+
+-- Текущая дата+время
+SELECT NOW();
+-- 2024-03-15 14:30:00.123+03
+
+-- Без дробных секунд
+SELECT CURRENT_TIMESTAMP(0);
+-- 2024-03-15 14:30:00+03
+
+-- Начало транзакции
+SELECT transaction_timestamp();
+-- Время «замораживается»</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">// Текущая дата
+= TODAY()
+// 15.03.2024
+
+// Текущая дата+время
+= NOW()
+// 15.03.2024 14:30:00
+
+// DAX: нет аналога CURRENT_TIME
+// Время получаем из NOW():
+= NOW() - TODAY()
+// 0.604166... (доля суток)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4.4 EXTRACT -->
+    <section>
+        <h2>Извлечение частей даты: EXTRACT</h2>
+        <pre><code class="language-sql">-- Извлечение компонентов из даты ввода в эксплуатацию
+SELECT equipment_name,
+       commissioning_date,
+       EXTRACT(YEAR  FROM commissioning_date)  AS year_comm,
+       EXTRACT(MONTH FROM commissioning_date)  AS month_comm,
+       EXTRACT(DAY   FROM commissioning_date)  AS day_comm,
+       EXTRACT(DOW   FROM commissioning_date)  AS day_of_week,
+       EXTRACT(QUARTER FROM commissioning_date) AS quarter_comm
+FROM dim_equipment
+WHERE commissioning_date IS NOT NULL;</code></pre>
+        <div class="compare-container" style="margin-top: 10px;">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL</h3>
+                <pre><code class="language-sql">EXTRACT(YEAR FROM date)
+EXTRACT(MONTH FROM date)
+EXTRACT(DOW FROM date)</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">YEAR(date)
+MONTH(date)
+WEEKDAY(date)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4.5 DATE_TRUNC -->
+    <section>
+        <h2>Усечение даты: DATE_TRUNC</h2>
+        <pre><code class="language-sql">-- Усечение до месяца (для группировки по месяцам)
+SELECT DATE_TRUNC('month', full_date) AS month_start,
+       COUNT(*) AS days_count
+FROM dim_date
+WHERE year = 2024
+GROUP BY DATE_TRUNC('month', full_date)
+ORDER BY month_start;
+
+-- Усечение начала простоя до часа
+SELECT DATE_TRUNC('hour', start_time) AS hour_start,
+       COUNT(*) AS downtimes_count
+FROM fact_equipment_downtime
+GROUP BY DATE_TRUNC('hour', start_time)
+ORDER BY hour_start;
+
+-- Доступные уровни: microsecond, millisecond, second,
+-- minute, hour, day, week, month, quarter, year, decade,
+-- century, millennium</code></pre>
+        <div class="card-orange card">
+            В DAX нет прямого аналога <code>DATE_TRUNC</code>. Используют <code>DATE(YEAR(d), MONTH(d), 1)</code> для усечения до месяца.
+        </div>
+    </section>
+
+    <!-- 4.6 Арифметика дат -->
+    <section>
+        <h2>Арифметика дат и INTERVAL</h2>
+        <pre><code class="language-sql">-- Дата + интервал
+SELECT CURRENT_DATE + INTERVAL '30 days' AS through_30_days;
+SELECT CURRENT_DATE - INTERVAL '1 year' AS year_ago;
+
+-- Когда следующее ТО? (каждые 90 дней)
+SELECT equipment_name,
+       commissioning_date,
+       commissioning_date + INTERVAL '90 days' AS first_maintenance
+FROM dim_equipment
+WHERE commissioning_date IS NOT NULL;
+
+-- Разница между датами
+SELECT equipment_name,
+       CURRENT_DATE - commissioning_date AS days_in_service,
+       AGE(CURRENT_DATE, commissioning_date) AS age_interval
+FROM dim_equipment
+WHERE commissioning_date IS NOT NULL;
+
+-- AGE() возвращает INTERVAL: '4 years 2 mons 15 days'</code></pre>
+    </section>
+
+    <!-- 4.7 SQL vs DAX: арифметика дат -->
+    <section>
+        <h2>Арифметика дат: SQL vs DAX</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+                <pre><code class="language-sql">-- Добавить 90 дней
+SELECT commissioning_date
+       + INTERVAL '90 days'
+FROM dim_equipment;
+
+-- Разница в днях
+SELECT CURRENT_DATE
+       - commissioning_date
+FROM dim_equipment;
+
+-- Возраст (полная форма)
+SELECT AGE(NOW(),
+           commissioning_date)
+FROM dim_equipment;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">// Добавить 90 дней
+= dim_equipment[commissioning_date]
+  + 90
+
+// Или DATEADD (в календарной таблице)
+= DATEADD(
+    dim_date[full_date], 90, DAY
+  )
+
+// Разница в днях
+= DATEDIFF(
+    dim_equipment[commissioning_date],
+    TODAY(),
+    DAY
+  )
+
+// Полный возраст — только вручную</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4.8 Форматирование: TO_CHAR -->
+    <section>
+        <h2>Форматирование дат: TO_CHAR</h2>
+        <pre><code class="language-sql">-- Форматирование даты в строку
+SELECT equipment_name,
+       commissioning_date,
+       TO_CHAR(commissioning_date, 'DD.MM.YYYY')       AS ru_format,
+       TO_CHAR(commissioning_date, 'DD Month YYYY')     AS full_month,
+       TO_CHAR(commissioning_date, 'YYYY-"Q"Q')         AS year_quarter,
+       TO_CHAR(commissioning_date, 'Day, DD TMMonth')    AS day_name
+FROM dim_equipment
+WHERE commissioning_date IS NOT NULL;</code></pre>
+        <table style="margin-top: 10px;">
+            <thead>
+                <tr><th>Шаблон</th><th>Описание</th><th>Пример</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>YYYY</code></td><td>4-значный год</td><td>2024</td></tr>
+                <tr><td><code>MM</code></td><td>Номер месяца</td><td>03</td></tr>
+                <tr><td><code>DD</code></td><td>День месяца</td><td>15</td></tr>
+                <tr><td><code>HH24:MI:SS</code></td><td>Время (24ч)</td><td>14:30:00</td></tr>
+                <tr><td><code>Day</code></td><td>Название дня</td><td>Friday</td></tr>
+                <tr><td><code>TMMonth</code></td><td>Локализованный месяц</td><td>Март</td></tr>
+                <tr><td><code>Q</code></td><td>Квартал</td><td>1</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 4.9 TO_DATE и TO_TIMESTAMP -->
+    <section>
+        <h2>Парсинг строк: TO_DATE, TO_TIMESTAMP</h2>
+        <pre><code class="language-sql">-- Преобразование строки в дату
+SELECT TO_DATE('15.03.2024', 'DD.MM.YYYY');
+-- Результат: 2024-03-15
+
+-- Преобразование строки во временную метку
+SELECT TO_TIMESTAMP('15-03-2024 14:30', 'DD-MM-YYYY HH24:MI');
+-- Результат: 2024-03-15 14:30:00+03
+
+-- Применение: парсинг date_id (INTEGER) в дату
+SELECT date_id,
+       TO_DATE(date_id::TEXT, 'YYYYMMDD') AS parsed_date
+FROM dim_date
+WHERE year = 2024 AND month = 1
+LIMIT 5;</code></pre>
+        <div class="compare-container" style="margin-top: 10px;">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL</h3>
+                <pre><code class="language-sql">TO_CHAR(date, 'DD.MM.YYYY')
+TO_DATE('15.03.2024', 'DD.MM.YYYY')</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+                <pre><code class="language-dax">FORMAT(date, "DD.MM.YYYY")
+DATEVALUE("2024-03-15")</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4.10 Практический пример: расчёт длительности простоев -->
+    <section>
+        <h2>Пример: длительность простоев</h2>
+        <h3>Вычисление продолжительности через TIMESTAMP</h3>
+        <pre><code class="language-sql">-- Длительность простоя из временных меток
+SELECT d.equipment_id,
+       e.equipment_name,
+       d.start_time,
+       d.end_time,
+       -- Разница в минутах
+       EXTRACT(EPOCH FROM (d.end_time - d.start_time)) / 60
+           AS calc_duration_min,
+       d.duration_min AS stored_duration_min
+FROM fact_equipment_downtime d
+JOIN dim_equipment e ON d.equipment_id = e.equipment_id
+WHERE d.end_time IS NOT NULL
+ORDER BY calc_duration_min DESC
+LIMIT 10;</code></pre>
+        <div class="card-green card">
+            <code>EXTRACT(EPOCH FROM interval)</code> возвращает количество <strong>секунд</strong>. Делим на 60 для минут, на 3600 для часов.
+        </div>
+    </section>
+
+    <!-- 4.11 Квиз по датам -->
+    <section>
+        <h2>Мини-квиз: дата и время</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Вопрос</h3>
+            <p>Что вернёт выражение?</p>
+            <pre><code class="language-sql">SELECT EXTRACT(EPOCH FROM INTERVAL '2 hours 30 minutes');</code></pre>
+            <div class="quiz-option">A) 2.5</div>
+            <div class="quiz-option">B) 150</div>
+            <div class="quiz-option">C) 9000</div>
+            <div class="quiz-option">D) Ошибка</div>
+        </div>
+        <div class="fragment card-green card">
+            <strong>Ответ: C) 9000</strong> — EXTRACT(EPOCH FROM ...) возвращает секунды: 2*3600 + 30*60 = 9000.
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВОПРОСЫ ДЛЯ ОБСУЖДЕНИЯ                                       -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Вопрос для обсуждения 1</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Выбор типа данных</h3>
+            <p>В MES-системе «Руда+» дата в таблице <code>dim_date</code> хранится как <code>DATE</code>, а ключ <code>date_id</code> — как <code>INTEGER</code> (формат YYYYMMDD).</p>
+            <ul>
+                <li>Почему используются оба варианта одновременно?</li>
+                <li>В каких ситуациях удобнее <code>date_id</code>, а в каких <code>full_date</code>?</li>
+                <li>Как бы вы хранили временные метки в системе, работающей в разных часовых поясах?</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос для обсуждения 2</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Ограничения DAX</h3>
+            <p>Мы увидели, что DAX не поддерживает регулярные выражения и имеет меньше типов данных.</p>
+            <ul>
+                <li>В каких сценариях анализа данных горнодобывающего предприятия это критично?</li>
+                <li>Как бы вы решили задачу парсинга кодов оборудования в Power BI?</li>
+                <li>Стоит ли делать «очистку» данных на уровне SQL перед загрузкой в Power BI?</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос для обсуждения 3</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Специальные типы PostgreSQL</h3>
+            <p>PostgreSQL поддерживает JSON/JSONB, массивы, UUID и другие специальные типы.</p>
+            <ul>
+                <li>Приведите примеры, где в MES-системе шахты могли бы пригодиться JSON-данные</li>
+                <li>Телеметрия с датчиков — подходящий кандидат для JSONB?</li>
+                <li>Когда <code>UUID</code> лучше <code>SERIAL</code> в качестве первичного ключа?</li>
+            </ul>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ГРУППОВОЕ ЗАДАНИЕ                                             -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Групповое задание</h2>
+        <h3>Кейс: Анализ графика ТО оборудования «Руда+»</h3>
+        <div class="card" style="margin-top: 15px;">
+            <strong>Сценарий:</strong> Главный механик предприятия «Руда+» просит подготовить отчёт по техническому обслуживанию оборудования. Необходимо определить, какое оборудование скоро потребует ТО.
+        </div>
+        <p style="margin-top: 15px;"><strong>Разделитесь на группы по 3-4 человека и решите задачи:</strong></p>
+        <ol style="font-size: 0.8em;">
+            <li>Рассчитайте «возраст» каждой единицы оборудования (от даты ввода в эксплуатацию)</li>
+            <li>Определите оборудование, которое эксплуатируется более 3 лет</li>
+            <li>Сформируйте строку вида: «ПДМ-01 (Sandvik LH517i) — возраст: 4 года 2 мес.»</li>
+            <li>Найдите оборудование, у которого последняя калибровка датчиков была более 6 месяцев назад</li>
+        </ol>
+        <p class="small-text">Время: 10 минут. Решение — на SQL. Бонус: продублировать на DAX.</p>
+    </section>
+
+    <section>
+        <h2>Групповое задание: подсказки</h2>
+        <pre><code class="language-sql">-- Подсказка для задачи 1-2:
+SELECT equipment_name,
+       commissioning_date,
+       AGE(CURRENT_DATE, commissioning_date) AS equipment_age,
+       EXTRACT(YEAR FROM AGE(CURRENT_DATE, commissioning_date))
+           AS years_in_service
+FROM dim_equipment
+WHERE commissioning_date IS NOT NULL
+  AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, commissioning_date)) > 3;
+
+-- Подсказка для задачи 3:
+-- Используйте CONCAT, TO_CHAR, EXTRACT, AGE
+
+-- Подсказка для задачи 4:
+-- JOIN dim_equipment с dim_sensor
+-- CURRENT_DATE - calibration_date > 180</code></pre>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ДОПОЛНИТЕЛЬНО: СПЕЦИАЛЬНЫЕ ТИПЫ                               -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Бонус: специальные типы PostgreSQL</h2>
+        <h3>JSON / JSONB</h3>
+        <pre><code class="language-sql">-- Пример: телеметрия в формате JSONB
+CREATE TABLE telemetry_raw (
+    id         BIGSERIAL PRIMARY KEY,
+    device_id  INT,
+    payload    JSONB,
+    received   TIMESTAMP DEFAULT NOW()
+);
+
+-- Вставка JSON-данных
+INSERT INTO telemetry_raw (device_id, payload) VALUES
+(1, '{"temperature": 45.2, "vibration": 3.1, "rpm": 1500}');
+
+-- Извлечение полей
+SELECT payload->>'temperature' AS temp,
+       payload->>'vibration'   AS vib,
+       (payload->>'rpm')::INT  AS rpm
+FROM telemetry_raw;
+
+-- Фильтрация по JSON-полю
+SELECT * FROM telemetry_raw
+WHERE (payload->>'temperature')::NUMERIC > 40;</code></pre>
+    </section>
+
+    <section>
+        <h2>Бонус: массивы и UUID</h2>
+        <pre><code class="language-sql">-- Массивы PostgreSQL
+SELECT ARRAY['LHD', 'TRUCK', 'CART', 'SKIP'] AS equipment_types;
+
+-- Проверка вхождения
+SELECT equipment_name
+FROM dim_equipment
+WHERE equipment_type_id = ANY(ARRAY[1, 2]);
+
+-- UUID: генерация уникального идентификатора
+SELECT gen_random_uuid();
+-- Результат: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+
+-- UUID часто используется для распределённых систем,
+-- где SERIAL может вызвать конфликты между узлами</code></pre>
+        <div class="card-orange card">
+            Эти типы данных <strong>отсутствуют</strong> в DAX / Power BI. Если нужно работать с JSON-телеметрией, обрабатывайте данные на уровне PostgreSQL или Power Query (M).
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Часть 3 + Часть 4 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 3 — Дата и время (шаги 3.1–3.5), Часть 4 — Контроль качества данных</p>
+        <p><strong>Задание:</strong> Выполните запросы с DATE_TRUNC, AGE, TO_CHAR. Рассчитайте длительность простоев. Проверьте качество строковых и временных данных.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 15–20 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на работу с типами данных, строковыми функциями и датами</p>
+        <p><strong>Формат:</strong> Каждое задание выполняется на SQL и DAX (где применимо), результаты сравниваются</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ МОДУЛЯ ==================== -->
+<section>
+    <h2>Итоги модуля 4</h2>
+    <div class="type-grid">
+        <div class="type-card" style="border-left-color: var(--accent6);">
+            <h4 style="color: var(--accent6);">Типы данных</h4>
+            <p>PostgreSQL предоставляет богатый набор типов: числовые, строковые, даты, JSON, UUID, массивы</p>
+        </div>
+        <div class="type-card" style="border-left-color: var(--accent6);">
+            <h4 style="color: var(--accent6);">Строковые функции</h4>
+            <p>LENGTH, SUBSTRING, SPLIT_PART, CONCAT, TRIM, UPPER/LOWER, STRING_AGG, REGEXP_*</p>
+        </div>
+        <div class="type-card" style="border-left-color: var(--accent6);">
+            <h4 style="color: var(--accent6);">Дата и время</h4>
+            <p>EXTRACT, DATE_TRUNC, AGE, INTERVAL, TO_CHAR, TO_DATE — мощная арифметика дат</p>
+        </div>
+        <div class="type-card" style="border-left-color: var(--accent6);">
+            <h4 style="color: var(--accent6);">SQL vs DAX</h4>
+            <p>PostgreSQL значительно богаче по типам и функциям. DAX проще, но ограниченнее</p>
+        </div>
+    </div>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Следующий модуль:</strong> продолжаем углублять навыки работы с данными «Руда+»
+    </div>
+</section>
+
+<!-- ==================== ВОПРОСЫ ==================== -->
+<section>
+    <h1>Вопросы?</h1>
+    <p class="subtitle">Модуль 4 — Работа с типами данных PostgreSQL</p>
+    <div style="margin-top: 40px;">
+        <span class="icon-box">SQL</span>
+        <span class="icon-box orange">DAX</span>
+        <span class="icon-box green">OK</span>
+    </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.06,
+        transition: 'slide',
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>
