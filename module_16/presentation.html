@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 16 — Программирование при помощи SQL</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.82em; text-align: left; margin: 10px 0; }
+        .danger-box { background: #f8d7da; border-left: 4px solid #dc3545; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.82em; text-align: left; margin: 10px 0; }
+
+        .vs-badge { display: inline-block; background: var(--accent2); color: white; border-radius: 50%; width: 40px; height: 40px; line-height: 40px; text-align: center; font-weight: bold; font-size: 0.7em; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 16</h1>
+    <h2 style="border: none;">Программирование при помощи SQL</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">SQL</span>
+        <span class="icon-box orange">PL</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 1.5 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Анонимные блоки:</strong> DO $$ ... END $$ <span class="small-text">(10 мин)</span></li>
+        <li><strong>Переменные:</strong> DECLARE, типы, присваивание <span class="small-text">(10 мин)</span></li>
+        <li><strong>Условия:</strong> IF/ELSIF/ELSE, CASE <span class="small-text">(15 мин)</span></li>
+        <li><strong>Циклы:</strong> LOOP, WHILE, FOR, FOREACH <span class="small-text">(15 мин)</span></li>
+        <li><strong>RAISE:</strong> NOTICE, WARNING, EXCEPTION <span class="small-text">(10 мин)</span></li>
+        <li><strong>Возврат данных:</strong> RETURN, RETURN NEXT, RETURN QUERY <span class="small-text">(10 мин)</span></li>
+        <li><strong>Курсоры:</strong> объявление, использование, пакетная обработка <span class="small-text">(10 мин)</span></li>
+        <li><strong>Практика и обсуждение</strong> <span class="small-text">(10 мин)</span></li>
+    </ol>
+</section>
+
+<!-- ==================== ВВОДНЫЙ ВОПРОС ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card">
+        <p><strong>Ситуация:</strong> На предприятии «Руда+» каждый вечер нужно автоматически:</p>
+        <ul>
+            <li>Проверить данные телеметрии за день на аномалии</li>
+            <li>Рассчитать KPI по каждой шахте и смене</li>
+            <li>Если KPI ниже порога — записать предупреждение в лог</li>
+            <li>Сформировать сводный отчёт для руководства</li>
+        </ul>
+        <br>
+        <p><strong>Вопросы:</strong></p>
+        <ul>
+            <li>Можно ли решить эту задачу одним SELECT-запросом?</li>
+            <li>Что нужно: условия, циклы, переменные?</li>
+        </ul>
+    </div>
+    <p class="small-text">Обсудите в парах — 2 минуты</p>
+</section>
+
+<!-- ==================== ЧАСТЬ 1: АНОНИМНЫЕ БЛОКИ ==================== -->
+<section>
+    <h2>1. Анонимные блоки DO $$ ... END $$</h2>
+    <div class="key-concept">
+        <h3>Что такое анонимный блок?</h3>
+        <p>Фрагмент PL/pgSQL-кода, который выполняется <strong>немедленно</strong>, не сохраняется в БД и не имеет имени.</p>
+    </div>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    -- Объявление переменных
+BEGIN
+    -- Тело блока: SQL-операторы, логика
+EXCEPTION
+    -- Обработка ошибок (необязательно)
+END;
+$$;</code></pre>
+    <div class="card">
+        <strong>Когда использовать:</strong> одноразовые скрипты, миграции данных, быстрые проверки, прототипирование логики перед созданием функции.
+    </div>
+</section>
+
+<section>
+    <h2>Анонимный блок: пример «Руда+»</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_total_mines   INT;
+    v_total_equip   INT;
+    v_total_sensors INT;
+BEGIN
+    SELECT COUNT(*) INTO v_total_mines   FROM dim_mine;
+    SELECT COUNT(*) INTO v_total_equip   FROM dim_equipment;
+    SELECT COUNT(*) INTO v_total_sensors FROM dim_sensor;
+
+    RAISE NOTICE 'Статистика «Руда+»:';
+    RAISE NOTICE '  Шахт: %', v_total_mines;
+    RAISE NOTICE '  Оборудования: %', v_total_equip;
+    RAISE NOTICE '  Датчиков: %', v_total_sensors;
+END;
+$$;</code></pre>
+    <div class="card-green card">
+        <strong>Результат:</strong> В панели Messages появятся строки с уведомлениями. Анонимные блоки не возвращают результат в виде таблицы — только сообщения.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 2: ПЕРЕМЕННЫЕ ==================== -->
+<section>
+    <h2>2. Переменные: DECLARE</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    -- Простые типы с инициализацией
+    v_mine_name    VARCHAR(100) := 'Шахта Северная';
+    v_shift_count  INT          := 3;
+    v_target_tons  NUMERIC(10,2) DEFAULT 500.00;
+    v_is_active    BOOLEAN      := TRUE;
+    v_report_date  DATE         := CURRENT_DATE;
+
+    -- Тип на основе столбца таблицы
+    v_equip_name   dim_equipment.equipment_name%TYPE;
+
+    -- Вся строка таблицы
+    v_mine_row     dim_mine%ROWTYPE;
+
+    -- Константа
+    c_max_fe       CONSTANT NUMERIC := 72.0;
+
+    -- Без инициализации (будет NULL)
+    v_result       TEXT;
+BEGIN
+    -- ...
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>Способы присваивания</h2>
+    <table>
+        <tr>
+            <th>Способ</th>
+            <th>Синтаксис</th>
+            <th>Когда использовать</th>
+        </tr>
+        <tr>
+            <td>При объявлении</td>
+            <td><code>v_name VARCHAR := 'значение';</code></td>
+            <td>Начальное значение</td>
+        </tr>
+        <tr>
+            <td>DEFAULT</td>
+            <td><code>v_name VARCHAR DEFAULT 'значение';</code></td>
+            <td>Альтернатива :=</td>
+        </tr>
+        <tr>
+            <td>Оператор :=</td>
+            <td><code>v_name := 'новое значение';</code></td>
+            <td>В теле блока</td>
+        </tr>
+        <tr>
+            <td>SELECT INTO</td>
+            <td><code>SELECT col INTO v_name FROM ...</code></td>
+            <td>Результат запроса</td>
+        </tr>
+    </table>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_mine_name  VARCHAR;
+    v_total_tons NUMERIC;
+BEGIN
+    -- SELECT INTO: результат запроса -> переменная
+    SELECT m.mine_name, SUM(fp.tons_mined)
+    INTO v_mine_name, v_total_tons
+    FROM fact_production fp
+    JOIN dim_mine m ON fp.mine_id = m.mine_id
+    WHERE fp.mine_id = 1
+      AND fp.date_id BETWEEN 20250101 AND 20250131
+    GROUP BY m.mine_name;
+
+    RAISE NOTICE '% — добыто: % т', v_mine_name, v_total_tons;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>%TYPE и %ROWTYPE</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>%TYPE</h3>
+                <p>Наследует тип <strong>одного столбца</strong></p>
+                <pre><code class="language-sql">DECLARE
+  v_name dim_mine.mine_name%TYPE;
+  -- Эквивалент: VARCHAR(100)
+  -- Но автоматически обновится,
+  -- если тип столбца изменится</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>%ROWTYPE</h3>
+                <p>Наследует структуру <strong>всей строки</strong></p>
+                <pre><code class="language-sql">DECLARE
+  v_row dim_equipment%ROWTYPE;
+BEGIN
+  SELECT * INTO v_row
+  FROM dim_equipment
+  WHERE equipment_id = 1;
+  -- v_row.equipment_name
+  -- v_row.mine_id и т.д.</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="card-green card">
+        <strong>Рекомендация:</strong> Используйте <code>%TYPE</code> — если столбец изменит тип (например, с VARCHAR(100) на VARCHAR(200)), ваш код автоматически адаптируется.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 3: УСЛОВИЯ ==================== -->
+<section>
+    <h2>3. Условные конструкции: IF</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_fe_content NUMERIC := 58.5;
+    v_grade      VARCHAR;
+BEGIN
+    IF v_fe_content >= 65 THEN
+        v_grade := 'Высший сорт (богатая руда)';
+    ELSIF v_fe_content >= 55 THEN
+        v_grade := 'Первый сорт';
+    ELSIF v_fe_content >= 45 THEN
+        v_grade := 'Второй сорт';
+    ELSIF v_fe_content >= 30 THEN
+        v_grade := 'Третий сорт (бедная руда)';
+    ELSE
+        v_grade := 'Пустая порода';
+    END IF;
+
+    RAISE NOTICE 'Fe: %, Сорт: %', v_fe_content, v_grade;
+END;
+$$;</code></pre>
+    <div class="warning-box">
+        <strong>Обратите внимание:</strong> В PL/pgSQL используется <code>ELSIF</code> (не ELSEIF и не ELSE IF). Каждый IF должен заканчиваться <code>END IF;</code>.
+    </div>
+</section>
+
+<section>
+    <h2>Оператор CASE в PL/pgSQL</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Простой CASE</h3>
+                <pre><code class="language-sql">CASE v_equipment_type
+    WHEN 'ПДМ' THEN
+        v_role := 'Погрузка';
+    WHEN 'Самосвал' THEN
+        v_role := 'Транспорт';
+    WHEN 'Вагонетка' THEN
+        v_role := 'Откатка';
+    ELSE
+        v_role := 'Прочее';
+END CASE;</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>Поисковый CASE</h3>
+                <pre><code class="language-sql">CASE
+    WHEN v_hours > 100 THEN
+        v_severity := 'КРИТИЧНО';
+    WHEN v_hours > 50 THEN
+        v_severity := 'ВЫСОКАЯ';
+    WHEN v_hours > 20 THEN
+        v_severity := 'СРЕДНЯЯ';
+    ELSE
+        v_severity := 'НИЗКАЯ';
+END CASE;</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <strong>Важно:</strong> CASE в PL/pgSQL — это <strong>оператор</strong> (заканчивается <code>END CASE;</code>). Не путайте с выражением CASE в SQL (заканчивается <code>END</code>).
+    </div>
+</section>
+
+<section>
+    <h2>Пример: оценка эффективности смены</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    rec RECORD;
+    v_status VARCHAR;
+    v_target NUMERIC := 5000;  -- Целевая добыча на шахту за месяц
+BEGIN
+    FOR rec IN
+        SELECT m.mine_name, COALESCE(SUM(fp.tons_mined), 0) AS total_tons
+        FROM dim_mine m
+        LEFT JOIN fact_production fp ON fp.mine_id = m.mine_id
+            AND fp.date_id BETWEEN 20250101 AND 20250131
+        GROUP BY m.mine_name
+        ORDER BY total_tons DESC
+    LOOP
+        IF rec.total_tons >= v_target THEN
+            v_status := 'ПЛАН ВЫПОЛНЕН';
+        ELSIF rec.total_tons >= v_target * 0.8 THEN
+            v_status := 'БЛИЗКО К ПЛАНУ';
+        ELSIF rec.total_tons > 0 THEN
+            v_status := 'ОТСТАВАНИЕ';
+        ELSE
+            v_status := 'НЕТ ДАННЫХ';
+        END IF;
+
+        RAISE NOTICE '% — % т [%]', rec.mine_name, rec.total_tons, v_status;
+    END LOOP;
+END;
+$$;</code></pre>
+</section>
+
+<!-- ==================== ВОПРОС ДЛЯ ОБСУЖДЕНИЯ ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card">
+        <p><strong>Сравните два подхода к классификации:</strong></p>
+    </div>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">CASE в SQL</h3>
+            <pre><code class="language-sql">SELECT mine_name,
+    CASE
+        WHEN total > 5000 THEN 'OK'
+        WHEN total > 3000 THEN 'WARN'
+        ELSE 'CRIT'
+    END AS status
+FROM ...</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">IF в PL/pgSQL</h3>
+            <pre><code class="language-sql">IF total > 5000 THEN
+    status := 'OK';
+ELSIF total > 3000 THEN
+    status := 'WARN';
+ELSE
+    status := 'CRIT';
+END IF;</code></pre>
+        </div>
+    </div>
+    <div class="card-orange card">
+        <strong>Вопросы:</strong>
+        <ul>
+            <li>Когда достаточно CASE в SQL, а когда нужен IF в PL/pgSQL?</li>
+            <li>Какой подход быстрее? Почему?</li>
+        </ul>
+    </div>
+</section>
+
+<!-- Практика: Части 1–2 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — Анонимные блоки и переменные, Часть 2 — Управление потоком: IF и CASE</p>
+        <p><strong>Задание:</strong> Создайте анонимные блоки PL/pgSQL, объявите переменные, используйте IF/ELSEIF и CASE для логики обработки данных «Руда+».</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10 минут</em></p>
+</section>
+
+<!-- ==================== ЧАСТЬ 4: ЦИКЛЫ ==================== -->
+<section>
+    <h2>4. Циклы в PL/pgSQL</h2>
+    <table>
+        <tr>
+            <th>Цикл</th>
+            <th>Назначение</th>
+            <th>Пример</th>
+        </tr>
+        <tr>
+            <td><code>LOOP</code></td>
+            <td>Бесконечный цикл (нужен EXIT)</td>
+            <td>Ожидание условия</td>
+        </tr>
+        <tr>
+            <td><code>WHILE</code></td>
+            <td>Пока условие истинно</td>
+            <td>Накопление до порога</td>
+        </tr>
+        <tr>
+            <td><code>FOR i IN 1..N</code></td>
+            <td>Числовой диапазон</td>
+            <td>Помесячный отчёт</td>
+        </tr>
+        <tr>
+            <td><code>FOR rec IN query</code></td>
+            <td>Итерация по запросу</td>
+            <td>Обработка строк</td>
+        </tr>
+        <tr>
+            <td><code>FOREACH x IN ARRAY</code></td>
+            <td>Итерация по массиву</td>
+            <td>Список шахт</td>
+        </tr>
+    </table>
+    <div class="card">
+        <strong>Управление циклом:</strong> <code>EXIT</code> — выход из цикла, <code>CONTINUE</code> — переход к следующей итерации. Оба поддерживают <code>WHEN условие</code>.
+    </div>
+</section>
+
+<section>
+    <h2>LOOP с EXIT и CONTINUE</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_counter INT := 0;
+    v_total   NUMERIC := 0;
+    v_daily   NUMERIC;
+BEGIN
+    LOOP
+        v_counter := v_counter + 1;
+
+        -- Выход по условию
+        EXIT WHEN v_counter > 10;
+
+        SELECT COALESCE(SUM(tons_mined), 0)
+        INTO v_daily
+        FROM fact_production
+        WHERE date_id = 20250100 + v_counter;
+
+        -- Пропуск дней без добычи
+        CONTINUE WHEN v_daily = 0;
+
+        v_total := v_total + v_daily;
+        RAISE NOTICE 'День %: % т (итого: % т)',
+            v_counter, v_daily, v_total;
+    END LOOP;
+
+    RAISE NOTICE 'Итого за 10 дней: % т', v_total;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>WHILE — ожидание выполнения плана</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_date_id       INT := 20250101;
+    v_accumulated   NUMERIC := 0;
+    v_monthly_target NUMERIC := 50000;
+    v_daily_prod    NUMERIC;
+BEGIN
+    WHILE v_accumulated < v_monthly_target AND v_date_id <= 20250131
+    LOOP
+        SELECT COALESCE(SUM(tons_mined), 0)
+        INTO v_daily_prod
+        FROM fact_production
+        WHERE date_id = v_date_id;
+
+        v_accumulated := v_accumulated + v_daily_prod;
+        v_date_id := v_date_id + 1;
+    END LOOP;
+
+    IF v_accumulated >= v_monthly_target THEN
+        RAISE NOTICE 'План % т выполнен к дате %',
+            v_monthly_target, v_date_id - 1;
+    ELSE
+        RAISE NOTICE 'План НЕ выполнен: % т из % т',
+            v_accumulated, v_monthly_target;
+    END IF;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>FOR — числовой диапазон и запрос</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Числовой FOR</h3>
+                <pre><code class="language-sql">-- Помесячный отчёт
+FOR v_month IN 1..12 LOOP
+    SELECT SUM(tons_mined)
+    INTO v_prod
+    FROM fact_production
+    WHERE date_id BETWEEN
+      (20250000 + v_month*100 + 1) AND
+      (20250000 + v_month*100 + 31);
+
+    RAISE NOTICE 'Месяц %: % т',
+        v_month, v_prod;
+END LOOP;
+
+-- Обратный порядок
+FOR i IN REVERSE 10..1 LOOP
+    RAISE NOTICE 'Обратный: %', i;
+END LOOP;</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>FOR по запросу</h3>
+                <pre><code class="language-sql">-- ТОП-5 шахт
+FOR rec IN
+    SELECT m.mine_name,
+           SUM(fp.tons_mined) AS tons
+    FROM fact_production fp
+    JOIN dim_mine m
+      ON fp.mine_id = m.mine_id
+    WHERE fp.date_id BETWEEN
+      20250101 AND 20250131
+    GROUP BY m.mine_name
+    ORDER BY tons DESC
+    LIMIT 5
+LOOP
+    RAISE NOTICE '% — % т',
+        rec.mine_name, rec.tons;
+END LOOP;</code></pre>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>FOREACH — итерация по массиву</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_mine_ids INT[] := ARRAY[1, 2, 3, 4, 5];
+    v_mine_id  INT;
+    v_name     VARCHAR;
+    v_tons     NUMERIC;
+BEGIN
+    FOREACH v_mine_id IN ARRAY v_mine_ids
+    LOOP
+        SELECT m.mine_name, COALESCE(SUM(fp.tons_mined), 0)
+        INTO v_name, v_tons
+        FROM dim_mine m
+        LEFT JOIN fact_production fp ON fp.mine_id = m.mine_id
+            AND fp.date_id BETWEEN 20250101 AND 20250131
+        WHERE m.mine_id = v_mine_id
+        GROUP BY m.mine_name;
+
+        RAISE NOTICE 'Шахта «%» (ID=%): % т', v_name, v_mine_id, v_tons;
+    END LOOP;
+END;
+$$;</code></pre>
+    <div class="card">
+        <strong>Когда FOREACH?</strong> Когда набор значений задан явно (параметр-массив, конфигурация), а не получен из запроса.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 5: RAISE ==================== -->
+<section>
+    <h2>5. RAISE — вывод сообщений</h2>
+    <table>
+        <tr>
+            <th>Уровень</th>
+            <th>Назначение</th>
+            <th>Видимость</th>
+        </tr>
+        <tr>
+            <td><code>DEBUG</code></td>
+            <td>Отладочная информация</td>
+            <td>Только при debug-уровне</td>
+        </tr>
+        <tr>
+            <td><code>LOG</code></td>
+            <td>Запись в серверный лог</td>
+            <td>Лог PostgreSQL</td>
+        </tr>
+        <tr>
+            <td><code>INFO</code></td>
+            <td>Информационное сообщение</td>
+            <td>Клиент</td>
+        </tr>
+        <tr>
+            <td class="highlight-blue"><code>NOTICE</code></td>
+            <td>Уведомление (по умолчанию)</td>
+            <td>Клиент (по умолчанию)</td>
+        </tr>
+        <tr>
+            <td class="highlight-orange"><code>WARNING</code></td>
+            <td>Предупреждение</td>
+            <td>Клиент + лог</td>
+        </tr>
+        <tr>
+            <td style="color: #dc3545; font-weight: bold;"><code>EXCEPTION</code></td>
+            <td>Ошибка (прерывает выполнение!)</td>
+            <td>Клиент + лог + откат</td>
+        </tr>
+    </table>
+    <pre><code class="language-sql">RAISE NOTICE 'Добыча за %: % т', v_date, v_tons;
+RAISE WARNING 'Содержание Fe (%) ниже нормы!', v_fe;
+RAISE EXCEPTION 'Некорректные данные: equipment_id = %', v_eid
+    USING HINT = 'Проверьте справочник оборудования',
+          ERRCODE = 'P0001';</code></pre>
+</section>
+
+<section>
+    <h2>Форматирование RAISE</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_mine     VARCHAR := 'Северная';
+    v_tons     NUMERIC := 1234.56;
+    v_target   NUMERIC := 1500.00;
+    v_percent  NUMERIC;
+BEGIN
+    v_percent := ROUND(v_tons / v_target * 100, 1);
+
+    -- % — подставляет значение аргумента
+    RAISE NOTICE 'Шахта «%»: добыто % т из % т (% %%)',
+        v_mine, v_tons, v_target, v_percent;
+    -- %% — экранированный знак процента
+
+    -- USING для дополнительной информации
+    IF v_percent < 80 THEN
+        RAISE WARNING 'Отставание от плана на шахте «%»!', v_mine
+            USING DETAIL = format('Факт: %s т, План: %s т', v_tons, v_target),
+                  HINT   = 'Проверьте журнал простоев';
+    END IF;
+END;
+$$;</code></pre>
+    <div class="card">
+        <strong>Параметры USING:</strong> <code>DETAIL</code> — детали, <code>HINT</code> — рекомендация, <code>ERRCODE</code> — код ошибки SQLSTATE.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 6: RETURN ==================== -->
+<section>
+    <h2>6. Возврат данных из функций</h2>
+    <table>
+        <tr>
+            <th>Оператор</th>
+            <th>Назначение</th>
+            <th>Тип функции</th>
+        </tr>
+        <tr>
+            <td><code>RETURN expr</code></td>
+            <td>Вернуть одно значение</td>
+            <td>RETURNS скаляр</td>
+        </tr>
+        <tr>
+            <td><code>RETURN NEXT</code></td>
+            <td>Добавить строку к результату</td>
+            <td>RETURNS TABLE / SETOF</td>
+        </tr>
+        <tr>
+            <td><code>RETURN QUERY</code></td>
+            <td>Добавить результат запроса</td>
+            <td>RETURNS TABLE / SETOF</td>
+        </tr>
+    </table>
+    <pre><code class="language-sql">-- RETURN: скалярная функция
+CREATE FUNCTION get_total_production(p_mine_id INT, p_date INT)
+RETURNS NUMERIC LANGUAGE plpgsql STABLE AS $$
+DECLARE v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(tons_mined), 0) INTO v_total
+    FROM fact_production
+    WHERE mine_id = p_mine_id AND date_id = p_date;
+    RETURN v_total;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>RETURN NEXT — построчный возврат</h2>
+    <pre><code class="language-sql">CREATE OR REPLACE FUNCTION get_monthly_production_report(p_year INT)
+RETURNS TABLE (
+    month_num INT, month_name VARCHAR,
+    total_tons NUMERIC, avg_per_day NUMERIC
+) LANGUAGE plpgsql STABLE AS $$
+DECLARE
+    v_months VARCHAR[] := ARRAY[
+        'Январь','Февраль','Март','Апрель','Май','Июнь',
+        'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    v_days INT;
+BEGIN
+    FOR i IN 1..12 LOOP
+        month_num := i;
+        month_name := v_months[i];
+
+        SELECT COALESCE(SUM(fp.tons_mined), 0)
+        INTO total_tons
+        FROM fact_production fp
+        WHERE fp.date_id BETWEEN (p_year*10000 + i*100 + 1)
+                              AND (p_year*10000 + i*100 + 31);
+
+        SELECT COUNT(DISTINCT date_id) INTO v_days
+        FROM fact_production
+        WHERE date_id BETWEEN (p_year*10000 + i*100 + 1)
+                          AND (p_year*10000 + i*100 + 31);
+
+        avg_per_day := CASE WHEN v_days > 0
+            THEN ROUND(total_tons / v_days, 1) ELSE 0 END;
+
+        RETURN NEXT;  -- Добавляем строку к результату
+    END LOOP;
+END;
+$$;
+
+SELECT * FROM get_monthly_production_report(2025);</code></pre>
+</section>
+
+<section>
+    <h2>RETURN QUERY — возврат целого запроса</h2>
+    <pre><code class="language-sql">CREATE OR REPLACE FUNCTION get_equipment_downtime_summary(
+    p_mine_id INT, p_date_from INT, p_date_to INT
+)
+RETURNS TABLE (
+    equipment_name VARCHAR, downtime_hours NUMERIC,
+    incident_count BIGINT, top_reason VARCHAR
+) LANGUAGE plpgsql STABLE AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        e.equipment_name,
+        ROUND(SUM(fd.downtime_minutes) / 60.0, 1),
+        COUNT(*),
+        (SELECT dr.reason_name
+         FROM fact_equipment_downtime fd2
+         JOIN dim_downtime_reason dr ON fd2.reason_id = dr.reason_id
+         WHERE fd2.equipment_id = e.equipment_id
+           AND fd2.date_id BETWEEN p_date_from AND p_date_to
+         GROUP BY dr.reason_name ORDER BY COUNT(*) DESC LIMIT 1)
+    FROM fact_equipment_downtime fd
+    JOIN dim_equipment e ON fd.equipment_id = e.equipment_id
+    WHERE fd.date_id BETWEEN p_date_from AND p_date_to
+      AND e.mine_id = p_mine_id
+    GROUP BY e.equipment_id, e.equipment_name
+    ORDER BY SUM(fd.downtime_minutes) DESC;
+END;
+$$;</code></pre>
+    <div class="card-green card">
+        <strong>RETURN QUERY</strong> проще, когда результат можно получить одним SQL. <strong>RETURN NEXT</strong> — когда нужна дополнительная логика (циклы, условия, вычисления).
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 7: КУРСОРЫ ==================== -->
+<section>
+    <h2>7. Курсоры</h2>
+    <div class="key-concept">
+        <h3>Что такое курсор?</h3>
+        <p>Указатель на результат запроса, позволяющий обрабатывать строки <strong>по одной</strong>, не загружая весь результат в память.</p>
+    </div>
+    <table>
+        <tr>
+            <th>Операция</th>
+            <th>Описание</th>
+        </tr>
+        <tr>
+            <td><code>DECLARE cur CURSOR FOR ...</code></td>
+            <td>Объявление курсора</td>
+        </tr>
+        <tr>
+            <td><code>OPEN cur</code></td>
+            <td>Открытие (выполнение запроса)</td>
+        </tr>
+        <tr>
+            <td><code>FETCH cur INTO rec</code></td>
+            <td>Получение следующей строки</td>
+        </tr>
+        <tr>
+            <td><code>CLOSE cur</code></td>
+            <td>Закрытие курсора</td>
+        </tr>
+        <tr>
+            <td><code>FOR rec IN cur LOOP</code></td>
+            <td>Автоматический open/fetch/close</td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Курсор: ручное управление</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    cur_equipment CURSOR FOR
+        SELECT e.equipment_id, e.equipment_name, et.equipment_type_name
+        FROM dim_equipment e
+        JOIN dim_equipment_type et ON e.equipment_type_id = et.equipment_type_id
+        ORDER BY e.equipment_id;
+    rec RECORD;
+    v_count INT := 0;
+BEGIN
+    OPEN cur_equipment;
+
+    LOOP
+        FETCH cur_equipment INTO rec;
+        EXIT WHEN NOT FOUND;
+
+        v_count := v_count + 1;
+        RAISE NOTICE '#%: % [%]',
+            v_count, rec.equipment_name, rec.equipment_type_name;
+    END LOOP;
+
+    CLOSE cur_equipment;
+    RAISE NOTICE 'Всего: %', v_count;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>Курсор с параметрами</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    cur_production CURSOR (p_mine_id INT, p_date INT) FOR
+        SELECT e.equipment_name, fp.tons_mined, fp.trips_count
+        FROM fact_production fp
+        JOIN dim_equipment e ON fp.equipment_id = e.equipment_id
+        WHERE fp.mine_id = p_mine_id AND fp.date_id = p_date
+        ORDER BY fp.tons_mined DESC;
+    rec RECORD;
+BEGIN
+    RAISE NOTICE '=== Шахта 1, 15.01.2025 ===';
+
+    -- Открываем с параметрами
+    OPEN cur_production(1, 20250115);
+    LOOP
+        FETCH cur_production INTO rec;
+        EXIT WHEN NOT FOUND;
+        RAISE NOTICE '  % — % т, % рейсов',
+            rec.equipment_name, rec.tons_mined, rec.trips_count;
+    END LOOP;
+    CLOSE cur_production;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>Курсор: пакетная обработка данных</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    cur_dates CURSOR FOR
+        SELECT DISTINCT date_id FROM fact_production
+        WHERE date_id BETWEEN 20250101 AND 20250107
+        ORDER BY date_id;
+    v_rows INT;
+    v_total_rows INT := 0;
+BEGIN
+    FOR rec IN cur_dates LOOP
+        INSERT INTO report_daily_production (
+            report_date, mine_id, mine_name,
+            total_tons, total_trips, avg_tons_per_trip
+        )
+        SELECT d.full_date, m.mine_id, m.mine_name,
+            SUM(fp.tons_mined), SUM(fp.trips_count),
+            ROUND(SUM(fp.tons_mined) / NULLIF(SUM(fp.trips_count), 0), 2)
+        FROM fact_production fp
+        JOIN dim_mine m ON fp.mine_id = m.mine_id
+        JOIN dim_date d ON fp.date_id = d.date_id
+        WHERE fp.date_id = rec.date_id
+        GROUP BY d.full_date, m.mine_id, m.mine_name;
+
+        GET DIAGNOSTICS v_rows = ROW_COUNT;
+        v_total_rows := v_total_rows + v_rows;
+        RAISE NOTICE 'Дата %: вставлено % записей', rec.date_id, v_rows;
+    END LOOP;
+
+    RAISE NOTICE 'Всего: %', v_total_rows;
+END;
+$$;</code></pre>
+    <div class="card">
+        <strong>FOR rec IN cursor</strong> — автоматически открывает, извлекает и закрывает курсор. Рекомендуемый способ!
+    </div>
+</section>
+
+<!-- ==================== СРАВНЕНИЕ С DAX ==================== -->
+<section>
+    <h2>Сравнение с DAX</h2>
+    <h3>Условная логика</h3>
+    <div class="compare-container">
+        <div class="compare-col">
+            <h3 class="sql-header">PL/pgSQL</h3>
+            <pre><code class="language-sql">DO $$
+DECLARE
+    v_fe NUMERIC := 58.5;
+    v_grade VARCHAR;
+BEGIN
+    IF v_fe >= 65 THEN
+        v_grade := 'Высший';
+    ELSIF v_fe >= 55 THEN
+        v_grade := 'Первый';
+    ELSIF v_fe >= 45 THEN
+        v_grade := 'Второй';
+    ELSE
+        v_grade := 'Третий';
+    END IF;
+END;
+$$;</code></pre>
+        </div>
+        <div class="compare-col">
+            <h3 class="dax-header">DAX</h3>
+            <pre><code class="language-dax">// В DAX нет процедурных блоков
+// Условия только в мерах/столбцах
+OreGrade =
+IF(
+    [AvgFe] >= 65, "Высший",
+    IF(
+        [AvgFe] >= 55, "Первый",
+        IF(
+            [AvgFe] >= 45, "Второй",
+            "Третий"
+        )
+    )
+)
+
+// Или через SWITCH
+OreGrade =
+SWITCH(TRUE(),
+    [AvgFe] >= 65, "Высший",
+    [AvgFe] >= 55, "Первый",
+    [AvgFe] >= 45, "Второй",
+    "Третий"
+)</code></pre>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Что есть в PL/pgSQL, но нет в DAX</h2>
+    <table>
+        <tr>
+            <th>Возможность</th>
+            <th style="background: var(--accent1);">PL/pgSQL</th>
+            <th style="background: var(--accent2);">DAX</th>
+        </tr>
+        <tr>
+            <td>Анонимные блоки</td>
+            <td class="highlight-green">DO $$ ... END $$</td>
+            <td>Нет</td>
+        </tr>
+        <tr>
+            <td>Переменные</td>
+            <td class="highlight-green">DECLARE, :=, SELECT INTO</td>
+            <td>VAR (только в мерах)</td>
+        </tr>
+        <tr>
+            <td>Циклы</td>
+            <td class="highlight-green">FOR, WHILE, LOOP, FOREACH</td>
+            <td>Нет (только итераторы: SUMX, FILTER)</td>
+        </tr>
+        <tr>
+            <td>Условия</td>
+            <td class="highlight-green">IF/ELSIF/ELSE, CASE</td>
+            <td>IF, SWITCH (только выражения)</td>
+        </tr>
+        <tr>
+            <td>Курсоры</td>
+            <td class="highlight-green">CURSOR, FETCH</td>
+            <td>Нет</td>
+        </tr>
+        <tr>
+            <td>Вывод сообщений</td>
+            <td class="highlight-green">RAISE NOTICE/WARNING</td>
+            <td>Нет</td>
+        </tr>
+        <tr>
+            <td>Модификация данных</td>
+            <td class="highlight-green">INSERT/UPDATE/DELETE</td>
+            <td>Только чтение</td>
+        </tr>
+    </table>
+    <div class="card-orange card">
+        <strong>Вывод:</strong> DAX — декларативный язык для аналитики. PL/pgSQL — императивный язык для серверной логики, ETL и управления данными.
+    </div>
+</section>
+
+<!-- ==================== ГРУППОВОЕ ЗАДАНИЕ ==================== -->
+<section>
+    <h2>Групповое задание</h2>
+    <div class="card-orange card">
+        <h3>Проектирование автоматической проверки данных</h3>
+        <p><strong>Контекст:</strong> На «Руда+» ежедневно поступают данные с датчиков оборудования. Иногда данные содержат ошибки: отрицательные значения, аномальные пики, пропуски.</p>
+        <br>
+        <p><strong>Задание (работа в группах по 3-4 человека, 10 минут):</strong></p>
+        <ol>
+            <li>Составьте список из <strong>5 проверок</strong> качества данных</li>
+            <li>Для каждой проверки определите:
+                <ul>
+                    <li>Какую конструкцию использовать (IF, CASE, цикл)?</li>
+                    <li>Какой уровень RAISE (NOTICE, WARNING, EXCEPTION)?</li>
+                    <li>Что делать при обнаружении проблемы?</li>
+                </ul>
+            </li>
+            <li>Напишите псевдокод анонимного блока для одной проверки</li>
+        </ol>
+    </div>
+    <p class="small-text">Каждая группа представит свой проект — 2 минуты на группу</p>
+</section>
+
+<!-- ==================== КВИЗ ==================== -->
+<section>
+    <h2>Квиз: проверка знаний</h2>
+    <p><strong>1. Как объявить переменную, тип которой совпадает с типом столбца таблицы?</strong></p>
+    <div class="quiz-option">A) v_name := dim_mine.mine_name;</div>
+    <div class="quiz-option">B) v_name dim_mine.mine_name%TYPE;</div>
+    <div class="quiz-option">C) v_name TYPE OF dim_mine.mine_name;</div>
+    <div class="quiz-option">D) v_name LIKE dim_mine.mine_name;</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — <code>%TYPE</code> наследует тип столбца. Если тип столбца изменится, переменная автоматически адаптируется.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>2. Какой уровень RAISE прерывает выполнение блока?</strong></p>
+    <div class="quiz-option">A) RAISE NOTICE</div>
+    <div class="quiz-option">B) RAISE WARNING</div>
+    <div class="quiz-option">C) RAISE LOG</div>
+    <div class="quiz-option">D) RAISE EXCEPTION</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: D</strong> — Только <code>RAISE EXCEPTION</code> прерывает выполнение и вызывает откат транзакции (если нет блока EXCEPTION).</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>3. Чем отличается RETURN NEXT от RETURN QUERY?</strong></p>
+    <div class="quiz-option">A) RETURN NEXT быстрее</div>
+    <div class="quiz-option">B) RETURN NEXT добавляет одну строку, RETURN QUERY — результат запроса</div>
+    <div class="quiz-option">C) RETURN QUERY нельзя использовать в циклах</div>
+    <div class="quiz-option">D) Они идентичны</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — <code>RETURN NEXT</code> добавляет текущие значения OUT-переменных как одну строку. <code>RETURN QUERY</code> добавляет сразу все строки результата запроса.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>4. Какой цикл подходит для перебора элементов массива?</strong></p>
+    <div class="quiz-option">A) FOR i IN ARRAY</div>
+    <div class="quiz-option">B) WHILE ARRAY_LENGTH > 0</div>
+    <div class="quiz-option">C) FOREACH x IN ARRAY</div>
+    <div class="quiz-option">D) LOOP OVER ARRAY</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: C</strong> — <code>FOREACH x IN ARRAY arr LOOP</code> — специальная конструкция для перебора массивов в PL/pgSQL.</div>
+    </div>
+</section>
+
+<!-- ==================== КЕЙС ДЛЯ АНАЛИЗА ==================== -->
+<section>
+    <h2>Кейс для анализа</h2>
+    <div class="card">
+        <h3>Проблема на «Руда+»: бесконечный цикл</h3>
+        <p>Инженер написал скрипт для обхода всех дат, но он «зависает»:</p>
+    </div>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_date_id INT := 20250101;
+    v_prod    NUMERIC;
+BEGIN
+    LOOP
+        SELECT SUM(tons_mined) INTO v_prod
+        FROM fact_production WHERE date_id = v_date_id;
+
+        RAISE NOTICE 'Дата %: % т', v_date_id, v_prod;
+        v_date_id := v_date_id + 1;
+    END LOOP;
+END;
+$$;</code></pre>
+    <div class="danger-box">
+        <strong>Найдите проблему:</strong>
+        <p class="fragment">Нет условия <code>EXIT WHEN</code> — цикл никогда не завершится! Нужно добавить: <code>EXIT WHEN v_date_id > 20250131;</code></p>
+    </div>
+</section>
+
+<!-- Практика: Части 3–4 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 3 — Циклы (LOOP, WHILE, FOR), Часть 4 — Курсоры</p>
+        <p><strong>Задание:</strong> Реализуйте циклы для пакетной обработки данных, используйте курсоры для построчной обработки записей «Руда+».</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10–12 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на программирование PL/pgSQL</p>
+        <p><strong>Формат:</strong> SQL — анонимные блоки, циклы, курсоры, управление потоком</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <h2>Итоги модуля</h2>
+    <div class="key-concept">
+        <h3>Что мы изучили:</h3>
+        <ol>
+            <li><span class="highlight-blue">DO $$ ... END $$</span> — анонимные блоки для одноразового выполнения</li>
+            <li><strong>DECLARE</strong> — переменные с типами, %TYPE, %ROWTYPE</li>
+            <li><span class="highlight-orange">IF/ELSIF/ELSE, CASE</span> — условная логика для бизнес-правил</li>
+            <li><strong>LOOP, WHILE, FOR, FOREACH</strong> — циклы для итеративной обработки</li>
+            <li><strong>RAISE</strong> — уведомления, предупреждения, исключения</li>
+            <li><span class="highlight-green">RETURN / RETURN NEXT / RETURN QUERY</span> — возврат данных из функций</li>
+            <li><strong>Курсоры</strong> — построчная обработка больших наборов данных</li>
+        </ol>
+    </div>
+</section>
+
+<section>
+    <h2>Что дальше?</h2>
+    <div class="card">
+        <p><strong>Практическая работа:</strong> Программирование на PL/pgSQL для MES-системы «Руда+»</p>
+        <p><strong>Лабораторная работа:</strong> 8 заданий — от простых блоков до комплексной валидации данных</p>
+    </div>
+    <br>
+    <div class="card card-orange">
+        <p><strong>Следующий модуль:</strong> Обработка ошибок в SQL</p>
+        <ul>
+            <li>Блок EXCEPTION</li>
+            <li>Предопределённые условия ошибок</li>
+            <li>Логирование ошибок</li>
+            <li>Best practices</li>
+        </ul>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Спасибо за внимание! Вопросы?</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.04,
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>
