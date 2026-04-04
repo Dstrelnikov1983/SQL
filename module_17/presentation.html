@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 17 — Применение обработки ошибок</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .small-text { font-size: 0.7em; color: #888; }
+        .reveal .slide-number { color: var(--accent1); }
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.82em; text-align: left; margin: 10px 0; }
+        .danger-box { background: #f8d7da; border-left: 4px solid #dc3545; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.82em; text-align: left; margin: 10px 0; }
+
+        .vs-badge { display: inline-block; background: var(--accent2); color: white; border-radius: 50%; width: 40px; height: 40px; line-height: 40px; text-align: center; font-weight: bold; font-size: 0.7em; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 17</h1>
+    <h2 style="border: none;">Применение обработки ошибок</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">TRY</span>
+        <span class="icon-box orange">ERR</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 1 час</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Блок EXCEPTION</strong> в PL/pgSQL <span class="small-text">(10 мин)</span></li>
+        <li><strong>Предопределённые условия ошибок</strong> (SQLSTATE) <span class="small-text">(10 мин)</span></li>
+        <li><strong>RAISE EXCEPTION:</strong> генерация ошибок <span class="small-text">(10 мин)</span></li>
+        <li><strong>GET STACKED DIAGNOSTICS:</strong> детальная информация <span class="small-text">(5 мин)</span></li>
+        <li><strong>Логирование ошибок</strong> в таблицу <span class="small-text">(10 мин)</span></li>
+        <li><strong>ASSERT:</strong> утверждения для отладки <span class="small-text">(5 мин)</span></li>
+        <li><strong>Best practices</strong> и обсуждение <span class="small-text">(10 мин)</span></li>
+    </ol>
+</section>
+
+<!-- ==================== ВВОДНЫЙ ВОПРОС ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card">
+        <p><strong>Ситуация:</strong> На «Руда+» запускается ночной ETL-процесс, который загружает данные с 200 датчиков. Один из датчиков присылает некорректное значение (строку вместо числа).</p>
+        <br>
+        <p><strong>Вопросы:</strong></p>
+        <ul>
+            <li>Должен ли весь процесс остановиться из-за одного датчика?</li>
+            <li>Как узнать, какой именно датчик вызвал ошибку?</li>
+            <li>Как обеспечить, чтобы данные с остальных 199 датчиков были загружены?</li>
+        </ul>
+    </div>
+    <p class="small-text">Обсудите в парах — 2 минуты</p>
+</section>
+
+<!-- ==================== ЧАСТЬ 1: БЛОК EXCEPTION ==================== -->
+<section>
+    <h2>1. Блок EXCEPTION</h2>
+    <div class="key-concept">
+        <h3>Структура PL/pgSQL блока с обработкой ошибок</h3>
+        <pre><code class="language-sql">BEGIN
+    -- Основной код
+    -- Если здесь возникает ошибка...
+EXCEPTION
+    WHEN условие_1 THEN
+        -- ...управление передаётся сюда
+    WHEN условие_2 THEN
+        -- ...или сюда
+    WHEN OTHERS THEN
+        -- ...или сюда (любая другая ошибка)
+END;</code></pre>
+    </div>
+    <div class="card">
+        <strong>Ключевой принцип:</strong> При возникновении ошибки в BEGIN-блоке все изменения данных (INSERT, UPDATE, DELETE) в этом блоке <strong>автоматически откатываются</strong>. Это неявный SAVEPOINT.
+    </div>
+</section>
+
+<!-- ==================== НЕЯВНЫЙ SAVEPOINT: ДЕТАЛИ ==================== -->
+<section>
+    <h2>Неявный SAVEPOINT — как это работает</h2>
+    <div class="key-concept">
+        <h3>Что делает PostgreSQL «под капотом»</h3>
+        <pre><code class="language-sql">BEGIN                -- ← PostgreSQL неявно создаёт SAVEPOINT
+    INSERT INTO ...  -- изменение 1
+    UPDATE ...       -- изменение 2
+    SELECT 1/0;      -- ошибка!
+EXCEPTION
+    WHEN division_by_zero THEN
+        -- ← PostgreSQL делает ROLLBACK TO SAVEPOINT
+        -- INSERT и UPDATE уже откачены
+        ...
+END;</code></pre>
+    </div>
+    <div class="card">
+        <strong>Аналогия с чистым SQL:</strong> PL/pgSQL автоматизирует паттерн <code>SAVEPOINT → ROLLBACK TO SAVEPOINT</code>, который иначе пришлось бы писать вручную.
+    </div>
+</section>
+
+<section>
+    <h2>Пошаговый механизм</h2>
+    <ol>
+        <li class="fragment"><span class="icon-box">1</span> <strong>Вход в BEGIN-блок</strong> — PostgreSQL создаёт неявный SAVEPOINT</li>
+        <li class="fragment"><span class="icon-box">2</span> <strong>Выполнение кода</strong> — INSERT, UPDATE, DELETE выполняются нормально</li>
+        <li class="fragment"><span class="icon-box orange">3</span> <strong>Ошибка</strong> — выполнение прерывается</li>
+        <li class="fragment"><span class="icon-box orange">4</span> <strong>Откат</strong> — ROLLBACK TO SAVEPOINT, все изменения в блоке <strong>отменяются</strong></li>
+        <li class="fragment"><span class="icon-box green">5</span> <strong>Обработка</strong> — управление переходит в секцию EXCEPTION</li>
+    </ol>
+    <div class="card-green card fragment">
+        <strong>Если ошибки не было</strong> — SAVEPOINT просто освобождается, все изменения сохраняются.
+    </div>
+</section>
+
+<section>
+    <h2>Пример: откат ВСЕХ изменений в блоке</h2>
+    <pre><code class="language-sql">DO $$
+BEGIN
+    -- Шаг 1: вставляем запись — она РЕАЛЬНО попадает в таблицу
+    INSERT INTO dim_mine (mine_id, mine_name, location, depth_meters, status)
+    VALUES (999, 'Тестовая шахта', 'Тест', 100, 'active');
+
+    -- Шаг 2: здесь ошибка — дубликат PK
+    INSERT INTO dim_mine (mine_id, mine_name, location, depth_meters, status)
+    VALUES (999, 'Дубликат', 'Тест', 100, 'active');  -- unique_violation!
+
+EXCEPTION
+    WHEN unique_violation THEN
+        -- К этому моменту INSERT из шага 1 УЖЕ ОТКАЧЕН
+        RAISE NOTICE 'Обе вставки отменены!';
+END;
+$$;
+
+-- Проверяем: записи с mine_id = 999 НЕТ в таблице
+SELECT * FROM dim_mine WHERE mine_id = 999;  -- пусто!</code></pre>
+    <div class="danger-box">
+        <strong>Важно:</strong> откатилась не только 2-я вставка (упавшая), но и 1-я (успешная). SAVEPOINT был создан на входе в блок — откат идёт к этой точке.
+    </div>
+</section>
+
+<section>
+    <h2>Что откатывается, а что нет</h2>
+    <table>
+        <tr>
+            <th>Элемент</th>
+            <th>Откатывается?</th>
+            <th>Пояснение</th>
+        </tr>
+        <tr>
+            <td>INSERT / UPDATE / DELETE</td>
+            <td><span class="highlight-orange">Да</span></td>
+            <td>Все DML-операции в блоке отменяются</td>
+        </tr>
+        <tr>
+            <td>Переменные (DECLARE)</td>
+            <td><span class="highlight-green">Нет</span></td>
+            <td>Сохраняют значение на момент ошибки</td>
+        </tr>
+        <tr>
+            <td>Последовательности (SERIAL)</td>
+            <td><span class="highlight-green">Нет</span></td>
+            <td><code>nextval()</code> необратим — будут «дырки» в ID</td>
+        </tr>
+        <tr>
+            <td>RAISE NOTICE до ошибки</td>
+            <td><span class="highlight-green">Нет</span></td>
+            <td>Сообщения уже отправлены клиенту</td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Переменные vs данные</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_counter INT := 0;
+BEGIN
+    v_counter := 1;                      -- переменная = 1
+    INSERT INTO some_table VALUES (1);   -- строка в таблице
+    v_counter := 2;                      -- переменная = 2
+    SELECT 1/0;                          -- ошибка!
+EXCEPTION WHEN OTHERS THEN
+    -- v_counter = 2     ← переменная НЕ откатилась
+    -- INSERT отменён    ← данные ОТКАТИЛИСЬ
+    RAISE NOTICE 'counter = %', v_counter;  -- выведет 2
+END;
+$$;</code></pre>
+    <div class="warning-box">
+        <strong>Практический вывод:</strong> переменные-счётчики можно использовать для подсчёта ошибок — они сохраняются после отката.
+    </div>
+</section>
+
+<section>
+    <h2>Вложенные блоки — свой SAVEPOINT для каждой итерации</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    rec RECORD;
+    v_ok INT := 0;  v_err INT := 0;
+BEGIN
+    FOR rec IN SELECT * FROM staging_data
+    LOOP
+        BEGIN  -- ← свой SAVEPOINT для каждой итерации
+            INSERT INTO target_table VALUES (rec.id, rec.value);
+            v_ok := v_ok + 1;
+        EXCEPTION WHEN OTHERS THEN
+            -- ← откатывается ТОЛЬКО эта одна вставка
+            v_err := v_err + 1;
+            RAISE WARNING 'Ошибка строки %: %', rec.id, SQLERRM;
+        END;
+        -- остальные итерации продолжаются!
+    END LOOP;
+    RAISE NOTICE 'Итого: % OK, % ошибок', v_ok, v_err;
+END;
+$$;</code></pre>
+    <div class="card-green card">
+        <strong>Ключевой паттерн:</strong> без вложенного блока ошибка на 5-й записи откатила бы записи 1–4. С вложенным — каждая запись независима.
+    </div>
+</section>
+
+<section>
+    <h2>Накладные расходы SAVEPOINT</h2>
+    <div class="warning-box">
+        <strong>Производительность:</strong> блок с EXCEPTION работает <strong>медленнее</strong>, чем без него, даже если ошибка не возникает. PostgreSQL должен создавать и освобождать SAVEPOINT на каждой итерации.
+    </div>
+    <div class="card">
+        <h3>Рекомендации</h3>
+        <ul>
+            <li><span class="highlight-green">Используйте</span> EXCEPTION когда ошибки <strong>ожидаемы</strong> (внешние данные, пакетная загрузка)</li>
+            <li><span class="highlight-orange">Избегайте</span> EXCEPTION для логики, которую можно проверить через <code>IF</code></li>
+            <li><span class="highlight-blue">Пример:</span> вместо перехвата <code>division_by_zero</code> — проверьте <code>IF v_hours != 0</code></li>
+        </ul>
+    </div>
+    <div class="card-orange card fragment">
+        <strong>Вопрос для обсуждения:</strong> В каких сценариях на «Руда+» накладные расходы SAVEPOINT будут критичны, а в каких — несущественны?
+    </div>
+</section>
+
+<section>
+    <h2>Пример: безопасное деление</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_tons  NUMERIC := 150;
+    v_hours NUMERIC := 0;
+    v_rate  NUMERIC;
+BEGIN
+    v_rate := v_tons / v_hours;  -- Ошибка!
+    RAISE NOTICE 'Производительность: % т/ч', v_rate;
+EXCEPTION
+    WHEN division_by_zero THEN
+        RAISE NOTICE 'Ошибка: рабочие часы = 0, деление невозможно';
+        RAISE NOTICE 'SQLSTATE: %', SQLSTATE;  -- 22012
+        RAISE NOTICE 'Сообщение: %', SQLERRM;
+END;
+$$;</code></pre>
+    <div class="card-green card">
+        <strong>Встроенные переменные:</strong>
+        <ul>
+            <li><code>SQLSTATE</code> — 5-символьный код ошибки (стандарт SQL)</li>
+            <li><code>SQLERRM</code> — текстовое сообщение об ошибке</li>
+        </ul>
+    </div>
+</section>
+
+<section>
+    <h2>Обработка нескольких типов ошибок</h2>
+    <pre><code class="language-sql">DO $$
+BEGIN
+    -- Попытка вставить дубликат
+    INSERT INTO dim_mine (mine_id, mine_name, location, depth_meters, status)
+    VALUES (1, 'Тестовая шахта', 'Тест', 100, 'active');
+
+    RAISE NOTICE 'Запись добавлена';
+EXCEPTION
+    WHEN unique_violation THEN
+        RAISE NOTICE 'Дубликат: запись с таким ID уже существует';
+    WHEN not_null_violation THEN
+        RAISE NOTICE 'Обязательное поле не заполнено';
+    WHEN foreign_key_violation THEN
+        RAISE NOTICE 'Нарушение ссылочной целостности';
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Неожиданная ошибка: [%] %', SQLSTATE, SQLERRM;
+END;
+$$;</code></pre>
+    <div class="warning-box">
+        <strong>Порядок важен!</strong> PostgreSQL проверяет условия сверху вниз. <code>WHEN OTHERS</code> всегда должен быть последним.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 2: SQLSTATE ==================== -->
+<section>
+    <h2>2. Предопределённые условия ошибок</h2>
+    <table>
+        <tr>
+            <th>Класс</th>
+            <th>SQLSTATE</th>
+            <th>Имя в PL/pgSQL</th>
+            <th>Описание</th>
+        </tr>
+        <tr>
+            <td>02</td>
+            <td>02000</td>
+            <td><code>no_data_found</code></td>
+            <td>Запрос не вернул строк</td>
+        </tr>
+        <tr>
+            <td>22</td>
+            <td>22012</td>
+            <td><code>division_by_zero</code></td>
+            <td>Деление на ноль</td>
+        </tr>
+        <tr>
+            <td>22</td>
+            <td>22001</td>
+            <td><code>string_data_right_truncation</code></td>
+            <td>Строка слишком длинная</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>23505</td>
+            <td><code>unique_violation</code></td>
+            <td>Нарушение уникальности</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>23503</td>
+            <td><code>foreign_key_violation</code></td>
+            <td>Нарушение внешнего ключа</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>23502</td>
+            <td><code>not_null_violation</code></td>
+            <td>Нарушение NOT NULL</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>23514</td>
+            <td><code>check_violation</code></td>
+            <td>Нарушение CHECK</td>
+        </tr>
+        <tr>
+            <td>40</td>
+            <td>40P01</td>
+            <td><code>deadlock_detected</code></td>
+            <td>Обнаружена взаимная блокировка</td>
+        </tr>
+        <tr>
+            <td>P0</td>
+            <td>P0001</td>
+            <td><code>raise_exception</code></td>
+            <td>Пользовательское исключение</td>
+        </tr>
+    </table>
+    <div class="card">
+        <strong>Полный список:</strong> <a href="https://www.postgresql.org/docs/current/errcodes-appendix.html">postgresql.org/docs/current/errcodes-appendix.html</a>
+    </div>
+</section>
+
+<section>
+    <h2>SELECT INTO STRICT</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_mine_name VARCHAR;
+BEGIN
+    -- STRICT гарантирует ровно одну строку
+    SELECT mine_name INTO STRICT v_mine_name
+    FROM dim_mine
+    WHERE mine_id = 999;  -- Не существует
+
+    RAISE NOTICE 'Шахта: %', v_mine_name;
+EXCEPTION
+    WHEN no_data_found THEN
+        RAISE NOTICE 'Шахта не найдена!';
+    WHEN too_many_rows THEN
+        RAISE NOTICE 'Запрос вернул более одной строки!';
+END;
+$$;</code></pre>
+    <div class="card-orange card">
+        <strong>Без STRICT:</strong> <code>SELECT INTO</code> молча вернёт NULL, если строк нет, или первую строку, если их несколько. <strong>Со STRICT:</strong> генерируется исключение <code>no_data_found</code> или <code>too_many_rows</code>.
+    </div>
+</section>
+
+<!-- Практика: Части 1–2 -->
+<section>
+    <div style="background: #FFF3E0; border-left: 4px solid #ED7D31; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 0.8em;">
+        📋 <strong>Практика:</strong> practice.md → Часть 1 — Базовый блок EXCEPTION, Часть 2 — RAISE EXCEPTION и валидация данных «Руда+»
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 3: RAISE EXCEPTION ==================== -->
+<section>
+    <h2>3. RAISE EXCEPTION — генерация ошибок</h2>
+    <pre><code class="language-sql">-- Простая ошибка
+RAISE EXCEPTION 'Содержание Fe (%) вне диапазона', v_fe_content;
+
+-- С параметрами USING
+RAISE EXCEPTION 'Оборудование ID=% не найдено', v_equip_id
+    USING HINT    = 'Проверьте справочник dim_equipment',
+          DETAIL  = format('Запрос вернул 0 строк для ID=%s', v_equip_id),
+          ERRCODE = 'P0002';
+
+-- С пользовательским кодом ошибки
+RAISE EXCEPTION 'Вес пробы должен быть положительным'
+    USING ERRCODE = 'R0002';</code></pre>
+    <div class="card">
+        <strong>Параметры USING:</strong>
+        <ul>
+            <li><code>ERRCODE</code> — код ошибки SQLSTATE (5 символов)</li>
+            <li><code>HINT</code> — подсказка для исправления</li>
+            <li><code>DETAIL</code> — дополнительные детали</li>
+            <li><code>COLUMN</code>, <code>TABLE</code>, <code>SCHEMA</code> — контекст</li>
+        </ul>
+    </div>
+</section>
+
+<section>
+    <h2>Пример: валидация данных «Руда+»</h2>
+    <pre><code class="language-sql">CREATE OR REPLACE FUNCTION validate_ore_sample(
+    p_fe_content    NUMERIC,
+    p_sample_weight NUMERIC,
+    p_mine_id       INT
+) RETURNS VARCHAR LANGUAGE plpgsql AS $$
+DECLARE
+    v_mine_exists BOOLEAN;
+BEGIN
+    -- Проверка 1: диапазон Fe
+    IF p_fe_content < 0 OR p_fe_content > 100 THEN
+        RAISE EXCEPTION 'Fe содержание (%) вне диапазона [0-100]', p_fe_content
+            USING ERRCODE = 'R0001',
+                  HINT = 'Проверьте данные лабораторного анализа';
+    END IF;
+
+    -- Проверка 2: вес пробы
+    IF p_sample_weight <= 0 THEN
+        RAISE EXCEPTION 'Вес пробы (%) должен быть положительным', p_sample_weight
+            USING ERRCODE = 'R0002';
+    END IF;
+
+    -- Проверка 3: существование шахты
+    SELECT EXISTS(SELECT 1 FROM dim_mine WHERE mine_id = p_mine_id)
+    INTO v_mine_exists;
+    IF NOT v_mine_exists THEN
+        RAISE EXCEPTION 'Шахта ID=% не найдена', p_mine_id
+            USING ERRCODE = 'R0003';
+    END IF;
+
+    RETURN 'Валидация пройдена';
+END;
+$$;</code></pre>
+</section>
+
+<!-- ==================== ЧАСТЬ 4: GET STACKED DIAGNOSTICS ==================== -->
+<section>
+    <h2>4. GET STACKED DIAGNOSTICS</h2>
+    <div class="key-concept">
+        <h3>Детальная информация об ошибке</h3>
+        <p>В блоке EXCEPTION доступны подробные сведения через <code>GET STACKED DIAGNOSTICS</code>.</p>
+    </div>
+    <pre><code class="language-sql">EXCEPTION WHEN OTHERS THEN
+    DECLARE
+        v_sqlstate   TEXT;
+        v_message    TEXT;
+        v_detail     TEXT;
+        v_hint       TEXT;
+        v_context    TEXT;
+        v_schema     TEXT;
+        v_table      TEXT;
+        v_column     TEXT;
+        v_constraint TEXT;
+    BEGIN
+        GET STACKED DIAGNOSTICS
+            v_sqlstate   = RETURNED_SQLSTATE,
+            v_message    = MESSAGE_TEXT,
+            v_detail     = PG_EXCEPTION_DETAIL,
+            v_hint       = PG_EXCEPTION_HINT,
+            v_context    = PG_EXCEPTION_CONTEXT,
+            v_schema     = SCHEMA_NAME,
+            v_table      = TABLE_NAME,
+            v_column     = COLUMN_NAME,
+            v_constraint = CONSTRAINT_NAME;
+    END;</code></pre>
+</section>
+
+<section>
+    <h2>Пример GET STACKED DIAGNOSTICS</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_state TEXT; v_msg TEXT; v_detail TEXT;
+    v_hint TEXT; v_context TEXT; v_constraint TEXT;
+BEGIN
+    INSERT INTO dim_mine (mine_id, mine_name, location, depth_meters, status)
+    VALUES (1, 'Дубль', 'Тест', 100, 'active');
+EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS
+        v_state      = RETURNED_SQLSTATE,
+        v_msg        = MESSAGE_TEXT,
+        v_detail     = PG_EXCEPTION_DETAIL,
+        v_hint       = PG_EXCEPTION_HINT,
+        v_context    = PG_EXCEPTION_CONTEXT,
+        v_constraint = CONSTRAINT_NAME;
+
+    RAISE NOTICE '=== Диагностика ===';
+    RAISE NOTICE 'SQLSTATE:    %', v_state;
+    RAISE NOTICE 'Сообщение:   %', v_msg;
+    RAISE NOTICE 'Детали:      %', v_detail;
+    RAISE NOTICE 'Подсказка:   %', v_hint;
+    RAISE NOTICE 'Контекст:    %', v_context;
+    RAISE NOTICE 'Ограничение: %', v_constraint;
+END;
+$$;</code></pre>
+    <div class="card-green card">
+        <strong>Преимущество перед SQLSTATE/SQLERRM:</strong> GET STACKED DIAGNOSTICS даёт имя таблицы, ограничения, полный контекст вызова — незаменимо для отладки.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 5: ЛОГИРОВАНИЕ ==================== -->
+<section>
+    <h2>5. Логирование ошибок в таблицу</h2>
+    <pre><code class="language-sql">-- Таблица для логов
+CREATE TABLE error_log (
+    log_id      SERIAL PRIMARY KEY,
+    log_time    TIMESTAMP DEFAULT NOW(),
+    severity    VARCHAR(20),     -- ERROR, WARNING, INFO
+    source      VARCHAR(100),    -- Имя функции/процесса
+    sqlstate    VARCHAR(5),
+    message     TEXT,
+    detail      TEXT,
+    hint        TEXT,
+    context     TEXT,
+    username    VARCHAR(100) DEFAULT CURRENT_USER,
+    parameters  JSONB            -- Входные параметры (для воспроизведения)
+);
+
+-- Функция логирования
+CREATE FUNCTION log_error(
+    p_severity VARCHAR, p_source VARCHAR,
+    p_sqlstate VARCHAR DEFAULT NULL, p_message TEXT DEFAULT NULL,
+    p_detail TEXT DEFAULT NULL, p_hint TEXT DEFAULT NULL,
+    p_context TEXT DEFAULT NULL, p_parameters JSONB DEFAULT NULL
+) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_id INT;
+BEGIN
+    INSERT INTO error_log (severity, source, sqlstate, message,
+                           detail, hint, context, parameters)
+    VALUES (p_severity, p_source, p_sqlstate, p_message,
+            p_detail, p_hint, p_context, p_parameters)
+    RETURNING log_id INTO v_id;
+    RETURN v_id;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>Паттерн: пакетная обработка с логированием</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    rec RECORD;
+    v_ok INT := 0; v_err INT := 0;
+    v_state TEXT; v_msg TEXT; v_ctx TEXT;
+BEGIN
+    FOR rec IN SELECT * FROM dim_equipment LIMIT 10
+    LOOP
+        BEGIN  -- Вложенный блок для изоляции ошибок
+            -- Обработка каждой единицы оборудования
+            IF rec.equipment_id % 3 = 0 THEN
+                RAISE EXCEPTION 'Тестовая ошибка для ID=%', rec.equipment_id;
+            END IF;
+            v_ok := v_ok + 1;
+
+        EXCEPTION WHEN OTHERS THEN
+            GET STACKED DIAGNOSTICS
+                v_state = RETURNED_SQLSTATE,
+                v_msg   = MESSAGE_TEXT,
+                v_ctx   = PG_EXCEPTION_CONTEXT;
+
+            -- Логируем и продолжаем
+            PERFORM log_error('ERROR', 'batch_process',
+                v_state, v_msg, NULL, NULL, v_ctx,
+                jsonb_build_object('equipment_id', rec.equipment_id));
+            v_err := v_err + 1;
+        END;
+    END LOOP;
+
+    RAISE NOTICE 'Обработано: %, ошибок: %', v_ok, v_err;
+END;
+$$;</code></pre>
+    <div class="card">
+        <strong>Ключевая идея:</strong> Вложенный <code>BEGIN...EXCEPTION...END</code> внутри цикла позволяет обработать ошибку для одного элемента и продолжить с остальными.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 6: ASSERT ==================== -->
+<section>
+    <h2>6. ASSERT — утверждения</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_mine_count INT;
+BEGIN
+    SELECT COUNT(*) INTO v_mine_count FROM dim_mine;
+
+    -- Если условие FALSE — генерируется ASSERT_FAILURE
+    ASSERT v_mine_count > 0,
+        'Справочник шахт пуст! Выполните загрузку данных.';
+
+    RAISE NOTICE 'OK: % шахт в справочнике', v_mine_count;
+END;
+$$;</code></pre>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>ASSERT</h3>
+                <ul>
+                    <li>Для <strong>разработки и тестирования</strong></li>
+                    <li>Можно отключить параметром <code>plpgsql.check_asserts = off</code></li>
+                    <li>Проверка инвариантов</li>
+                </ul>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>IF + RAISE EXCEPTION</h3>
+                <ul>
+                    <li>Для <strong>production</strong></li>
+                    <li>Нельзя отключить</li>
+                    <li>Валидация входных данных</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== ВОПРОС ДЛЯ ОБСУЖДЕНИЯ ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card">
+        <p><strong>Сценарий:</strong> На «Руда+» функция импорта данных с датчиков работает ночью. Утром оператор обнаруживает, что часть данных не загружена.</p>
+        <br>
+        <p><strong>Обсудите в группах:</strong></p>
+        <ol>
+            <li>Какую информацию нужно логировать для быстрого диагноза?</li>
+            <li>Нужно ли уведомлять дежурного инженера в реальном времени?</li>
+            <li>Как организовать повторную загрузку отклонённых записей?</li>
+            <li>Как отличить «нормальные» ошибки (датчик выключен) от «критичных» (сбой БД)?</li>
+        </ol>
+    </div>
+    <p class="small-text">Обсудите 5 минут, затем каждая группа представит 1-2 ключевые идеи</p>
+</section>
+
+<!-- ==================== BEST PRACTICES ==================== -->
+<section>
+    <h2>7. Best Practices</h2>
+    <div class="card-green card">
+        <h3>Рекомендации</h3>
+        <ol>
+            <li><strong>Не перехватывайте WHEN OTHERS без логирования</strong> — «проглоченные» ошибки — худший враг отладки</li>
+            <li><strong>Используйте вложенные блоки</strong> для изоляции ошибок в циклах</li>
+            <li><strong>Логируйте входные параметры</strong> (JSONB) — это позволит воспроизвести ошибку</li>
+            <li><strong>Различайте уровни серьёзности:</strong> ERROR, WARNING, INFO</li>
+            <li><strong>Используйте пользовательские коды ошибок</strong> (Rxxxx, Sxxxx) для бизнес-ошибок</li>
+            <li><strong>ASSERT — для разработки</strong>, IF + RAISE — для production</li>
+        </ol>
+    </div>
+</section>
+
+<section>
+    <h2>Антипаттерны</h2>
+    <div class="danger-box">
+        <h3>Плохо: «проглатывание» ошибок</h3>
+        <pre><code class="language-sql">EXCEPTION WHEN OTHERS THEN
+    NULL;  -- Ошибка молча игнорируется!</code></pre>
+    </div>
+    <div class="danger-box">
+        <h3>Плохо: слишком широкий перехват</h3>
+        <pre><code class="language-sql">EXCEPTION WHEN OTHERS THEN
+    -- Перехватываем ВСЕ, включая out_of_memory,
+    -- disk_full, deadlock...</code></pre>
+    </div>
+    <div class="card-green card">
+        <h3>Хорошо: точечный перехват + логирование</h3>
+        <pre><code class="language-sql">EXCEPTION
+    WHEN unique_violation THEN
+        -- Обработка конкретной ситуации
+        PERFORM log_error('WARNING', ...);
+    WHEN foreign_key_violation THEN
+        PERFORM log_error('ERROR', ...);
+        RAISE;  -- Пробрасываем дальше</code></pre>
+    </div>
+</section>
+
+<!-- ==================== КВИЗ ==================== -->
+<section>
+    <h2>Квиз: проверка знаний</h2>
+    <p><strong>1. Что происходит с INSERT внутри BEGIN-блока, если возникает ошибка?</strong></p>
+    <div class="quiz-option">A) INSERT остаётся, ошибка только логируется</div>
+    <div class="quiz-option">B) INSERT автоматически откатывается</div>
+    <div class="quiz-option">C) INSERT сохраняется, но помечается как «ошибочный»</div>
+    <div class="quiz-option">D) Зависит от уровня изоляции транзакции</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — При входе в блок с EXCEPTION PostgreSQL создаёт неявный SAVEPOINT. При ошибке все изменения в этом блоке откатываются до этого SAVEPOINT.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>2. Какой SQLSTATE соответствует нарушению уникальности?</strong></p>
+    <div class="quiz-option">A) 22012</div>
+    <div class="quiz-option">B) 23503</div>
+    <div class="quiz-option">C) 23505</div>
+    <div class="quiz-option">D) P0001</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: C</strong> — <code>23505</code> (unique_violation). 22012 — деление на ноль, 23503 — FK violation, P0001 — raise_exception.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>3. Для чего нужен USING HINT в RAISE EXCEPTION?</strong></p>
+    <div class="quiz-option">A) Для подсказки оптимизатору запросов</div>
+    <div class="quiz-option">B) Для рекомендации по исправлению ошибки</div>
+    <div class="quiz-option">C) Для указания имени таблицы</div>
+    <div class="quiz-option">D) Для задания уровня серьёзности</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — HINT содержит рекомендацию по исправлению ошибки, которая отображается пользователю вместе с сообщением.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>4. Можно ли отключить ASSERT в production?</strong></p>
+    <div class="quiz-option">A) Нет, ASSERT нельзя отключить</div>
+    <div class="quiz-option">B) Да, через SET plpgsql.check_asserts = off</div>
+    <div class="quiz-option">C) Да, через DROP ASSERT</div>
+    <div class="quiz-option">D) ASSERT не существует в PostgreSQL</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — Параметр <code>plpgsql.check_asserts</code> позволяет отключить все ASSERT. Именно поэтому для production-валидации используйте IF + RAISE EXCEPTION.</div>
+    </div>
+</section>
+
+<!-- ==================== КЕЙС ==================== -->
+<section>
+    <h2>Кейс для анализа</h2>
+    <div class="card">
+        <h3>Сбой ночного ETL на «Руда+»</h3>
+        <p>Инженер написал процедуру импорта, но она падает при первой же ошибке:</p>
+    </div>
+    <pre><code class="language-sql">CREATE PROCEDURE import_sensor_data(p_data JSONB)
+LANGUAGE plpgsql AS $$
+DECLARE rec JSONB;
+BEGIN
+    FOR rec IN SELECT jsonb_array_elements(p_data) LOOP
+        INSERT INTO fact_equipment_telemetry (...)
+        VALUES ((rec->>'equipment_id')::INT, ...);
+    END LOOP;
+END;
+$$;</code></pre>
+    <div class="danger-box">
+        <strong>Проблемы:</strong>
+        <ol>
+            <li class="fragment">Нет блока EXCEPTION — одна ошибка остановит всё</li>
+            <li class="fragment">Нет логирования — непонятно, что пошло не так</li>
+            <li class="fragment">Нет валидации — некорректные данные попадут в БД</li>
+            <li class="fragment">Нет статистики обработки — непонятно, сколько загружено</li>
+        </ol>
+    </div>
+</section>
+
+<!-- Практика: Части 3–4 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 3 — Логирование ошибок, Часть 4 — ASSERT</p>
+        <p><strong>Задание:</strong> Создайте таблицу логирования ошибок, реализуйте запись ошибок при обработке данных телеметрии. Используйте ASSERT для проверки инвариантов.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на обработку ошибок в PL/pgSQL</p>
+        <p><strong>Формат:</strong> SQL — EXCEPTION, RAISE, GET STACKED DIAGNOSTICS, логирование</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <h2>Итоги модуля</h2>
+    <div class="key-concept">
+        <h3>Что мы изучили:</h3>
+        <ol>
+            <li><span class="highlight-blue">EXCEPTION</span> — перехват и обработка ошибок в PL/pgSQL</li>
+            <li><strong>SQLSTATE</strong> — стандартные коды ошибок (23505, 23503, 22012...)</li>
+            <li><span class="highlight-orange">RAISE EXCEPTION</span> — генерация ошибок с USING (HINT, DETAIL, ERRCODE)</li>
+            <li><strong>GET STACKED DIAGNOSTICS</strong> — детальная информация для отладки</li>
+            <li><span class="highlight-green">Логирование</span> — запись ошибок в таблицу для анализа</li>
+            <li><strong>ASSERT</strong> — утверждения для разработки и тестирования</li>
+            <li><strong>Best practices:</strong> вложенные блоки, точечный перехват, логирование</li>
+        </ol>
+    </div>
+</section>
+
+<section>
+    <h2>Что дальше?</h2>
+    <div class="card">
+        <p><strong>Практическая работа:</strong> Обработка ошибок в MES-системе «Руда+»</p>
+        <p><strong>Лабораторная работа:</strong> 6 заданий — валидация, логирование, пакетная обработка</p>
+    </div>
+    <br>
+    <div class="card card-orange">
+        <p><strong>Следующий модуль:</strong> Применение транзакций</p>
+        <ul>
+            <li>ACID и уровни изоляции</li>
+            <li>MVCC в PostgreSQL</li>
+            <li>Deadlocks и их предотвращение</li>
+        </ul>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Спасибо за внимание! Вопросы?</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.04,
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>
