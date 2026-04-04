@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 18 — Применение транзакций</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .small-text { font-size: 0.7em; color: #888; }
+        .reveal .slide-number { color: var(--accent1); }
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.82em; text-align: left; margin: 10px 0; }
+        .danger-box { background: #f8d7da; border-left: 4px solid #dc3545; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.82em; text-align: left; margin: 10px 0; }
+
+        .acid-box { display: inline-block; width: 120px; padding: 12px; margin: 8px; border-radius: 12px; text-align: center; color: white; font-weight: bold; font-size: 0.75em; vertical-align: top; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 18</h1>
+    <h2 style="border: none;">Применение транзакций</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">TX</span>
+        <span class="icon-box orange">ACID</span>
+        <span class="icon-box green">MVCC</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 3 часа</p>
+</section>
+
+<!-- ==================== ПЛАН ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>ACID:</strong> свойства транзакций <span class="small-text">(15 мин)</span></li>
+        <li><strong>BEGIN / COMMIT / ROLLBACK</strong> <span class="small-text">(15 мин)</span></li>
+        <li><strong>SAVEPOINT:</strong> частичный откат <span class="small-text">(15 мин)</span></li>
+        <li><strong>Уровни изоляции</strong> <span class="small-text">(30 мин)</span></li>
+        <li><strong>MVCC</strong> в PostgreSQL <span class="small-text">(20 мин)</span></li>
+        <li><strong>Аномалии:</strong> dirty/non-repeatable/phantom reads <span class="small-text">(20 мин)</span></li>
+        <li><strong>Блокировки и Deadlocks</strong> <span class="small-text">(20 мин)</span></li>
+        <li><strong>Advisory Locks</strong> <span class="small-text">(15 мин)</span></li>
+        <li><strong>Best practices</strong> и кейс <span class="small-text">(30 мин)</span></li>
+    </ol>
+</section>
+
+<!-- ==================== ВВОДНЫЙ ВОПРОС ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card">
+        <p><strong>Ситуация:</strong> На «Руда+» три оператора одновременно вводят данные о добыче за свою смену. Один оператор допустил ошибку и хочет отменить ввод.</p>
+        <br>
+        <p><strong>Вопросы:</strong></p>
+        <ul>
+            <li>Что произойдёт с данными двух других операторов?</li>
+            <li>Как обеспечить, чтобы отмена одного оператора не повлияла на других?</li>
+            <li>Что если два оператора одновременно редактируют одну запись?</li>
+        </ul>
+    </div>
+    <p class="small-text">Обсудите в парах — 3 минуты</p>
+</section>
+
+<!-- ==================== ЧАСТЬ 1: ACID ==================== -->
+<section>
+    <h2>1. ACID — свойства транзакций</h2>
+    <div style="text-align: center; margin: 20px 0;">
+        <div class="acid-box" style="background: var(--accent1);">
+            <div style="font-size: 1.8em;">A</div>
+            Atomicity<br>(Атомарность)
+        </div>
+        <div class="acid-box" style="background: var(--accent2);">
+            <div style="font-size: 1.8em;">C</div>
+            Consistency<br>(Согласованность)
+        </div>
+        <div class="acid-box" style="background: var(--accent6);">
+            <div style="font-size: 1.8em;">I</div>
+            Isolation<br>(Изолированность)
+        </div>
+        <div class="acid-box" style="background: #9b59b6;">
+            <div style="font-size: 1.8em;">D</div>
+            Durability<br>(Долговечность)
+        </div>
+    </div>
+    <div class="card">
+        <strong>Транзакция</strong> — логическая единица работы, которая переводит базу данных из одного согласованного состояния в другое.
+    </div>
+</section>
+
+<section>
+    <h2>ACID на примере «Руда+»</h2>
+    <table>
+        <tr>
+            <th>Свойство</th>
+            <th>Пример</th>
+        </tr>
+        <tr>
+            <td><strong>Atomicity</strong><br>Всё или ничего</td>
+            <td>Запись данных о смене: добыча + качество + простои. Если ошибка при записи простоев — откатываются ВСЕ три вставки.</td>
+        </tr>
+        <tr>
+            <td><strong>Consistency</strong><br>Правила БД</td>
+            <td>Нельзя записать добычу с несуществующим equipment_id. FK-ограничение обеспечивает согласованность.</td>
+        </tr>
+        <tr>
+            <td><strong>Isolation</strong><br>Независимость</td>
+            <td>Оператор смены 1 не видит незафиксированных данных оператора смены 2.</td>
+        </tr>
+        <tr>
+            <td><strong>Durability</strong><br>Надёжность</td>
+            <td>После COMMIT данные сохраняются даже при сбое питания — PostgreSQL использует WAL (Write-Ahead Log).</td>
+        </tr>
+    </table>
+</section>
+
+<!-- ==================== ЧАСТЬ 2: BEGIN/COMMIT/ROLLBACK ==================== -->
+<section>
+    <h2>2. BEGIN / COMMIT / ROLLBACK</h2>
+    <pre><code class="language-sql">-- Успешная транзакция
+BEGIN;
+    INSERT INTO fact_production (production_id, date_id, shift_id,
+        equipment_id, mine_id, operator_id, tons_mined, trips_count, operating_hours)
+    VALUES (800001, 20250201, 1, 1, 1, 1, 120.5, 10, 7.5);
+
+    INSERT INTO fact_production (production_id, date_id, shift_id,
+        equipment_id, mine_id, operator_id, tons_mined, trips_count, operating_hours)
+    VALUES (800002, 20250201, 1, 2, 1, 2, 98.3, 8, 6.5);
+COMMIT;
+
+-- Отмена транзакции
+BEGIN;
+    INSERT INTO fact_production (...)
+    VALUES (800003, 20250201, 2, 1, 1, 1, 200.0, 15, 8.0);
+    -- Обнаружена ошибка в данных
+ROLLBACK;  -- Запись 800003 НЕ сохранена</code></pre>
+</section>
+
+<section>
+    <h2>Явные и неявные транзакции</h2>
+    <table>
+        <tr>
+            <th></th>
+            <th>Явная (Explicit)</th>
+            <th>Неявная (Implicit / Autocommit)</th>
+        </tr>
+        <tr>
+            <td><strong>Синтаксис</strong></td>
+            <td>Программист пишет <code>BEGIN</code> … <code>COMMIT</code> / <code>ROLLBACK</code></td>
+            <td>Каждая отдельная SQL-команда автоматически оборачивается в транзакцию</td>
+        </tr>
+        <tr>
+            <td><strong>Когда фиксируется</strong></td>
+            <td>Только по команде <code>COMMIT</code></td>
+            <td>Сразу после успешного выполнения команды</td>
+        </tr>
+        <tr>
+            <td><strong>Откат</strong></td>
+            <td><code>ROLLBACK</code> отменяет все изменения с момента <code>BEGIN</code></td>
+            <td>Откатить нельзя — изменения уже зафиксированы</td>
+        </tr>
+        <tr>
+            <td><strong>При ошибке</strong></td>
+            <td>Транзакция переходит в состояние <strong>aborted</strong>. Все предыдущие изменения <strong>откатываются</strong> при <code>ROLLBACK</code>. Данные остаются согласованными.</td>
+            <td>Ошибочная команда <strong>не выполняется</strong>, но все предыдущие команды <strong>уже зафиксированы</strong> и откатить их нельзя. Данные могут быть <strong>несогласованы</strong>.</td>
+        </tr>
+        <tr>
+            <td><strong>Пример</strong></td>
+            <td><code>BEGIN; INSERT ...; UPDATE ...; COMMIT;</code></td>
+            <td><code>INSERT INTO fact_production VALUES (...);</code></td>
+        </tr>
+    </table>
+    <div class="card" style="margin-top: 20px;">
+        <strong>PostgreSQL работает в режиме autocommit по умолчанию.</strong> Если вы не написали <code>BEGIN</code>, каждая команда — это отдельная неявная транзакция, которая автоматически фиксируется.
+    </div>
+</section>
+
+<section>
+    <h2>Явные vs неявные: пример «Руда+»</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent6);">✅ Явная транзакция</h3>
+            <pre><code class="language-sql">-- Атомарная запись данных смены
+BEGIN;
+    INSERT INTO fact_production
+    VALUES (900001, 20250301, 1, 1, 1, 1,
+            150.0, 12, 8.0);
+
+    INSERT INTO fact_ore_quality
+    VALUES (500001, 20250301, 1, 1,
+            62.5, 4.2, 0.08, 'A');
+
+    INSERT INTO fact_downtime
+    VALUES (700001, 20250301, 1, 1,
+            3, 45, 'Замена ковша');
+COMMIT;
+-- Все 3 записи сохранены вместе</code></pre>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent2);">⚠️ Неявные транзакции</h3>
+            <pre><code class="language-sql">-- Каждая команда — отдельная транзакция
+INSERT INTO fact_production
+VALUES (900001, 20250301, 1, 1, 1, 1,
+        150.0, 12, 8.0);
+-- ✅ Зафиксировано
+
+INSERT INTO fact_ore_quality
+VALUES (500001, 20250301, 1, 1,
+        62.5, 4.2, 0.08, 'A');
+-- ✅ Зафиксировано
+
+INSERT INTO fact_downtime
+VALUES (700001, 20250301, 1, 1,
+        3, 45, 'Замена ковша');
+-- ❌ ОШИБКА! Но предыдущие
+-- записи УЖЕ сохранены —
+-- данные несогласованы!</code></pre>
+        </div>
+    </div>
+    <div class="danger-box" style="margin-top: 15px;">
+        <strong>Вывод:</strong> Когда несколько операций должны выполняться как единое целое — всегда используйте явную транзакцию (<code>BEGIN ... COMMIT</code>). Autocommit подходит только для одиночных независимых операций.
+    </div>
+</section>
+
+<!-- ==================== Вопрос для обсуждения ==================== -->
+<section>
+    <h2>🗣️ Вопрос для обсуждения</h2>
+    <div class="key-concept" style="font-size: 1.1em; text-align: center; padding: 40px;">
+        <p>Диспетчер MES-системы «Руда+» выполняет INSERT для записи данных о добыче, но забывает написать <code>BEGIN</code>.</p>
+        <p style="margin-top: 20px;"><strong>Что произойдёт с данными?</strong></p>
+        <p style="margin-top: 10px;">Сможет ли он откатить изменения?</p>
+    </div>
+    <div class="fragment card-green card" style="margin-top: 20px;">
+        <strong>Ответ:</strong> Данные будут сразу зафиксированы (autocommit). Откатить командой <code>ROLLBACK</code> уже нельзя — придётся вручную удалять или обновлять записи.
+    </div>
+</section>
+
+<section>
+    <h2>Ошибка внутри транзакции</h2>
+    <pre><code class="language-sql">BEGIN;
+    -- Первый INSERT — OK
+    INSERT INTO fact_production (production_id, ...)
+    VALUES (800004, ...);
+
+    -- Второй INSERT — ОШИБКА (FK violation)
+    INSERT INTO fact_production (production_id, ..., equipment_id, ...)
+    VALUES (800005, ..., 99999, ...);
+    -- ERROR: insert or update on table "fact_production" violates
+    --        foreign key constraint
+
+    -- Любой последующий запрос:
+    SELECT 1;
+    -- ERROR: current transaction is aborted
+
+    -- Единственный выход:
+ROLLBACK;  -- Откатываются ОБА INSERT</code></pre>
+    <div class="danger-box">
+        <strong>В PostgreSQL</strong> после ошибки внутри транзакции она переходит в состояние «aborted». Единственное, что можно сделать — <code>ROLLBACK</code>. Это отличие от некоторых других СУБД.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 3: SAVEPOINT ==================== -->
+<section>
+    <h2>3. SAVEPOINT — точки сохранения</h2>
+    <div class="key-concept">
+        <h3>Зачем нужен SAVEPOINT?</h3>
+        <p>Позволяет откатить <strong>часть</strong> транзакции, не теряя остальные изменения.</p>
+    </div>
+    <pre><code class="language-sql">BEGIN;
+    -- Часть 1: данные о добыче (критичные)
+    INSERT INTO fact_production (...) VALUES (...);
+
+    SAVEPOINT sp_quality;  -- Точка сохранения
+
+    -- Часть 2: данные о качестве (могут быть ошибки)
+    INSERT INTO fact_ore_quality (...) VALUES (...);
+
+    -- Если ошибка:
+    ROLLBACK TO sp_quality;  -- Откатить ТОЛЬКО quality
+
+    -- production — сохранена!
+    RELEASE SAVEPOINT sp_quality;  -- Освободить SAVEPOINT
+COMMIT;</code></pre>
+</section>
+
+<section>
+    <h2>SAVEPOINT в PL/pgSQL</h2>
+    <div class="card">
+        <strong>Важно:</strong> В PL/pgSQL нельзя использовать SAVEPOINT/ROLLBACK TO напрямую. Вместо этого используются <strong>вложенные BEGIN...EXCEPTION...END</strong> блоки, которые автоматически создают неявный SAVEPOINT.
+    </div>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_ok INT := 0; v_err INT := 0;
+BEGIN
+    FOR i IN 1..10 LOOP
+        -- Каждая итерация — неявный SAVEPOINT
+        BEGIN
+            INSERT INTO fact_production (...) VALUES (...);
+            v_ok := v_ok + 1;
+        EXCEPTION WHEN OTHERS THEN
+            -- Откат ТОЛЬКО этой итерации
+            v_err := v_err + 1;
+        END;
+    END LOOP;
+    -- Все успешные INSERT сохранены!
+    RAISE NOTICE 'OK: %, ошибок: %', v_ok, v_err;
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>Вложенные транзакции (Nested Transactions)</h2>
+    <div class="danger-box">
+        <h3>PostgreSQL НЕ поддерживает вложенные транзакции!</h3>
+    </div>
+    <pre><code class="language-sql">BEGIN;  -- Транзакция 1
+    INSERT INTO fact_production (...) VALUES (...);
+
+    BEGIN;  -- ⚠️ WARNING: there is already a transaction in progress
+        INSERT INTO fact_ore_quality (...) VALUES (...);
+    COMMIT;  -- Фиксирует ВСЮ транзакцию 1, а не «внутреннюю»
+
+    INSERT INTO fact_downtime (...) VALUES (...);
+    -- ERROR: эта команда выполнится ВНЕ транзакции!</code></pre>
+    <div class="card" style="margin-top: 15px;">
+        Второй <code>BEGIN</code> <strong>игнорируется</strong> с предупреждением. Первый <code>COMMIT</code> закрывает всю транзакцию. Вложенности нет — это частая ошибка.
+    </div>
+</section>
+
+<section>
+    <h2>Альтернативы вложенным транзакциям</h2>
+    <table>
+        <tr>
+            <th>Механизм</th>
+            <th>Что делает</th>
+            <th>Ограничения</th>
+        </tr>
+        <tr>
+            <td><strong>SAVEPOINT</strong><br>(SQL)</td>
+            <td>Точка внутри транзакции для частичного отката — по сути «подтранзакция»</td>
+            <td>Нельзя зафиксировать часть отдельно — итоговый <code>COMMIT</code> фиксирует всё</td>
+        </tr>
+        <tr>
+            <td><strong>BEGIN...EXCEPTION...END</strong><br>(PL/pgSQL)</td>
+            <td>Вложенный блок с неявным SAVEPOINT — откат только своего блока при ошибке</td>
+            <td>Работает только в PL/pgSQL, не в обычном SQL</td>
+        </tr>
+        <tr>
+            <td><strong>Автономные транзакции</strong></td>
+            <td>Независимая транзакция внутри другой — фиксируется отдельно</td>
+            <td><strong>Не поддерживаются</strong> в PostgreSQL (есть в Oracle). Обходной путь — <code>dblink</code></td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>SAVEPOINT как замена вложенных транзакций</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h3 style="color: #e74c3c;">❌ Вложенные (не работает)</h3>
+            <pre><code class="language-sql">BEGIN;  -- Внешняя
+    INSERT INTO fact_production
+    VALUES (...);
+
+    BEGIN;  -- «Внутренняя» — нет!
+        INSERT INTO fact_ore_quality
+        VALUES (...);
+        -- Ошибка — хотим откатить
+        -- только quality
+    ROLLBACK;  -- Откатит ВСЁ!
+
+    -- production тоже потеряна
+COMMIT;</code></pre>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent6);">✅ SAVEPOINT (работает)</h3>
+            <pre><code class="language-sql">BEGIN;
+    INSERT INTO fact_production
+    VALUES (...);
+
+    SAVEPOINT sp_quality;
+
+        INSERT INTO fact_ore_quality
+        VALUES (...);
+        -- Ошибка — откатываем
+        -- только quality
+    ROLLBACK TO sp_quality;
+
+    -- production сохранена!
+COMMIT;</code></pre>
+        </div>
+    </div>
+    <div class="card-green card" style="margin-top: 15px;">
+        <strong>Правило:</strong> Вместо вложенных <code>BEGIN</code> всегда используйте <code>SAVEPOINT</code>. Это единственный способ частичного отката внутри транзакции в PostgreSQL.
+    </div>
+</section>
+
+<section>
+    <h2>Откат внешнего блока отменяет ВСЕ вложенные</h2>
+    <pre><code class="language-sql">DO $$
+DECLARE
+    v_result TEXT := '';
+BEGIN
+    -- Вложенный блок 1 — успех
+    BEGIN
+        INSERT INTO fact_production (production_id, date_id, shift_id,
+            equipment_id, mine_id, operator_id, tons_mined, trips_count, operating_hours)
+        VALUES (900020, 20250301, 1, 1, 1, 1, 120.0, 10, 7.5);
+        v_result := v_result || 'Блок 1: OK | ';
+    EXCEPTION WHEN OTHERS THEN
+        v_result := v_result || 'Блок 1: ОШИБКА | ';
+    END;
+
+    -- Вложенный блок 2 — успех
+    BEGIN
+        INSERT INTO fact_ore_quality (quality_id, date_id, shift_id,
+            mine_id, fe_content, moisture, impurity_pct, grade)
+        VALUES (500020, 20250301, 1, 1, 63.0, 4.0, 0.07, 'A');
+        v_result := v_result || 'Блок 2: OK | ';
+    EXCEPTION WHEN OTHERS THEN
+        v_result := v_result || 'Блок 2: ОШИБКА | ';
+    END;
+
+    RAISE NOTICE '%', v_result;  -- «Блок 1: OK | Блок 2: OK |»
+
+    -- Ошибка во внешнем блоке!
+    RAISE EXCEPTION 'Критическая ошибка во внешнем блоке!';
+
+END;
+$$;
+-- ERROR: Критическая ошибка во внешнем блоке!
+-- Блоки 1 и 2 выполнились успешно, НО:
+-- ❌ production  — ОТКАЧЕНА
+-- ❌ ore_quality — ОТКАЧЕНА</code></pre>
+</section>
+
+<section>
+    <h2>Почему так происходит?</h2>
+    <div style="text-align: left; max-width: 800px; margin: 0 auto;">
+        <div class="card" style="margin-bottom: 15px; border-left: 4px solid var(--accent1);">
+            <strong>1. Вложенный блок завершился успешно</strong><br>
+            → Неявный SAVEPOINT освобождается (<code>RELEASE</code>)<br>
+            → Изменения <strong>вливаются</strong> в родительскую транзакцию<br>
+            → Но <strong>НЕ фиксируются</strong> — это не <code>COMMIT</code>!
+        </div>
+        <div class="card" style="margin-bottom: 15px; border-left: 4px solid var(--accent2);">
+            <strong>2. Вложенный блок завершился с ошибкой</strong><br>
+            → Выполняется <code>ROLLBACK TO</code> неявного SAVEPOINT<br>
+            → Откатываются <strong>только</strong> изменения этого блока<br>
+            → Родительская транзакция продолжает работу
+        </div>
+        <div class="danger-box" style="margin-bottom: 15px;">
+            <strong>3. Внешний блок завершился с ошибкой / ROLLBACK</strong><br>
+            → Откатывается <strong>ВСЯ</strong> транзакция целиком<br>
+            → Все изменения всех вложенных блоков <strong>отменяются</strong><br>
+            → Даже если внутренние блоки завершились успешно
+        </div>
+    </div>
+    <div class="card-green card" style="margin-top: 10px;">
+        <strong>Запомните:</strong> <code>RELEASE SAVEPOINT</code> ≠ <code>COMMIT</code>. Успешный вложенный блок лишь говорит: «мои изменения готовы». Окончательная судьба данных решается на уровне внешней транзакции.
+    </div>
+</section>
+
+<section>
+    <h2>Подтранзакция ≠ Транзакция</h2>
+    <div class="key-concept">
+        <h3>Функция поддерживает транзакции? — Нет!</h3>
+        <p>Наличие <code>BEGIN...EXCEPTION...END</code> в функции — это <strong>подтранзакции</strong> (subtransactions), а не управление транзакциями.</p>
+    </div>
+    <table style="margin-top: 20px;">
+        <tr>
+            <th>Возможность</th>
+            <th>FUNCTION</th>
+            <th>PROCEDURE / DO</th>
+        </tr>
+        <tr>
+            <td><code>BEGIN...EXCEPTION...END</code><br>(неявный SAVEPOINT)</td>
+            <td style="color: var(--accent6);">✅ Да</td>
+            <td style="color: var(--accent6);">✅ Да</td>
+        </tr>
+        <tr>
+            <td><code>COMMIT</code> / <code>ROLLBACK</code></td>
+            <td style="color: #e74c3c;">❌ Нет</td>
+            <td style="color: var(--accent6);">✅ Да</td>
+        </tr>
+        <tr>
+            <td>Начать новую транзакцию</td>
+            <td style="color: #e74c3c;">❌ Нет</td>
+            <td style="color: var(--accent6);">✅ Да</td>
+        </tr>
+        <tr>
+            <td>Свой уровень изоляции</td>
+            <td style="color: #e74c3c;">❌ Нет</td>
+            <td style="color: var(--accent6);">✅ Да (после COMMIT)</td>
+        </tr>
+        <tr>
+            <td>Контекст выполнения</td>
+            <td>Внутри транзакции <strong>вызывающего</strong></td>
+            <td>Может управлять <strong>своими</strong> транзакциями</td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Что может и чего не может подтранзакция</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1; background: #E8F4FD; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent1);">
+            <h3 style="color: var(--accent1); margin-top: 0;">Подтранзакция (FUNCTION)</h3>
+            <ul>
+                <li>✅ Перехватить ошибку и продолжить работу</li>
+                <li>✅ Откатить <strong>часть</strong> изменений</li>
+                <li>❌ Зафиксировать изменения независимо</li>
+                <li>❌ Пережить откат внешней транзакции</li>
+                <li>❌ Установить свой уровень изоляции</li>
+            </ul>
+        </div>
+        <div style="flex: 1; background: #FFF3CD; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent2);">
+            <h3 style="color: var(--accent2); margin-top: 0;">Транзакция (PROCEDURE)</h3>
+            <ul>
+                <li>✅ Перехватить ошибку и продолжить работу</li>
+                <li>✅ Откатить <strong>часть</strong> изменений</li>
+                <li>✅ Зафиксировать изменения (<code>COMMIT</code>)</li>
+                <li>✅ Данные после <code>COMMIT</code> сохранены навсегда</li>
+                <li>✅ Начать новую транзакцию с другим уровнем изоляции</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card" style="margin-top: 20px;">
+        <strong>Корректная формулировка:</strong> Функция поддерживает <strong>обработку ошибок с частичным откатом</strong> (через неявные SAVEPOINT), но <strong>не управление транзакциями</strong>. Для управления транзакциями используйте <code>PROCEDURE</code>.
+    </div>
+</section>
+
+<section>
+    <h2>Транзакции: SQL vs PL/pgSQL</h2>
+    <table>
+        <tr>
+            <th>Аспект</th>
+            <th>SQL (интерактивный)</th>
+            <th>PL/pgSQL</th>
+        </tr>
+        <tr>
+            <td><strong><code>BEGIN</code></strong></td>
+            <td>Начинает <strong>транзакцию</strong></td>
+            <td>Начинает <strong>блок кода</strong> (не транзакцию!)</td>
+        </tr>
+        <tr>
+            <td><strong><code>COMMIT</code> / <code>ROLLBACK</code></strong></td>
+            <td>Завершает транзакцию</td>
+            <td>Доступно только в <strong>PROCEDURE</strong>.<br>В FUNCTION — запрещено!</td>
+        </tr>
+        <tr>
+            <td><strong><code>SAVEPOINT</code></strong></td>
+            <td><code>SAVEPOINT sp1;</code><br><code>ROLLBACK TO sp1;</code></td>
+            <td>Нельзя напрямую. Заменяется вложенным<br><code>BEGIN ... EXCEPTION ... END</code></td>
+        </tr>
+        <tr>
+            <td><strong>Контекст транзакции</strong></td>
+            <td>Программист управляет сам</td>
+            <td>Функция выполняется <strong>внутри транзакции вызывающего</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Обработка ошибок</strong></td>
+            <td>Транзакция переходит в состояние «aborted», нужен <code>ROLLBACK</code></td>
+            <td>Блок <code>EXCEPTION</code> перехватывает ошибку и откатывает <strong>только свой блок</strong></td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>SQL vs PL/pgSQL: примеры</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent1);">SQL</h3>
+            <pre><code class="language-sql">-- Явное управление транзакцией
+BEGIN;
+    INSERT INTO fact_production (...)
+    VALUES (...);
+
+    SAVEPOINT sp1;
+
+    INSERT INTO fact_ore_quality (...)
+    VALUES (...);
+    -- При ошибке:
+    ROLLBACK TO sp1;
+
+COMMIT;</code></pre>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent2);">PL/pgSQL (функция)</h3>
+            <pre><code class="language-sql">CREATE FUNCTION load_shift_data()
+RETURNS void AS $$
+BEGIN  -- это блок кода, НЕ транзакция
+    INSERT INTO fact_production (...)
+    VALUES (...);
+
+    BEGIN  -- вложенный блок = неявный SAVEPOINT
+        INSERT INTO fact_ore_quality (...)
+        VALUES (...);
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Ошибка quality: %',
+              SQLERRM;
+    END;
+    -- production сохранена!
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>PL/pgSQL: PROCEDURE vs FUNCTION</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent6);">✅ PROCEDURE (PostgreSQL 11+)</h3>
+            <pre><code class="language-sql">CREATE PROCEDURE close_shift(
+    p_shift_id INT
+) AS $$
+BEGIN
+    UPDATE fact_production
+    SET status = 'closed'
+    WHERE shift_id = p_shift_id;
+
+    COMMIT;  -- ✅ Разрешено!
+
+    INSERT INTO shift_log (shift_id, action)
+    VALUES (p_shift_id, 'closed');
+
+    COMMIT;  -- Вторая транзакция
+END;
+$$ LANGUAGE plpgsql;
+
+-- Вызов:
+CALL close_shift(42);</code></pre>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="color: #e74c3c;">❌ FUNCTION</h3>
+            <pre><code class="language-sql">CREATE FUNCTION close_shift(
+    p_shift_id INT
+) RETURNS void AS $$
+BEGIN
+    UPDATE fact_production
+    SET status = 'closed'
+    WHERE shift_id = p_shift_id;
+
+    COMMIT;  -- ❌ ОШИБКА!
+    -- ERROR: invalid transaction
+    -- termination
+
+    -- Функция ВСЕГДА работает
+    -- внутри транзакции
+    -- вызывающего кода
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+        </div>
+    </div>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Правило:</strong> Если логика требует управления транзакциями (COMMIT/ROLLBACK) — используйте <code>PROCEDURE</code>. Если нужно вернуть значение или использовать в SELECT — используйте <code>FUNCTION</code>.
+    </div>
+</section>
+
+<section>
+    <h2>А что насчёт DO-блоков?</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent6);">✅ PostgreSQL 11+</h3>
+            <pre><code class="language-sql">DO $$
+BEGIN
+    INSERT INTO fact_production (...)
+    VALUES (900010, 20250301, 1,
+            1, 1, 1, 130.0, 11, 7.0);
+
+    COMMIT;  -- ✅ Разрешено!
+
+    INSERT INTO fact_ore_quality (...)
+    VALUES (500010, 20250301, 1, 1,
+            61.8, 4.5, 0.09, 'B');
+
+    COMMIT;  -- Вторая транзакция
+END;
+$$;</code></pre>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="color: #e74c3c;">❌ PostgreSQL 10 и ранее</h3>
+            <pre><code class="language-sql">DO $$
+BEGIN
+    INSERT INTO fact_production (...)
+    VALUES (...);
+
+    COMMIT;  -- ❌ ОШИБКА!
+    -- ERROR: invalid transaction
+    --        termination
+
+    -- DO-блок ведёт себя как
+    -- FUNCTION: работает внутри
+    -- транзакции вызывающего
+END;
+$$;</code></pre>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>PROCEDURE vs DO-блок vs FUNCTION</h2>
+    <table>
+        <tr>
+            <th>Конструкция</th>
+            <th>COMMIT / ROLLBACK</th>
+            <th>Возврат значений</th>
+            <th>Вызов</th>
+        </tr>
+        <tr>
+            <td><strong>PROCEDURE</strong></td>
+            <td style="color: var(--accent6);">✅ Да</td>
+            <td>Только через OUT-параметры</td>
+            <td><code>CALL proc_name()</code></td>
+        </tr>
+        <tr>
+            <td><strong>DO-блок</strong></td>
+            <td style="color: var(--accent6);">✅ Да (PG 11+)</td>
+            <td>Нет (анонимный)</td>
+            <td>Выполняется напрямую</td>
+        </tr>
+        <tr>
+            <td><strong>FUNCTION</strong></td>
+            <td style="color: #e74c3c;">❌ Нет</td>
+            <td>RETURNS / SETOF / TABLE</td>
+            <td><code>SELECT func_name()</code></td>
+        </tr>
+    </table>
+    <div class="card" style="margin-top: 15px;">
+        <strong>DO-блок</strong> — это анонимная процедура. Начиная с PostgreSQL 11, он поддерживает <code>COMMIT</code> / <code>ROLLBACK</code> так же, как <code>PROCEDURE</code>. Удобен для одноразовых скриптов миграции и загрузки данных.
+    </div>
+</section>
+
+<!-- Практика: Части 1–2 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — BEGIN / COMMIT / ROLLBACK, Часть 2 — SAVEPOINT</p>
+        <p><strong>Задание:</strong> Выполните транзакции с загрузкой данных добычи, используйте SAVEPOINT для частичного отката при ошибках в данных качества руды.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10–12 минут</em></p>
+</section>
+
+<!-- ==================== ЧАСТЬ 4: УРОВНИ ИЗОЛЯЦИИ ==================== -->
+<section>
+    <h2>4. Два подхода к изоляции транзакций</h2>
+    <div class="key-concept">
+        <h3>Как СУБД обеспечивает изоляцию?</h3>
+        <p>Существуют два принципиально разных механизма. Выбор механизма определяет поведение СУБД при конкурентном доступе.</p>
+    </div>
+    <div style="display: flex; gap: 20px; margin-top: 20px;">
+        <div style="flex: 1; background: #FFF3CD; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent2);">
+            <h3 style="color: var(--accent2); margin-top: 0;">🔒 Блокировки (Locking)</h3>
+            <ul>
+                <li>Транзакция <strong>блокирует</strong> данные, которые читает или изменяет</li>
+                <li>Другие транзакции <strong>ждут</strong> снятия блокировки</li>
+                <li>Пессимистичный подход: «заблокирую заранее, чтобы никто не помешал»</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>СУБД:</strong> MS SQL Server, MySQL (InnoDB — гибрид), DB2</p>
+        </div>
+        <div style="flex: 1; background: #E8F4FD; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent1);">
+            <h3 style="color: var(--accent1); margin-top: 0;">📸 Версионность (MVCC)</h3>
+            <ul>
+                <li>Каждая транзакция видит свой <strong>снимок</strong> (snapshot) данных</li>
+                <li>Читатели <strong>не блокируют</strong> писателей и наоборот</li>
+                <li>Оптимистичный подход: «работаю со своей версией, конфликт проверю при COMMIT»</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>СУБД:</strong> PostgreSQL, Oracle, MySQL (InnoDB — гибрид)</p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Блокировки vs MVCC: сравнение</h2>
+    <table>
+        <tr>
+            <th>Критерий</th>
+            <th>Блокировки (Locking)</th>
+            <th>Версионность (MVCC)</th>
+        </tr>
+        <tr>
+            <td><strong>Чтение + Запись</strong></td>
+            <td>Читатель ждёт, пока писатель завершит транзакцию</td>
+            <td>Читатель видит старую версию строки — <strong>не ждёт</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Чтение + Чтение</strong></td>
+            <td>Могут блокировать друг друга (shared locks)</td>
+            <td>Никогда не блокируют друг друга</td>
+        </tr>
+        <tr>
+            <td><strong>Запись + Запись</strong></td>
+            <td>Блокировка до завершения первой транзакции</td>
+            <td>Блокировка <strong>тоже есть</strong> — MVCC не устраняет write-write конфликты</td>
+        </tr>
+        <tr>
+            <td><strong>Накладные расходы</strong></td>
+            <td>Lock manager, возможны deadlocks</td>
+            <td>Хранение нескольких версий строк, нужен VACUUM</td>
+        </tr>
+        <tr>
+            <td><strong>Пропускная способность</strong></td>
+            <td>Ниже при интенсивном чтении (читатели ждут)</td>
+            <td>Выше — читатели и писатели работают параллельно</td>
+        </tr>
+    </table>
+    <div class="card" style="margin-top: 15px;">
+        <strong>PostgreSQL использует MVCC</strong> — именно поэтому <code>SELECT</code> никогда не блокируется обычным <code>UPDATE</code>. Это ключевое преимущество для систем с интенсивным чтением, таких как MES-аналитика «Руда+».
+    </div>
+</section>
+
+<section>
+    <h2>Пример: «Руда+» — два оператора одновременно</h2>
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent2);">🔒 Модель на блокировках (MS SQL)</h3>
+            <pre><code class="language-sql">-- Сессия 1: аналитик строит отчёт
+BEGIN TRANSACTION;
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE date_id = 20250301;
+-- Накладывает shared lock на строки
+
+-- Сессия 2: оператор вносит данные
+BEGIN TRANSACTION;
+UPDATE fact_production
+SET tons_mined = 155.0
+WHERE production_id = 900001;
+-- ⏳ ЖДЁТ! Shared lock мешает
+-- Оператор заблокирован, пока
+-- аналитик не завершит SELECT</code></pre>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="color: var(--accent1);">📸 Модель MVCC (PostgreSQL)</h3>
+            <pre><code class="language-sql">-- Сессия 1: аналитик строит отчёт
+BEGIN;
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE date_id = 20250301;
+-- Читает из своего снимка (snapshot)
+
+-- Сессия 2: оператор вносит данные
+BEGIN;
+UPDATE fact_production
+SET tons_mined = 155.0
+WHERE production_id = 900001;
+-- ✅ Выполняется СРАЗУ!
+-- Создаётся новая версия строки
+-- Аналитик продолжает видеть
+-- старое значение из снимка</code></pre>
+        </div>
+    </div>
+    <div class="card-green card" style="margin-top: 15px;">
+        <strong>Результат:</strong> В MVCC аналитик и оператор работают одновременно без ожидания. В модели на блокировках оператор вынужден ждать завершения аналитического запроса.
+    </div>
+</section>
+
+<section>
+    <h2>Уровни изоляции транзакций</h2>
+    <table>
+        <tr>
+            <th>Уровень</th>
+            <th>Dirty Read</th>
+            <th>Non-Repeatable Read</th>
+            <th>Phantom Read</th>
+            <th>Serialization Anomaly</th>
+        </tr>
+        <tr>
+            <td><strong>READ UNCOMMITTED</strong></td>
+            <td style="background: #f0fff0;">Нет*</td>
+            <td style="background: #fff3cd;">Да</td>
+            <td style="background: #fff3cd;">Да</td>
+            <td style="background: #fff3cd;">Да</td>
+        </tr>
+        <tr>
+            <td><strong>READ COMMITTED</strong></td>
+            <td style="background: #f0fff0;">Нет</td>
+            <td style="background: #fff3cd;">Да</td>
+            <td style="background: #fff3cd;">Да</td>
+            <td style="background: #fff3cd;">Да</td>
+        </tr>
+        <tr>
+            <td><strong>REPEATABLE READ</strong></td>
+            <td style="background: #f0fff0;">Нет</td>
+            <td style="background: #f0fff0;">Нет</td>
+            <td style="background: #f0fff0;">Нет*</td>
+            <td style="background: #fff3cd;">Да</td>
+        </tr>
+        <tr>
+            <td><strong>SERIALIZABLE</strong></td>
+            <td style="background: #f0fff0;">Нет</td>
+            <td style="background: #f0fff0;">Нет</td>
+            <td style="background: #f0fff0;">Нет</td>
+            <td style="background: #f0fff0;">Нет</td>
+        </tr>
+    </table>
+    <div class="card-green card">
+        <strong>* В PostgreSQL:</strong> READ UNCOMMITTED работает как READ COMMITTED (dirty read невозможен). REPEATABLE READ защищает и от phantom reads (благодаря MVCC).
+    </div>
+</section>
+
+<section>
+    <h2>Установка уровня изоляции</h2>
+    <pre><code class="language-sql">-- Для текущей транзакции
+BEGIN;
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+-- ...
+COMMIT;
+
+-- Для всей сессии
+SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- Проверка текущего уровня
+SHOW transaction_isolation;
+-- По умолчанию: read committed</code></pre>
+    <div class="card">
+        <strong>Рекомендация:</strong> В большинстве случаев <code>READ COMMITTED</code> (по умолчанию) достаточен. Используйте <code>REPEATABLE READ</code> для аналитических отчётов, <code>SERIALIZABLE</code> — для критичных финансовых операций.
+    </div>
+</section>
+
+<!-- ==================== АНОМАЛИИ ==================== -->
+<section>
+    <h2>Аномалии конкурентного доступа</h2>
+    <h3>Dirty Read (грязное чтение)</h3>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Сессия A</h3>
+                <pre><code class="language-sql">BEGIN;
+UPDATE fact_production
+SET tons_mined = 999
+WHERE production_id = 1;
+-- НЕ COMMIT!</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>Сессия B</h3>
+                <pre><code class="language-sql">SELECT tons_mined
+FROM fact_production
+WHERE production_id = 1;
+-- Dirty Read: видит 999?</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="card-green card">
+        <strong>PostgreSQL:</strong> Dirty Read <strong>невозможен</strong> ни на каком уровне изоляции. Даже при READ UNCOMMITTED фактически работает READ COMMITTED.
+    </div>
+</section>
+
+<section>
+    <h2>Non-Repeatable Read</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Сессия A (READ COMMITTED)</h3>
+                <pre><code class="language-sql">BEGIN;
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE date_id = 20250115;
+-- Результат: 5000
+
+-- ... время проходит ...
+
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE date_id = 20250115;
+-- Результат: 5150 (!)
+COMMIT;</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>Сессия B</h3>
+                <pre><code class="language-sql">-- Между двумя SELECT Сессии A:
+INSERT INTO fact_production
+    (production_id, date_id, ...,
+     tons_mined, ...)
+VALUES
+    (800020, 20250115, ...,
+     150.0, ...);
+-- Автокоммит</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="warning-box">
+        <strong>Проблема:</strong> Один и тот же запрос возвращает разные результаты внутри одной транзакции.
+        <strong>Решение:</strong> Используйте <code>REPEATABLE READ</code>.
+    </div>
+</section>
+
+<section>
+    <h2>Phantom Read (фантомное чтение)</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Сессия A</h3>
+                <pre><code class="language-sql">BEGIN;
+SELECT COUNT(*)
+FROM fact_production
+WHERE date_id = 20250115;
+-- Результат: 100
+
+-- ... время ...
+
+SELECT COUNT(*)
+FROM fact_production
+WHERE date_id = 20250115;
+-- Результат: 101 (!)
+-- Появилась «фантомная» строка
+COMMIT;</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>Сессия B</h3>
+                <pre><code class="language-sql">INSERT INTO fact_production
+    (production_id,
+     date_id, ...)
+VALUES
+    (800021, 20250115, ...);
+-- Новая строка попадает
+-- в диапазон запроса A</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <strong>В PostgreSQL</strong> REPEATABLE READ защищает от phantom reads (в отличие от стандарта SQL, где для этого нужен SERIALIZABLE).
+    </div>
+</section>
+
+<section>
+    <h2>Serialization Anomaly (аномалия сериализации)</h2>
+    <div class="key-concept">
+        <h3>Что это?</h3>
+        <p>Результат параллельного выполнения транзакций <strong>отличается от любого</strong> возможного последовательного выполнения тех же транзакций. Даже если каждая транзакция корректна сама по себе — вместе они дают <strong>логически невозможный</strong> результат.</p>
+    </div>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Отличие от других аномалий:</strong> Dirty Read, Non-Repeatable Read, Phantom Read — это проблемы <em>чтения</em>. Serialization Anomaly — это проблема <em>логической согласованности</em> при взаимозависимых записях.
+    </div>
+</section>
+
+<section>
+    <h2>Serialization Anomaly: пример «Руда+»</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Сессия A — Диспетчер шахты 1</h3>
+                <pre><code class="language-sql">BEGIN ISOLATION LEVEL REPEATABLE READ;
+
+-- Читает итог по шахте 2
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE mine_id = 2
+  AND date_id = 20250301;
+-- Результат: 500 тонн
+
+-- Записывает бонус для шахты 1
+-- на основе данных шахты 2
+INSERT INTO shift_bonuses
+    (mine_id, date_id, bonus)
+VALUES (1, 20250301,
+        500 * 0.1);  -- 50
+
+COMMIT;  -- ✅ Успех</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>Сессия B — Диспетчер шахты 2</h3>
+                <pre><code class="language-sql">BEGIN ISOLATION LEVEL REPEATABLE READ;
+
+-- Читает итог по шахте 1
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE mine_id = 1
+  AND date_id = 20250301;
+-- Результат: 800 тонн
+
+-- Записывает бонус для шахты 2
+-- на основе данных шахты 1
+INSERT INTO shift_bonuses
+    (mine_id, date_id, bonus)
+VALUES (2, 20250301,
+        800 * 0.1);  -- 80
+
+COMMIT;  -- ✅ Успех</code></pre>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Serialization Anomaly: почему это проблема?</h2>
+    <div class="danger-box">
+        <h3>Обе транзакции успешно завершились. Но результат невозможен!</h3>
+    </div>
+    <table style="margin-top: 15px;">
+        <tr>
+            <th>Порядок</th>
+            <th>Бонус шахты 1</th>
+            <th>Бонус шахты 2</th>
+        </tr>
+        <tr>
+            <td><strong>Сначала A, потом B</strong></td>
+            <td>50 (видит 500 т шахты 2)</td>
+            <td>80 (видит 800 т шахты 1 <strong>+ бонус A</strong>)</td>
+        </tr>
+        <tr>
+            <td><strong>Сначала B, потом A</strong></td>
+            <td>50 (видит 500 т шахты 2 <strong>+ бонус B</strong>)</td>
+            <td>80 (видит 800 т шахты 1)</td>
+        </tr>
+        <tr style="background: #FDEDEC;">
+            <td><strong>Параллельно (аномалия!)</strong></td>
+            <td>50 (не видит бонус B)</td>
+            <td>80 (не видит бонус A)</td>
+        </tr>
+    </table>
+    <div class="card" style="margin-top: 15px;">
+        Каждая транзакция работала со <strong>старым снимком</strong> — ни одна не увидела запись другой. Результат не соответствует ни одному последовательному порядку выполнения.
+    </div>
+</section>
+
+<section>
+    <h2>Решение: SERIALIZABLE</h2>
+    <pre><code class="language-sql">-- Те же операции, но с уровнем SERIALIZABLE
+BEGIN ISOLATION LEVEL SERIALIZABLE;
+
+SELECT SUM(tons_mined)
+FROM fact_production
+WHERE mine_id = 2 AND date_id = 20250301;
+
+INSERT INTO shift_bonuses (mine_id, date_id, bonus)
+VALUES (1, 20250301, 500 * 0.1);
+
+COMMIT;
+-- ERROR: could not serialize access due to read/write
+--        dependencies among transactions
+-- HINT: The transaction might succeed if retried.</code></pre>
+    <div class="card-green card" style="margin-top: 15px;">
+        <strong>PostgreSQL обнаруживает</strong> зависимость между транзакциями и <strong>отменяет одну из них</strong> с ошибкой <code>serialization_failure</code>. Приложение должно <strong>повторить</strong> отменённую транзакцию.
+    </div>
+    <div class="card" style="margin-top: 10px;">
+        <strong>Цена SERIALIZABLE:</strong> возможны откаты транзакций → приложение должно уметь повторять. Используйте только когда логическая согласованность критична (финансы, расчёт бонусов, распределение ресурсов).
+    </div>
+</section>
+
+<!-- ==================== ВОПРОС ДЛЯ ОБСУЖДЕНИЯ ==================== -->
+<section>
+    <h2>Вопрос для обсуждения</h2>
+    <div class="card-orange card">
+        <p><strong>Кейс «Руда+»:</strong> Аналитик формирует ежемесячный отчёт по добыче (суммы, средние, рейтинги). Процесс занимает 5 минут. В это время операторы продолжают вводить данные.</p>
+        <br>
+        <p><strong>Вопросы:</strong></p>
+        <ul>
+            <li>Какой уровень изоляции выбрать для отчёта? Почему?</li>
+            <li>Что произойдёт, если использовать READ COMMITTED?</li>
+            <li>Есть ли производительностные последствия REPEATABLE READ?</li>
+        </ul>
+    </div>
+    <p class="small-text">Обсуждение — 3 минуты</p>
+</section>
+
+<!-- ==================== ЧАСТЬ 5: MVCC ==================== -->
+<section>
+    <h2>5. MVCC — Multi-Version Concurrency Control</h2>
+    <div class="key-concept">
+        <h3>Ключевая идея</h3>
+        <p>PostgreSQL не блокирует строки для чтения. Вместо этого каждая транзакция видит <strong>свой снимок</strong> (snapshot) данных.</p>
+    </div>
+    <ul>
+        <li>При UPDATE PostgreSQL <strong>не изменяет</strong> старую строку, а создаёт <strong>новую версию</strong></li>
+        <li>Старая версия остаётся для транзакций, которые ещё её видят</li>
+        <li><code>VACUUM</code> очищает «мёртвые» версии, когда они больше не нужны</li>
+    </ul>
+    <pre><code class="language-sql">-- Системные столбцы MVCC
+SELECT
+    ctid,   -- Физическое расположение (page, offset)
+    xmin,   -- ID транзакции, создавшей строку
+    xmax,   -- ID транзакции, удалившей/обновившей (0 = актуальна)
+    mine_name
+FROM dim_mine LIMIT 3;</code></pre>
+</section>
+
+<section>
+    <h2>MVCC: как работает UPDATE</h2>
+    <div style="text-align: center; font-size: 0.8em;">
+        <table>
+            <tr>
+                <th>Шаг</th>
+                <th>Действие</th>
+                <th>ctid</th>
+                <th>xmin</th>
+                <th>xmax</th>
+                <th>Данные</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>INSERT (TX 100)</td>
+                <td>(0,1)</td>
+                <td>100</td>
+                <td>0</td>
+                <td>«Северная»</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>UPDATE (TX 105)</td>
+                <td>(0,1)</td>
+                <td>100</td>
+                <td class="highlight-orange">105</td>
+                <td>«Северная» (мёртвая)</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td class="highlight-green">(0,2)</td>
+                <td class="highlight-green">105</td>
+                <td>0</td>
+                <td>«Северная-2» (новая)</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>VACUUM</td>
+                <td colspan="4" style="text-align: center;">Строка (0,1) удалена, пространство освобождено</td>
+            </tr>
+        </table>
+    </div>
+    <div class="card">
+        <strong>Следствия MVCC:</strong>
+        <ul>
+            <li>Чтение НЕ блокирует запись, запись НЕ блокирует чтение</li>
+            <li>UPDATE создаёт новые кортежи — таблица «раздувается» (bloat)</li>
+            <li>VACUUM необходим для очистки — autovacuum делает это автоматически</li>
+        </ul>
+    </div>
+</section>
+
+<section>
+    <h2>Снимки (Snapshots) транзакций</h2>
+    <pre><code class="language-sql">-- READ COMMITTED: новый снимок для КАЖДОГО запроса
+BEGIN;
+SELECT * FROM fact_production;  -- Снимок 1
+SELECT * FROM fact_production;  -- Снимок 2 (может отличаться!)
+COMMIT;
+
+-- REPEATABLE READ: один снимок на всю транзакцию
+BEGIN;
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+SELECT * FROM fact_production;  -- Снимок 1
+SELECT * FROM fact_production;  -- Тот же снимок 1!
+COMMIT;</code></pre>
+    <div class="card-green card">
+        <strong>Практическая польза:</strong> Для длительных аналитических запросов REPEATABLE READ гарантирует согласованность данных на протяжении всего отчёта.
+    </div>
+</section>
+
+<!-- ==================== ЧАСТЬ 7: БЛОКИРОВКИ ==================== -->
+<section>
+    <h2>7. Иерархия блокировок в PostgreSQL</h2>
+    <div class="key-concept">
+        <h3>Блокировки действуют на разных уровнях</h3>
+        <p>PostgreSQL использует <strong>многоуровневую</strong> систему блокировок. Каждый уровень защищает свой тип объекта.</p>
+    </div>
+    <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <div style="flex: 1; background: #FDEDEC; padding: 15px; border-radius: 8px; border-top: 4px solid #e74c3c; text-align: center;">
+            <h3 style="margin-top: 0; color: #e74c3c;">Таблица</h3>
+            <p><strong>Table-level locks</strong></p>
+            <p style="font-size: 0.85em;">Защищают <em>структуру</em> таблицы. Берутся автоматически при любой операции.</p>
+            <p style="font-size: 0.8em; color: #666;"><code>LOCK TABLE</code>,<br>DDL-команды</p>
+        </div>
+        <div style="flex: 1; background: #FFF3CD; padding: 15px; border-radius: 8px; border-top: 4px solid var(--accent2); text-align: center;">
+            <h3 style="margin-top: 0; color: var(--accent2);">Строка</h3>
+            <p><strong>Row-level locks</strong></p>
+            <p style="font-size: 0.85em;">Защищают <em>конкретные строки</em>. Берутся при UPDATE, DELETE, SELECT FOR UPDATE.</p>
+            <p style="font-size: 0.8em; color: #666;"><code>FOR UPDATE</code>,<br><code>FOR SHARE</code></p>
+        </div>
+        <div style="flex: 1; background: #E8F4FD; padding: 15px; border-radius: 8px; border-top: 4px solid var(--accent1); text-align: center;">
+            <h3 style="margin-top: 0; color: var(--accent1);">Рекомендательная</h3>
+            <p><strong>Advisory locks</strong></p>
+            <p style="font-size: 0.85em;">Определяются <em>приложением</em>. PostgreSQL не знает, что они защищают.</p>
+            <p style="font-size: 0.8em; color: #666;"><code>pg_advisory_lock()</code></p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Блокировки на уровне таблицы (Table-level)</h2>
+    <table style="font-size: 0.75em;">
+        <tr>
+            <th>Режим блокировки</th>
+            <th>Когда берётся</th>
+            <th>Что защищает</th>
+            <th>Строгость</th>
+        </tr>
+        <tr>
+            <td><strong>ACCESS SHARE</strong></td>
+            <td><code>SELECT</code></td>
+            <td>Запрещает удаление/перестроение таблицы во время чтения</td>
+            <td style="background: #f0fff0;">Самая мягкая</td>
+        </tr>
+        <tr>
+            <td><strong>ROW SHARE</strong></td>
+            <td><code>SELECT FOR UPDATE/SHARE</code></td>
+            <td>Сигнализирует: «я собираюсь блокировать строки»</td>
+            <td style="background: #f0fff0;">Мягкая</td>
+        </tr>
+        <tr>
+            <td><strong>ROW EXCLUSIVE</strong></td>
+            <td><code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></td>
+            <td>Сигнализирует: «я изменяю данные в таблице»</td>
+            <td style="background: #fff3cd;">Средняя</td>
+        </tr>
+        <tr>
+            <td><strong>SHARE</strong></td>
+            <td><code>CREATE INDEX</code></td>
+            <td>Запрещает изменение данных, пока строится индекс</td>
+            <td style="background: #fff3cd;">Строгая</td>
+        </tr>
+        <tr>
+            <td><strong>SHARE ROW EXCLUSIVE</strong></td>
+            <td><code>CREATE TRIGGER</code>, некоторые <code>ALTER</code></td>
+            <td>Запрещает изменение данных и параллельные DDL</td>
+            <td style="background: #FDEDEC;">Строгая</td>
+        </tr>
+        <tr>
+            <td><strong>EXCLUSIVE</strong></td>
+            <td><code>REFRESH MATERIALIZED VIEW CONCURRENTLY</code></td>
+            <td>Разрешает только чтение (<code>ACCESS SHARE</code>)</td>
+            <td style="background: #FDEDEC;">Очень строгая</td>
+        </tr>
+        <tr>
+            <td><strong>ACCESS EXCLUSIVE</strong></td>
+            <td><code>ALTER TABLE</code>, <code>DROP TABLE</code>, <code>VACUUM FULL</code></td>
+            <td>Полная монопольная блокировка — никто не может даже читать</td>
+            <td style="background: #FDEDEC;">Максимальная</td>
+        </tr>
+    </table>
+    <div class="card" style="margin-top: 10px;">
+        <strong>Ключевой принцип:</strong> Чем «строже» блокировка, тем больше других операций она блокирует. <code>SELECT</code> (ACCESS SHARE) совместим почти со всем. <code>ALTER TABLE</code> (ACCESS EXCLUSIVE) блокирует всех.
+    </div>
+</section>
+
+<section>
+    <h2>Блокировки на уровне строк (Row-level)</h2>
+    <table>
+        <tr>
+            <th>Режим</th>
+            <th>Команда</th>
+            <th>Что разрешает другим</th>
+            <th>Что запрещает другим</th>
+        </tr>
+        <tr>
+            <td><strong>FOR KEY SHARE</strong></td>
+            <td>Неявно при проверке FK</td>
+            <td>SELECT, UPDATE (не ключевых столбцов)</td>
+            <td>DELETE, UPDATE ключевых столбцов</td>
+        </tr>
+        <tr>
+            <td><strong>FOR SHARE</strong></td>
+            <td><code>SELECT ... FOR SHARE</code></td>
+            <td>SELECT, FOR KEY SHARE, FOR SHARE</td>
+            <td>UPDATE, DELETE, FOR UPDATE</td>
+        </tr>
+        <tr>
+            <td><strong>FOR NO KEY UPDATE</strong></td>
+            <td>Неявно при <code>UPDATE</code> (не ключевых столбцов)</td>
+            <td>SELECT, FOR KEY SHARE</td>
+            <td>UPDATE, DELETE, FOR SHARE, FOR UPDATE</td>
+        </tr>
+        <tr>
+            <td><strong>FOR UPDATE</strong></td>
+            <td><code>SELECT ... FOR UPDATE</code>, <code>DELETE</code>, <code>UPDATE</code> ключа</td>
+            <td>Только SELECT (без FOR)</td>
+            <td>Любые другие блокировки строки</td>
+        </tr>
+    </table>
+    <div class="card-green card" style="margin-top: 10px;">
+        <strong>Важно:</strong> Обычный <code>SELECT</code> (без FOR) <strong>никогда не берёт блокировку строк</strong> — он работает через MVCC и читает снимок данных. Поэтому <code>SELECT</code> не мешает <code>UPDATE</code> и наоборот.
+    </div>
+</section>
+
+<section>
+    <h2>Как уровни блокировок связаны</h2>
+    <pre><code class="language-sql">-- Пример: UPDATE одной строки в fact_production
+BEGIN;
+UPDATE fact_production
+SET tons_mined = 155.0
+WHERE production_id = 900001;
+-- PostgreSQL автоматически берёт:
+-- 1) ROW EXCLUSIVE lock на ТАБЛИЦУ fact_production
+--    → другие SELECT, INSERT, UPDATE — ОК
+--    → CREATE INDEX, ALTER TABLE — ЖДУТ
+-- 2) FOR NO KEY UPDATE lock на СТРОКУ production_id = 900001
+--    → SELECT этой строки — ОК (MVCC)
+--    → UPDATE/DELETE этой же строки — ЖДУТ
+COMMIT;  -- Обе блокировки сняты</code></pre>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Принцип:</strong> Table-level блокировка защищает <em>структуру</em> (чтобы никто не сделал ALTER TABLE). Row-level блокировка защищает <em>данные конкретной строки</em> (чтобы два UPDATE не перезаписали друг друга). Они работают <strong>вместе</strong>.
+    </div>
+</section>
+
+<section>
+    <h2>SELECT FOR UPDATE — явная блокировка строк</h2>
+    <pre><code class="language-sql">-- Блокируем строки для обновления
+BEGIN;
+SELECT * FROM fact_production
+WHERE equipment_id = 1 AND date_id = 20250115
+FOR UPDATE;  -- Другие транзакции ждут COMMIT/ROLLBACK
+
+-- Безопасно обновляем
+UPDATE fact_production
+SET tons_mined = tons_mined * 1.05
+WHERE equipment_id = 1 AND date_id = 20250115;
+COMMIT;
+
+-- Варианты FOR:
+SELECT ... FOR UPDATE;         -- Эксклюзивная блокировка
+SELECT ... FOR SHARE;          -- Разделяемая (другие могут читать)
+SELECT ... FOR UPDATE NOWAIT;  -- Не ждать, ошибка при конфликте
+SELECT ... FOR UPDATE SKIP LOCKED;  -- Пропустить заблокированные</code></pre>
+</section>
+
+<!-- ==================== DEADLOCKS ==================== -->
+<section>
+    <h2>Deadlock — взаимная блокировка</h2>
+    <div class="compare-container">
+        <div class="compare-col">
+            <div class="card">
+                <h3>Сессия A</h3>
+                <pre><code class="language-sql">BEGIN;
+-- Шаг 1: блокировка ID=1
+UPDATE test_deadlock
+SET amount = amount - 100
+WHERE id = 1;
+
+-- Шаг 3: ждёт ID=2 (!)
+UPDATE test_deadlock
+SET amount = amount + 100
+WHERE id = 2;
+-- ОЖИДАНИЕ...</code></pre>
+            </div>
+        </div>
+        <div class="compare-col">
+            <div class="card card-orange">
+                <h3>Сессия B</h3>
+                <pre><code class="language-sql">BEGIN;
+-- Шаг 2: блокировка ID=2
+UPDATE test_deadlock
+SET amount = amount - 200
+WHERE id = 2;
+
+-- Шаг 4: ждёт ID=1 (!)
+UPDATE test_deadlock
+SET amount = amount + 200
+WHERE id = 1;
+-- DEADLOCK DETECTED!</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="danger-box">
+        <strong>PostgreSQL обнаруживает deadlock</strong> (по умолчанию через 1 секунду) и <strong>отменяет одну из транзакций</strong>. Вторая транзакция продолжает работу.
+    </div>
+</section>
+
+<section>
+    <h2>Предотвращение Deadlock</h2>
+    <div class="card-green card">
+        <h3>Правило: единый порядок блокировки</h3>
+        <p>Всегда блокируйте ресурсы в <strong>одном и том же порядке</strong> (например, по возрастанию ID).</p>
+    </div>
+    <pre><code class="language-sql">CREATE FUNCTION safe_transfer(p_from INT, p_to INT, p_amount NUMERIC)
+RETURNS VARCHAR LANGUAGE plpgsql AS $$
+DECLARE
+    v_first INT; v_second INT;
+BEGIN
+    -- Упорядочиваем ID для единого порядка блокировки
+    IF p_from < p_to THEN
+        v_first := p_from; v_second := p_to;
+    ELSE
+        v_first := p_to; v_second := p_from;
+    END IF;
+
+    -- Блокируем в отсортированном порядке
+    PERFORM 1 FROM equipment_balance WHERE equipment_id = v_first FOR UPDATE;
+    PERFORM 1 FROM equipment_balance WHERE equipment_id = v_second FOR UPDATE;
+
+    -- Теперь безопасно обновляем
+    UPDATE equipment_balance SET balance_tons = balance_tons - p_amount
+    WHERE equipment_id = p_from;
+    UPDATE equipment_balance SET balance_tons = balance_tons + p_amount
+    WHERE equipment_id = p_to;
+
+    RETURN 'OK';
+END;
+$$;</code></pre>
+</section>
+
+<section>
+    <h2>Обработка deadlock с повтором</h2>
+    <pre><code class="language-sql">CREATE FUNCTION retry_on_deadlock(p_from INT, p_to INT, p_tons NUMERIC)
+RETURNS VARCHAR LANGUAGE plpgsql AS $$
+DECLARE
+    v_attempt INT := 0;
+    v_max_retries INT := 3;
+BEGIN
+    LOOP
+        v_attempt := v_attempt + 1;
+        BEGIN
+            UPDATE fact_production SET tons_mined = tons_mined - p_tons
+            WHERE equipment_id = p_from AND date_id = 20250115;
+            UPDATE fact_production SET tons_mined = tons_mined + p_tons
+            WHERE equipment_id = p_to AND date_id = 20250115;
+
+            RETURN format('OK за %s попыток', v_attempt);
+        EXCEPTION
+            WHEN deadlock_detected THEN
+                IF v_attempt >= v_max_retries THEN
+                    RAISE EXCEPTION 'Deadlock: % попыток исчерпано', v_max_retries;
+                END IF;
+                RAISE NOTICE 'Deadlock, попытка %/%', v_attempt, v_max_retries;
+                PERFORM pg_sleep(random());  -- Случайная задержка
+        END;
+    END LOOP;
+END;
+$$;</code></pre>
+</section>
+
+<!-- ==================== ЧАСТЬ 8: ADVISORY LOCKS ==================== -->
+<section>
+    <h2>8. Advisory Locks</h2>
+    <div class="key-concept">
+        <h3>Рекомендательные блокировки</h3>
+        <p>Пользовательские блокировки, управляемые приложением. PostgreSQL не навязывает семантику — вы решаете, что они означают.</p>
+    </div>
+    <table>
+        <tr>
+            <th>Функция</th>
+            <th>Описание</th>
+        </tr>
+        <tr>
+            <td><code>pg_advisory_lock(id)</code></td>
+            <td>Блокирующий захват (ждёт)</td>
+        </tr>
+        <tr>
+            <td><code>pg_try_advisory_lock(id)</code></td>
+            <td>Неблокирующий (TRUE/FALSE)</td>
+        </tr>
+        <tr>
+            <td><code>pg_advisory_unlock(id)</code></td>
+            <td>Освобождение</td>
+        </tr>
+        <tr>
+            <td><code>pg_advisory_xact_lock(id)</code></td>
+            <td>Автоматически освобождается при COMMIT/ROLLBACK</td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Advisory Lock: защита ETL</h2>
+    <pre><code class="language-sql">CREATE FUNCTION run_daily_etl(p_date_id INT)
+RETURNS VARCHAR LANGUAGE plpgsql AS $$
+DECLARE
+    v_acquired BOOLEAN;
+BEGIN
+    -- Пытаемся захватить блокировку (ID = дата)
+    v_acquired := pg_try_advisory_lock(p_date_id::BIGINT);
+
+    IF NOT v_acquired THEN
+        RETURN format('ETL для даты %s уже выполняется', p_date_id);
+    END IF;
+
+    BEGIN
+        -- Выполняем ETL
+        INSERT INTO report_daily_production (...)
+        SELECT ... FROM fact_production ...
+        WHERE date_id = p_date_id ...;
+
+        PERFORM pg_advisory_unlock(p_date_id::BIGINT);
+        RETURN 'ETL завершён успешно';
+    EXCEPTION WHEN OTHERS THEN
+        -- ОБЯЗАТЕЛЬНО освобождаем при ошибке!
+        PERFORM pg_advisory_unlock(p_date_id::BIGINT);
+        RAISE;
+    END;
+END;
+$$;</code></pre>
+    <div class="card">
+        <strong>Типичные применения:</strong> защита от параллельного запуска ETL, распределённая координация, управление очередями задач.
+    </div>
+</section>
+
+<!-- ==================== ГРУППОВОЕ ЗАДАНИЕ ==================== -->
+<section>
+    <h2>Групповое задание</h2>
+    <div class="card-orange card">
+        <h3>Кейс: Deadlock на «Руда+»</h3>
+        <p><strong>Ситуация:</strong> В 3 часа ночи ETL-процесс обновляет данные по шахтам в порядке ID: 1, 2, 3. Одновременно аналитический отчёт пересчитывает KPI в обратном порядке: 3, 2, 1. Возникает deadlock.</p>
+        <br>
+        <p><strong>Задание (работа в группах по 3-4, 10 минут):</strong></p>
+        <ol>
+            <li>Нарисуйте схему deadlock (кто кого ждёт)</li>
+            <li>Предложите <strong>3 способа</strong> решения проблемы</li>
+            <li>Оцените каждый способ: сложность, надёжность, производительность</li>
+            <li>Какой способ выберете для production? Почему?</li>
+        </ol>
+    </div>
+    <p class="small-text">Каждая группа представит решение — 3 минуты на группу</p>
+</section>
+
+<!-- ==================== BEST PRACTICES ==================== -->
+<section>
+    <h2>9. Best Practices</h2>
+    <div class="card-green card">
+        <h3>Рекомендации по транзакциям</h3>
+        <ol>
+            <li><strong>Короткие транзакции:</strong> держите блокировки минимальное время</li>
+            <li><strong>Единый порядок блокировки:</strong> всегда по возрастанию ID</li>
+            <li><strong>Обрабатывайте deadlock:</strong> повтор с экспоненциальной задержкой</li>
+            <li><strong>Используйте SAVEPOINT</strong> в пакетных операциях</li>
+            <li><strong>REPEATABLE READ</strong> для аналитических отчётов</li>
+            <li><strong>Мониторьте длительные транзакции:</strong> <code>pg_stat_activity</code></li>
+            <li><strong>COMMIT в процедурах</strong> для пакетной загрузки (не в функциях!)</li>
+            <li><strong>Advisory locks</strong> для координации процессов</li>
+        </ol>
+    </div>
+</section>
+
+<section>
+    <h2>Мониторинг транзакций</h2>
+    <pre><code class="language-sql">-- Длительные транзакции
+SELECT pid, usename, state,
+    now() - xact_start AS tx_duration,
+    LEFT(query, 80) AS query
+FROM pg_stat_activity
+WHERE xact_start IS NOT NULL AND state != 'idle'
+ORDER BY xact_start;
+
+-- Ожидающие блокировки
+SELECT blocked.pid AS blocked_pid,
+    blocking.pid AS blocking_pid,
+    LEFT(blocked.query, 50) AS blocked_query,
+    now() - blocked.query_start AS wait_time
+FROM pg_stat_activity blocked
+JOIN pg_locks bl ON blocked.pid = bl.pid AND NOT bl.granted
+JOIN pg_locks bk ON bl.locktype = bk.locktype
+    AND bl.relation = bk.relation AND bl.pid != bk.pid AND bk.granted
+JOIN pg_stat_activity blocking ON bk.pid = blocking.pid;
+
+-- Принудительное завершение (ОСТОРОЖНО!)
+-- SELECT pg_cancel_backend(pid);     -- Отмена запроса
+-- SELECT pg_terminate_backend(pid);  -- Завершение соединения</code></pre>
+</section>
+
+<!-- ==================== СРАВНЕНИЕ С DAX ==================== -->
+<section>
+    <h2>Транзакции: SQL vs DAX</h2>
+    <table>
+        <tr>
+            <th>Аспект</th>
+            <th style="background: var(--accent1);">PostgreSQL</th>
+            <th style="background: var(--accent2);">DAX / Power BI</th>
+        </tr>
+        <tr>
+            <td>Транзакции</td>
+            <td class="highlight-green">BEGIN / COMMIT / ROLLBACK</td>
+            <td>Нет (только чтение)</td>
+        </tr>
+        <tr>
+            <td>Изоляция</td>
+            <td class="highlight-green">4 уровня</td>
+            <td>Snapshot (модель в памяти)</td>
+        </tr>
+        <tr>
+            <td>Конкурентность</td>
+            <td class="highlight-green">MVCC, блокировки</td>
+            <td>Нет конфликтов (read-only)</td>
+        </tr>
+        <tr>
+            <td>Deadlocks</td>
+            <td>Возможны, обнаруживаются</td>
+            <td>Невозможны</td>
+        </tr>
+        <tr>
+            <td>Обновление данных</td>
+            <td class="highlight-green">INSERT/UPDATE/DELETE</td>
+            <td>Refresh модели (полная/инкрементальная)</td>
+        </tr>
+    </table>
+    <div class="card-orange card">
+        <strong>Вывод:</strong> DAX работает с «замороженным» снимком данных. Все проблемы конкурентности решаются на стороне SQL-источника при ETL.
+    </div>
+</section>
+
+<!-- ==================== КВИЗ ==================== -->
+<section>
+    <h2>Квиз: проверка знаний</h2>
+    <p><strong>1. Что означает «A» в ACID?</strong></p>
+    <div class="quiz-option">A) Authentication — аутентификация</div>
+    <div class="quiz-option">B) Atomicity — атомарность</div>
+    <div class="quiz-option">C) Availability — доступность</div>
+    <div class="quiz-option">D) Aggregation — агрегация</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — Atomicity (атомарность) — транзакция выполняется полностью или не выполняется вовсе.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>2. Какой уровень изоляции PostgreSQL использует по умолчанию?</strong></p>
+    <div class="quiz-option">A) READ UNCOMMITTED</div>
+    <div class="quiz-option">B) READ COMMITTED</div>
+    <div class="quiz-option">C) REPEATABLE READ</div>
+    <div class="quiz-option">D) SERIALIZABLE</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — READ COMMITTED. Каждый SQL-оператор видит снимок данных на момент начала этого оператора.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>3. Что такое SAVEPOINT?</strong></p>
+    <div class="quiz-option">A) Автоматическое сохранение транзакции</div>
+    <div class="quiz-option">B) Точка внутри транзакции, к которой можно откатиться</div>
+    <div class="quiz-option">C) Резервная копия базы данных</div>
+    <div class="quiz-option">D) Синоним COMMIT</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: B</strong> — SAVEPOINT позволяет откатить часть транзакции через ROLLBACK TO, не теряя остальные изменения.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>4. Как PostgreSQL обрабатывает deadlock?</strong></p>
+    <div class="quiz-option">A) Ждёт бесконечно</div>
+    <div class="quiz-option">B) Отменяет обе транзакции</div>
+    <div class="quiz-option">C) Обнаруживает и отменяет одну из транзакций</div>
+    <div class="quiz-option">D) Перезапускает сервер</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: C</strong> — PostgreSQL обнаруживает циклическую зависимость и отменяет одну из транзакций (с ошибкой deadlock_detected). Вторая продолжает работу.</div>
+    </div>
+</section>
+
+<section>
+    <h2>Квиз (продолжение)</h2>
+    <p><strong>5. Возможен ли Dirty Read в PostgreSQL?</strong></p>
+    <div class="quiz-option">A) Да, при READ UNCOMMITTED</div>
+    <div class="quiz-option">B) Да, при отключении MVCC</div>
+    <div class="quiz-option">C) Нет, PostgreSQL всегда обеспечивает минимум READ COMMITTED</div>
+    <div class="quiz-option">D) Да, при параллельных запросах</div>
+    <div class="fragment">
+        <div class="card-green card"><strong>Ответ: C</strong> — Даже при установке READ UNCOMMITTED PostgreSQL фактически работает на уровне READ COMMITTED. Dirty read невозможен.</div>
+    </div>
+</section>
+
+<!-- ==================== КЕЙС ==================== -->
+<section>
+    <h2>Кейс для анализа</h2>
+    <div class="card">
+        <h3>Инцидент на «Руда+»: потеря данных</h3>
+        <p>Инженер запустил скрипт массового обновления KPI. Через 10 минут обнаружил ошибку в формуле. Нажал Ctrl+C. Часть данных обновлена, часть — нет. База в несогласованном состоянии.</p>
+    </div>
+    <div class="danger-box">
+        <strong>Вопросы для анализа:</strong>
+        <ol>
+            <li class="fragment">Почему данные оказались в несогласованном состоянии?</li>
+            <li class="fragment">Как исправить: PROCEDURE с COMMIT по батчам позволяет контролировать прогресс, но при прерывании часть зафиксирована</li>
+            <li class="fragment">Как предотвратить: одна большая транзакция + ROLLBACK при ошибке, ИЛИ таблица аудита для восстановления</li>
+        </ol>
+    </div>
+</section>
+
+<!-- Практика: Части 3–5 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 3 — Уровни изоляции, Часть 4 — Блокировки и Deadlock, Часть 5 — Advisory Locks</p>
+        <p><strong>Задание:</strong> Протестируйте уровни изоляции (READ COMMITTED, REPEATABLE READ, SERIALIZABLE), воспроизведите deadlock, используйте advisory locks для координации процессов.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 20–25 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на транзакции, уровни изоляции и блокировки</p>
+        <p><strong>Формат:</strong> SQL — транзакции, SAVEPOINT, тестирование аномалий конкурентного доступа</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <h2>Итоги модуля</h2>
+    <div class="key-concept">
+        <h3>Что мы изучили:</h3>
+        <ol>
+            <li><span class="highlight-blue">ACID</span> — фундаментальные свойства транзакций</li>
+            <li><strong>BEGIN / COMMIT / ROLLBACK</strong> — управление транзакциями</li>
+            <li><span class="highlight-orange">SAVEPOINT</span> — частичный откат</li>
+            <li><strong>Уровни изоляции</strong> — READ COMMITTED, REPEATABLE READ, SERIALIZABLE</li>
+            <li><strong>MVCC</strong> — версионность строк, снимки, VACUUM</li>
+            <li><strong>Аномалии</strong> — dirty/non-repeatable/phantom reads</li>
+            <li><span class="highlight-green">Deadlocks</span> — обнаружение, предотвращение, обработка</li>
+            <li><strong>Advisory Locks</strong> — координация процессов</li>
+        </ol>
+    </div>
+</section>
+
+<section>
+    <h2>Что дальше?</h2>
+    <div class="card">
+        <p><strong>Практическая работа:</strong> Транзакции и конкурентный доступ в MES-системе «Руда+» (два окна SQL)</p>
+        <p><strong>Лабораторная работа:</strong> 10 заданий — от базовых транзакций до предотвращения deadlocks</p>
+    </div>
+    <br>
+    <div class="card card-orange">
+        <p><strong>Финальный квиз:</strong> Проверка знаний по всему курсу (Модули 1-18)</p>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Спасибо за внимание! Вопросы?</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1280,
+        height: 720,
+        margin: 0.04,
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>
