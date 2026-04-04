@@ -211,34 +211,72 @@ WINDOW w7 AS (ORDER BY d.full_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)
 ORDER BY d.full_date;
 ```
 
-### Шаг 2.4. Различие ROWS и RANGE
+### Шаг 2.4. ROWS vs RANGE vs GROUPS — наглядное сравнение
+
+Чтобы увидеть разницу **всех трёх** режимов, нужны данные с двумя свойствами:
+1. **Дубликаты** в ORDER BY — несколько строк с одинаковым значением (→ ROWS отличается от RANGE/GROUPS)
+2. **Пропуски** в значениях — не все числа между min и max присутствуют (→ RANGE отличается от GROUPS)
+
+> **Важно:** `RANGE` с `N PRECEDING` требует **ровно одно** числовое/дата поле в ORDER BY.
+> С несколькими полями ORDER BY поддерживаются только `UNBOUNDED` и `CURRENT ROW`.
+
+Используем типы оборудования: **1** (ПДМ), **3** (Самосвал), **7** (Подъёмник) — каждый тип представлен 2 единицами (дубликаты), между типами есть пропуски (нет типов 2, 4, 5, 6).
 
 ```sql
--- ROWS: считает физические строки
--- RANGE: считает логический диапазон значений (строки с одинаковым ORDER BY попадают в одну группу)
+-- Одинаковая рамка 1 PRECEDING AND CURRENT ROW — три разных результата
+WITH data AS (
+    SELECT * FROM (VALUES
+        (1, 'ПДМ-01',       100),
+        (1, 'ПДМ-02',       120),
+        (3, 'Самосвал-01',  200),
+        (3, 'Самосвал-02',  180),
+        (7, 'Подъёмник-01', 250),
+        (7, 'Подъёмник-02', 230)
+    ) AS t(type_id, equip_name, tons)
+)
 SELECT
-    d.full_date,
-    s.shift_name,
-    SUM(fp.tons_mined) AS shift_tons,
-    SUM(SUM(fp.tons_mined)) OVER (
-        ORDER BY d.full_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) AS running_total_rows,
-    SUM(SUM(fp.tons_mined)) OVER (
-        ORDER BY d.full_date
-        RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) AS running_total_range
-FROM fact_production fp
-JOIN dim_date d ON d.date_id = fp.date_id
-JOIN dim_shift s ON s.shift_id = fp.shift_id
-WHERE fp.mine_id = 1 AND d.year = 2024 AND d.month = 1
-GROUP BY d.full_date, s.shift_id, s.shift_name
-ORDER BY d.full_date, s.shift_id;
+    type_id, equip_name, tons,
+    SUM(tons) OVER (ORDER BY type_id
+        ROWS   BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_rows,
+    SUM(tons) OVER (ORDER BY type_id
+        RANGE  BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_range,
+    SUM(tons) OVER (ORDER BY type_id
+        GROUPS BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_groups
+FROM data;
 ```
 
-**Что наблюдаем:** Если на одну дату приходится несколько строк (дневная и ночная смены), RANGE включает все строки с одинаковым значением ORDER BY, а ROWS обрабатывает строки по одной.
+**Ожидаемый результат:**
 
-### Шаг 2.5. Аналог в DAX — скользящее среднее
+| type_id | equip_name   | tons | sum_rows | sum_range | sum_groups |
+|---------|--------------|------|----------|-----------|------------|
+| 1       | ПДМ-01       | 100  | 100      | 220       | 220        |
+| 1       | ПДМ-02       | 120  | 220      | 220       | 220        |
+| **3**   | **Самосвал-01**  | **200** | **320** | **380** | **600** |
+| 3       | Самосвал-02  | 180  | 380      | 380       | 600        |
+| **7**   | **Подъёмник-01** | **250** | **430** | **480** | **860** |
+| 7       | Подъёмник-02 | 230  | 480      | 480       | 860        |
+
+**Разбор строки Самосвал-01 (type_id = 3):**
+
+- **ROWS** `1 PRECEDING` — 1 физическая строка назад (ПДМ-02, 120) + текущая (200) = **320**
+- **RANGE** `1 PRECEDING` — значения от 2 до 3. Тип 2 не существует! Только тип 3: 200 + 180 = **380**
+- **GROUPS** `1 PRECEDING` — предыдущая группа (тип 1: 100 + 120) + текущая (тип 3: 200 + 180) = **600**
+
+**Все три значения разные!** Это происходит потому, что:
+- Дубликаты (2 единицы на тип) → ROWS ≠ RANGE (ROWS берёт 1 строку, RANGE берёт все строки с близким значением)
+- Пропуски (нет типа 2) → RANGE ≠ GROUPS (RANGE не находит тип 2, GROUPS перешагивает к типу 1)
+
+### Шаг 2.5. Сводная таблица: ROWS / RANGE / GROUPS
+
+| Характеристика | ROWS | RANGE | GROUPS |
+|-----------------|------|-------|--------|
+| Единица отсчёта | Физическая строка | Значение ORDER BY | Группа peer-строк |
+| `1 PRECEDING` | 1 строка назад | Значение минус 1 | 1 группа назад |
+| Дубликаты ORDER BY | По одной строке | Все дубликаты вместе | Все дубликаты вместе |
+| Пропуски в значениях | Не замечает | **Теряет** данные через пропуск | **Перешагивает** через пропуск |
+| Когда использовать | Скользящее среднее по N строкам | Диапазон по значению (дата ± N дней) | Окно по N логических групп |
+
+### Шаг 2.6. Аналог в DAX — скользящее среднее
 
 ```dax
 // Скользящее среднее за 7 дней в DAX

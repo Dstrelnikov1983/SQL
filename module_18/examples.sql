@@ -12,15 +12,15 @@
 BEGIN;
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (800001, 20250201, 1, 1, 1, 1, 120.5, 10, 7.5);
+    VALUES (800001, 20250201, 1, 1, 1, 1, 1, 120.5, 10, 7.5);
 
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (800002, 20250201, 1, 2, 1, 2, 98.3, 8, 6.5);
+    VALUES (800002, 20250201, 1, 2, 1, 1, 2, 98.3, 8, 6.5);
 COMMIT;
 
 -- Пример 1.2. BEGIN / ROLLBACK
@@ -28,9 +28,9 @@ BEGIN;
     -- Вставляем данные
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (800003, 20250201, 2, 1, 1, 1, 200.0, 15, 8.0);
+    VALUES (800003, 20250201, 2, 1, 1, 1, 1, 200.0, 15, 8.0);
 
     -- Обнаруживаем ошибку — 200 тонн за смену нереально
     -- Откатываем всю транзакцию
@@ -43,16 +43,16 @@ SELECT * FROM fact_production WHERE production_id = 800003;
 BEGIN;
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (800004, 20250201, 1, 1, 1, 1, 100.0, 8, 7.0);
+    VALUES (800004, 20250201, 1, 1, 1, 1, 1, 100.0, 8, 7.0);
 
     -- Ошибка: equipment_id = 99999 не существует
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (800005, 20250201, 1, 99999, 1, 1, 50.0, 4, 3.0);
+    VALUES (800005, 20250201, 1, 99999, 1, 1, 1, 50.0, 4, 3.0);
 
     -- Эта строка не выполнится из-за ошибки FK
 COMMIT;
@@ -69,18 +69,18 @@ BEGIN;
     -- Часть 1: основные данные (гарантированно нужны)
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (800010, 20250202, 1, 1, 1, 1, 110.0, 9, 7.0);
+    VALUES (800010, 20250202, 1, 1, 1, 1, 1, 110.0, 9, 7.0);
 
     SAVEPOINT sp_quality;
 
     -- Часть 2: данные о качестве (могут быть ошибки)
     INSERT INTO fact_ore_quality (
-        quality_id, date_id, shift_id, mine_id,
-        sample_number, fe_content, moisture_percent
+        quality_id, date_id, time_id, shift_id, mine_id, shaft_id,
+        sample_number, fe_content, moisture
     )
-    VALUES (900001, 20250202, 1, 1, 'ORE-2025-0001', 55.5, 3.2);
+    VALUES (900001, 20250202, 1, 1, 1, 1, 'ORE-2025-0001', 55.5, 3.2);
 
     -- Допустим, ошибка при вставке второго замера
     -- ROLLBACK TO sp_quality;  -- Откатываем ТОЛЬКО качество
@@ -93,13 +93,13 @@ COMMIT;
 BEGIN;
     SAVEPOINT sp_mine_1;
     INSERT INTO fact_production (production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours)
-    VALUES (800020, 20250203, 1, 1, 1, 1, 100.0, 8, 7.0);
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours)
+    VALUES (800020, 20250203, 1, 1, 1, 1, 1, 100.0, 8, 7.0);
 
     SAVEPOINT sp_mine_2;
     INSERT INTO fact_production (production_id, date_id, shift_id, equipment_id,
-        mine_id, operator_id, tons_mined, trips_count, operating_hours)
-    VALUES (800021, 20250203, 1, 3, 2, 3, 95.0, 7, 6.5);
+        mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours)
+    VALUES (800021, 20250203, 1, 3, 2, 5, 3, 95.0, 7, 6.5);
 
     SAVEPOINT sp_mine_3;
     -- Эта вставка с ошибкой — откатим только её
@@ -124,10 +124,11 @@ BEGIN
     FOR rec IN
         SELECT generate_series AS production_id,
                20250210 AS date_id,
-               ((generate_series - 1) % 3 + 1) AS shift_id,
+               ((generate_series - 1) % 2 + 1) AS shift_id,
                CASE WHEN generate_series % 5 = 0 THEN 99999
                     ELSE (generate_series % 10 + 1) END AS equipment_id,
                1 AS mine_id,
+               1 AS shaft_id,
                1 AS operator_id,
                (random() * 100 + 50)::NUMERIC(8,2) AS tons,
                (random() * 10 + 3)::INT AS trips,
@@ -138,11 +139,11 @@ BEGIN
         BEGIN
             INSERT INTO fact_production (
                 production_id, date_id, shift_id, equipment_id,
-                mine_id, operator_id, tons_mined, trips_count, operating_hours
+                mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
             )
             VALUES (
                 rec.production_id, rec.date_id, rec.shift_id,
-                rec.equipment_id, rec.mine_id, rec.operator_id,
+                rec.equipment_id, rec.mine_id, rec.shaft_id, rec.operator_id,
                 rec.tons, rec.trips, rec.hours
             );
             v_ok := v_ok + 1;

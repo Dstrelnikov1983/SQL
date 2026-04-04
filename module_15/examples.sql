@@ -100,13 +100,13 @@ $$;
 
 -- Применение: статистика простоев по категориям
 SELECT
-    classify_downtime(fd.duration_min) AS category,
+    classify_downtime(fd.duration_min::INT) AS category,
     COUNT(*) AS cnt,
     ROUND(AVG(fd.duration_min), 0) AS avg_duration_min,
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 1) AS pct
 FROM fact_equipment_downtime fd
 WHERE fd.date_id BETWEEN 20240101 AND 20240131
-GROUP BY classify_downtime(fd.duration_min)
+GROUP BY classify_downtime(fd.duration_min::INT)
 ORDER BY avg_duration_min;
 
 
@@ -260,7 +260,8 @@ SELECT * FROM get_production_filtered(20240101, 20240131, p_equipment_type_id :=
 -- ============================================================
 
 -- 3.1 Подготовка staging-таблицы
-CREATE TABLE IF NOT EXISTS staging_production (
+DROP TABLE IF EXISTS staging_production;
+CREATE TABLE staging_production (
     LIKE fact_production INCLUDING DEFAULTS
 );
 
@@ -415,7 +416,7 @@ BEGIN
             v_field := 'd.shift_name';
         WHEN 'operator' THEN
             v_join  := 'JOIN dim_operator d ON fp.operator_id = d.operator_id';
-            v_field := 'd.last_name || '' '' || d.first_name';
+            v_field := '(d.last_name || '' '' || d.first_name)::VARCHAR';
         WHEN 'equipment' THEN
             v_join  := 'JOIN dim_equipment d ON fp.equipment_id = d.equipment_id';
             v_field := 'd.equipment_name';
@@ -485,9 +486,9 @@ BEGIN
     RETURN QUERY EXECUTE format(
         'SELECT
             e.equipment_name::VARCHAR,
-            ROUND(SUM(fp.tons_mined), 2),
-            SUM(fp.trips_count)::BIGINT,
-            ROUND(SUM(fp.tons_mined) / NULLIF(SUM(fp.operating_hours), 0), 2)
+            ROUND(SUM(fp.tons_mined), 2) AS total_tons,
+            SUM(fp.trips_count)::BIGINT AS total_trips,
+            ROUND(SUM(fp.tons_mined) / NULLIF(SUM(fp.operating_hours), 0), 2) AS avg_productivity
          FROM fact_production fp
          JOIN dim_equipment e ON fp.equipment_id = e.equipment_id
          WHERE fp.date_id BETWEEN $1 AND $2

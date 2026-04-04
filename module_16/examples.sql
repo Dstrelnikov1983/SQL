@@ -186,7 +186,7 @@ DECLARE
     v_equipment_type_id INT := 1;
     v_category VARCHAR;
 BEGIN
-    SELECT equipment_type_name INTO v_category
+    SELECT type_name INTO v_category
     FROM dim_equipment_type
     WHERE equipment_type_id = v_equipment_type_id;
 
@@ -215,7 +215,7 @@ BEGIN
     FOR rec IN
         SELECT
             e.equipment_name,
-            SUM(fd.downtime_minutes) / 60.0 AS hours
+            SUM(fd.duration_min) / 60.0 AS hours
         FROM fact_equipment_downtime fd
         JOIN dim_equipment e ON fd.equipment_id = e.equipment_id
         WHERE fd.date_id BETWEEN 20250101 AND 20250131
@@ -412,13 +412,13 @@ BEGIN
     RAISE DEBUG 'Проверка Fe содержания: %', v_fe_content;
 
     -- LOG — серверный лог
-    RAISE LOG 'Анализ пробы: Fe = %%', v_fe_content;
+    RAISE LOG 'Анализ пробы: Fe = % %%', v_fe_content;
 
     -- INFO — информационное сообщение
     RAISE INFO 'Начинаем проверку качества руды';
 
     -- NOTICE — по умолчанию видно клиенту
-    RAISE NOTICE 'Содержание Fe: %%', v_fe_content;
+    RAISE NOTICE 'Содержание Fe: % %%', v_fe_content;
 
     -- WARNING — предупреждение
     IF v_fe_content < 30 THEN
@@ -552,7 +552,7 @@ BEGIN
     RETURN QUERY
     SELECT
         e.equipment_name,
-        ROUND(SUM(fd.downtime_minutes) / 60.0, 1),
+        ROUND(SUM(fd.duration_min) / 60.0, 1),
         COUNT(*),
         (
             SELECT dr.reason_name
@@ -569,7 +569,7 @@ BEGIN
     WHERE fd.date_id BETWEEN p_date_from AND p_date_to
       AND e.mine_id = p_mine_id
     GROUP BY e.equipment_id, e.equipment_name
-    ORDER BY SUM(fd.downtime_minutes) DESC;
+    ORDER BY SUM(fd.duration_min) DESC;
 END;
 $$;
 
@@ -584,7 +584,7 @@ SELECT * FROM get_equipment_downtime_summary(1, 20250101, 20250131);
 DO $$
 DECLARE
     cur_equipment CURSOR FOR
-        SELECT e.equipment_id, e.equipment_name, et.equipment_type_name
+        SELECT e.equipment_id, e.equipment_name, et.type_name
         FROM dim_equipment e
         JOIN dim_equipment_type et ON e.equipment_type_id = et.equipment_type_id
         ORDER BY e.equipment_id;
@@ -599,7 +599,7 @@ BEGIN
 
         v_count := v_count + 1;
         RAISE NOTICE '#%: % [%]',
-            v_count, rec.equipment_name, rec.equipment_type_name;
+            v_count, rec.equipment_name, rec.type_name;
     END LOOP;
 
     CLOSE cur_equipment;
@@ -740,13 +740,14 @@ BEGIN
     ),
     downtime AS (
         SELECT
-            fd.mine_id,
+            e.mine_id,
             fd.shift_id,
-            SUM(fd.downtime_minutes) / 60.0 AS dt_hours
+            SUM(fd.duration_min) / 60.0 AS dt_hours
         FROM fact_equipment_downtime fd
+        JOIN dim_equipment e ON fd.equipment_id = e.equipment_id
         WHERE fd.date_id = p_date_id
-          AND (p_mine_id IS NULL OR fd.mine_id = p_mine_id)
-        GROUP BY fd.mine_id, fd.shift_id
+          AND (p_mine_id IS NULL OR e.mine_id = p_mine_id)
+        GROUP BY e.mine_id, fd.shift_id
     )
     SELECT
         m.mine_name,
@@ -756,12 +757,12 @@ BEGIN
         p.trips,
         ROUND(COALESCE(dt.dt_hours, 0), 1),
         ROUND(p.op_hours / NULLIF(p.eq_count * 8.0, 0) * 100, 1),
-        CASE
+        (CASE
             WHEN p.tons >= v_target_tons THEN 'План выполнен'
             WHEN p.tons >= v_target_tons * 0.8 THEN 'Близко к плану'
             WHEN p.tons >= v_target_tons * 0.5 THEN 'Отставание'
             ELSE 'Критично'
-        END
+        END)::VARCHAR
     FROM production p
     JOIN dim_mine m ON p.mine_id = m.mine_id
     JOIN dim_shift s ON p.shift_id = s.shift_id
@@ -853,7 +854,7 @@ BEGIN
     INTO v_count
     FROM dim_date d
     WHERE d.date_id BETWEEN p_date_from AND p_date_to
-      AND d.is_workday = TRUE
+      AND d.is_weekend = FALSE
       AND NOT EXISTS (
           SELECT 1 FROM fact_production fp WHERE fp.date_id = d.date_id
       );

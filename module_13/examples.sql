@@ -211,6 +211,64 @@ ORDER BY d.full_date;
 
 
 -- ============================================================
+-- 3.6 ROWS vs RANGE vs GROUPS — наглядное сравнение
+-- ============================================================
+-- Чтобы увидеть разницу ВСЕХ ТРЁХ режимов, нужны:
+--   1) Дубликаты в ORDER BY → ROWS ≠ RANGE
+--   2) Пропуски в значениях → RANGE ≠ GROUPS
+--
+-- Типы оборудования: 1 (ПДМ), 3 (Самосвал), 7 (Подъёмник)
+-- Дубликаты: по 2 единицы каждого типа
+-- Пропуски: нет типов 2, 4, 5, 6
+--
+-- Одинаковая рамка 1 PRECEDING AND CURRENT ROW — три разных результата!
+WITH data AS (
+    SELECT * FROM (VALUES
+        (1, 'ПДМ-01',       100),
+        (1, 'ПДМ-02',       120),
+        (3, 'Самосвал-01',  200),
+        (3, 'Самосвал-02',  180),
+        (7, 'Подъёмник-01', 250),
+        (7, 'Подъёмник-02', 230)
+    ) AS t(type_id, equip_name, tons)
+)
+SELECT
+    type_id, equip_name, tons,
+    SUM(tons) OVER (ORDER BY type_id
+        ROWS   BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_rows,
+    SUM(tons) OVER (ORDER BY type_id
+        RANGE  BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_range,
+    SUM(tons) OVER (ORDER BY type_id
+        GROUPS BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_groups
+FROM data;
+-- Результат для Самосвал-01 (type_id=3):
+--   ROWS  = 320 (ПДМ-02 + Самосвал-01 = 120+200)
+--   RANGE = 380 (type 2 не существует → только type 3: 200+180)
+--   GROUPS= 600 (группа type 1 + группа type 3: 100+120+200+180)
+
+-- ============================================================
+-- 3.7 То же сравнение на реальных таблицах «Руда+»
+-- ============================================================
+-- Анализ добычи по типу оборудования: equipment_type_id имеет пропуски
+SELECT
+    et.type_name,
+    e.equipment_name,
+    SUM(fp.tons_mined) AS total_tons,
+    SUM(SUM(fp.tons_mined)) OVER (ORDER BY et.equipment_type_id
+        ROWS   BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_rows,
+    SUM(SUM(fp.tons_mined)) OVER (ORDER BY et.equipment_type_id
+        RANGE  BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_range,
+    SUM(SUM(fp.tons_mined)) OVER (ORDER BY et.equipment_type_id
+        GROUPS BETWEEN 1 PRECEDING AND CURRENT ROW) AS sum_groups
+FROM fact_production fp
+JOIN dim_equipment e ON e.equipment_id = fp.equipment_id
+JOIN dim_equipment_type et ON et.equipment_type_id = e.equipment_type_id
+WHERE fp.mine_id = 1 AND fp.date_id BETWEEN 20240101 AND 20240131
+GROUP BY et.equipment_type_id, et.type_name, e.equipment_id, e.equipment_name
+ORDER BY et.equipment_type_id, e.equipment_name;
+
+
+-- ============================================================
 -- 4. АГРЕГАТНЫЕ ФУНКЦИИ С ВЛОЖЕННЫМИ ОПЕРАТОРАМИ
 -- ============================================================
 

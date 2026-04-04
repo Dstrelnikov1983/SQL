@@ -78,8 +78,8 @@ $$;
 DO $$
 BEGIN
     -- Попытка вставить дублирующую шахту
-    INSERT INTO dim_mine (mine_id, mine_name, location, depth_meters, status)
-    VALUES (1, 'Дублирующая шахта', 'Тест', 100, 'active');
+    INSERT INTO dim_mine (mine_id, mine_name, mine_code, region, max_depth_m, status)
+    VALUES (1, 'Дублирующая шахта', 'DUP', 'Тест', 100, 'active');
 
     RAISE NOTICE 'Шахта добавлена успешно';
 EXCEPTION
@@ -108,9 +108,9 @@ DO $$
 BEGIN
     INSERT INTO fact_production (
         production_id, date_id, shift_id, equipment_id, mine_id,
-        operator_id, tons_mined, trips_count, operating_hours
+        shaft_id, operator_id, tons_mined, trips_count, operating_hours
     )
-    VALUES (999999, 20250101, 1, 99999, 1, 1, 100, 10, 8);
+    VALUES (999999, 20250101, 1, 99999, 1, 1, 1, 100, 10, 8);
 EXCEPTION
     WHEN foreign_key_violation THEN
         RAISE NOTICE 'Ошибка: ссылка на несуществующий объект!';
@@ -224,8 +224,8 @@ DECLARE
     v_constraint  TEXT;
 BEGIN
     -- Генерируем ошибку
-    INSERT INTO dim_mine (mine_id, mine_name, location, depth_meters, status)
-    VALUES (1, 'Дубль', 'Тест', 100, 'active');
+    INSERT INTO dim_mine (mine_id, mine_name, mine_code, region, max_depth_m, status)
+    VALUES (1, 'Дубль', 'DUP', 'Тест', 100, 'active');
 
 EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS
@@ -332,7 +332,7 @@ BEGIN
         BEGIN
             INSERT INTO fact_production (
                 production_id, date_id, shift_id, equipment_id,
-                mine_id, operator_id, tons_mined, trips_count, operating_hours
+                mine_id, shaft_id, operator_id, tons_mined, trips_count, operating_hours
             )
             VALUES (
                 (v_record->>'production_id')::INT,
@@ -340,6 +340,7 @@ BEGIN
                 (v_record->>'shift_id')::INT,
                 (v_record->>'equipment_id')::INT,
                 (v_record->>'mine_id')::INT,
+                (v_record->>'shaft_id')::INT,
                 (v_record->>'operator_id')::INT,
                 (v_record->>'tons_mined')::NUMERIC,
                 (v_record->>'trips_count')::INT,
@@ -387,10 +388,10 @@ $$;
 -- Тест с корректными и некорректными данными
 SELECT * FROM import_production_data('[
     {"production_id": 900001, "date_id": 20250101, "shift_id": 1,
-     "equipment_id": 1, "mine_id": 1, "operator_id": 1,
+     "equipment_id": 1, "mine_id": 1, "shaft_id": 1, "operator_id": 1,
      "tons_mined": 150.5, "trips_count": 12, "operating_hours": 7.5},
     {"production_id": 900002, "date_id": 20250101, "shift_id": 1,
-     "equipment_id": 99999, "mine_id": 1, "operator_id": 1,
+     "equipment_id": 99999, "mine_id": 1, "shaft_id": 1, "operator_id": 1,
      "tons_mined": 100.0, "trips_count": 8, "operating_hours": 6.0}
 ]'::JSONB);
 
@@ -679,22 +680,34 @@ BEGIN
                   HINT = 'Проверьте справочник dim_sensor';
     END IF;
 
-    -- Upsert данных телеметрии
-    INSERT INTO fact_equipment_telemetry (
-        equipment_id, sensor_id, date_id, time_id,
-        sensor_value, location_id
-    )
-    VALUES (
-        p_equipment_id, p_sensor_id, p_date_id, p_time_id,
-        p_value, p_location_id
-    )
-    ON CONFLICT (equipment_id, sensor_id, date_id, time_id)
-    DO UPDATE SET
-        sensor_value = EXCLUDED.sensor_value,
-        location_id  = COALESCE(EXCLUDED.location_id, fact_equipment_telemetry.location_id)
-    RETURNING telemetry_id INTO v_telemetry_id;
+    -- Проверяем, существует ли запись
+    SELECT telemetry_id INTO v_telemetry_id
+    FROM fact_equipment_telemetry
+    WHERE equipment_id = p_equipment_id
+      AND sensor_id = p_sensor_id
+      AND date_id = p_date_id
+      AND time_id = p_time_id;
 
-    v_action := CASE WHEN xmax = 0 THEN 'INSERT' ELSE 'UPDATE' END;
+    IF v_telemetry_id IS NOT NULL THEN
+        -- Обновляем существующую запись
+        UPDATE fact_equipment_telemetry
+        SET sensor_value = p_value,
+            location_id  = COALESCE(p_location_id, location_id)
+        WHERE telemetry_id = v_telemetry_id;
+        v_action := 'UPDATE';
+    ELSE
+        -- Вставляем новую запись
+        INSERT INTO fact_equipment_telemetry (
+            equipment_id, sensor_id, date_id, time_id,
+            sensor_value, location_id
+        )
+        VALUES (
+            p_equipment_id, p_sensor_id, p_date_id, p_time_id,
+            p_value, p_location_id
+        )
+        RETURNING telemetry_id INTO v_telemetry_id;
+        v_action := 'INSERT';
+    END IF;
 
     v_result := jsonb_build_object(
         'status', 'ok',

@@ -41,3 +41,6 @@ scratch/
 # Игнорировать файлы проекта
 Claude.md
 *.html
+check_results.md
+students.md
+module_15/plpython_notes.md
