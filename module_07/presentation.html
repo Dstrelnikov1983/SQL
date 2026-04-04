@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 7 — Введение в индексы</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .emoji-icon { font-size: 1.2em; }
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .btree-diagram { text-align: center; margin: 15px 0; }
+        .btree-node { display: inline-block; background: var(--accent1); color: white; padding: 6px 14px; border-radius: 8px; margin: 3px 5px; font-size: 0.7em; font-weight: bold; }
+        .btree-node.leaf { background: var(--accent6); }
+        .btree-node.root { background: var(--accent2); }
+        .btree-level { margin: 5px 0; }
+
+        .heap-page { display: inline-block; border: 2px solid var(--accent1); border-radius: 8px; padding: 8px; margin: 5px; text-align: center; min-width: 90px; font-size: 0.65em; }
+        .heap-page .page-header { background: var(--accent1); color: white; padding: 3px 8px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; }
+        .heap-tuple { background: #e8f0fe; padding: 2px 6px; margin: 2px 0; border-radius: 3px; font-size: 0.9em; }
+        .heap-tuple.highlight { background: var(--accent2); color: white; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+
+        .perf-bar { height: 20px; border-radius: 4px; margin: 4px 0; display: flex; align-items: center; padding-left: 8px; color: white; font-size: 0.6em; font-weight: bold; }
+        .perf-bar.fast { background: var(--accent6); }
+        .perf-bar.medium { background: var(--accent2); }
+        .perf-bar.slow { background: #e74c3c; }
+
+        .plan-node { background: #f8f9fa; border: 2px solid var(--accent1); border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.75em; text-align: left; font-family: 'Consolas', 'Courier New', monospace; }
+        .plan-node.warn { border-color: var(--accent2); background: #fff5ec; }
+        .plan-node.good { border-color: var(--accent6); background: #f0fff0; }
+
+        .two-col { display: flex; gap: 20px; }
+        .two-col > div { flex: 1; }
+
+        .metric-box { display: inline-block; background: var(--accent1); color: white; border-radius: 10px; padding: 10px 18px; margin: 6px; text-align: center; }
+        .metric-box .val { font-size: 1.4em; font-weight: bold; }
+        .metric-box .label { font-size: 0.65em; opacity: 0.9; }
+        .metric-box.orange { background: var(--accent2); }
+        .metric-box.green { background: var(--accent6); }
+
+        .pipeline-step { display: inline-block; background: var(--accent1); color: white; padding: 8px 16px; border-radius: 8px; margin: 4px; font-size: 0.7em; font-weight: bold; }
+        .pipeline-step.active { background: var(--accent2); }
+        .pipeline-arrow { display: inline-block; font-size: 1.2em; color: #999; vertical-align: middle; margin: 0 4px; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 7</h1>
+    <h2 style="border: none;">Введение в индексы</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">IDX</span>
+        <span style="font-size: 1.5em; vertical-align: middle;">&#9889;</span>
+        <span class="icon-box orange">SQL</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 2 часа</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>Планы выполнения запросов</strong> <span class="small-text">(25 мин)</span></li>
+        <li><strong>Зачем нужны индексы?</strong> Избирательность, плотность, глубина <span class="small-text">(15 мин)</span></li>
+        <li><strong>Как PostgreSQL хранит данные:</strong> heap, страницы, кортежи <span class="small-text">(10 мин)</span></li>
+        <li><strong>Типы индексов в PostgreSQL</strong> <span class="small-text">(10 мин)</span></li>
+        <li><strong>B-tree индекс:</strong> структура, виды, создание <span class="small-text">(30 мин)</span></li>
+        <li><strong>Влияние индексов на INSERT/UPDATE/DELETE</strong> <span class="small-text">(10 мин)</span></li>
+        <li><strong>Практика и кейс «Руда+»</strong> <span class="small-text">(20 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL | EXPLAIN ANALYZE | pg_indexes
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7.1: ПЛАНЫ ВЫПОЛНЕНИЯ ЗАПРОСОВ                          -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>7.1 Планы выполнения запросов</h2>
+        <p>Как PostgreSQL обрабатывает ваш запрос</p>
+        <div style="margin-top: 20px;">
+            <span class="icon-box">?</span>
+        </div>
+    </section>
+
+    <!-- 7.1.1 Как PostgreSQL обрабатывает запрос -->
+    <section>
+        <h2>Как PostgreSQL обрабатывает запрос</h2>
+        <div style="margin: 20px 0; text-align: center;">
+            <span class="pipeline-step">SQL-запрос</span>
+            <span class="pipeline-arrow">&#8594;</span>
+            <span class="pipeline-step">Парсер</span>
+            <span class="pipeline-arrow">&#8594;</span>
+            <span class="pipeline-step">Перезапись</span>
+            <span class="pipeline-arrow">&#8594;</span>
+            <span class="pipeline-step active">Планировщик</span>
+            <span class="pipeline-arrow">&#8594;</span>
+            <span class="pipeline-step">Исполнитель</span>
+            <span class="pipeline-arrow">&#8594;</span>
+            <span class="pipeline-step">Результат</span>
+        </div>
+        <ul>
+            <li><strong>Парсер</strong> — проверяет синтаксис, строит дерево разбора</li>
+            <li><strong>Перезапись</strong> — применяет правила (views, rules)</li>
+            <li><strong>Планировщик (оптимизатор)</strong> — выбирает наилучший план выполнения на основе статистики</li>
+            <li><strong>Исполнитель</strong> — выполняет план, возвращает результат</li>
+        </ul>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Ключевой этап:</strong> Планировщик оценивает стоимость разных стратегий и выбирает самую дешёвую.
+        </div>
+    </section>
+
+    <!-- 7.1.2 Что такое план выполнения -->
+    <section>
+        <h2>Что такое план выполнения?</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Определение</h3>
+            <p><strong>План выполнения</strong> — это дерево операций (узлов), которое PostgreSQL построит для выполнения запроса. Каждый узел описывает одну операцию: сканирование таблицы, соединение, сортировку и т.д.</p>
+        </div>
+        <pre><code class="language-sql">-- Пример: простой запрос к «Руда+»
+EXPLAIN
+SELECT * FROM fact_production
+WHERE date_id = 20240315;</code></pre>
+        <div class="plan-node">
+Index Scan using idx_fact_production_date on fact_production<br>
+&nbsp;&nbsp;Index Cond: (date_id = 20240315)<br>
+&nbsp;&nbsp;cost=0.29..8.30 rows=14 width=76
+        </div>
+        <p class="small-text">План читается снизу вверх и изнутри наружу: сначала выполняются вложенные узлы.</p>
+    </section>
+
+    <!-- 7.1.3 Фактические и предполагаемые планы -->
+    <section>
+        <h2>Предполагаемый vs фактический план</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">EXPLAIN</h3>
+                    <p><strong>Предполагаемый план</strong></p>
+                    <ul style="font-size: 0.8em;">
+                        <li>Запрос <strong>не выполняется</strong></li>
+                        <li>Показывает оценку стоимости (cost)</li>
+                        <li>Показывает оценку строк (rows)</li>
+                        <li>Безопасен для DELETE/UPDATE</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent2);">EXPLAIN ANALYZE</h3>
+                    <p><strong>Фактический план</strong></p>
+                    <ul style="font-size: 0.8em;">
+                        <li>Запрос <strong>выполняется</strong></li>
+                        <li>Показывает реальное время (actual time)</li>
+                        <li>Показывает реальное количество строк</li>
+                        <li>Осторожно с UPDATE/DELETE!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card-orange card" style="margin-top: 10px;">
+            <strong>Совет:</strong> Для безопасного анализа UPDATE/DELETE оберните в транзакцию: <code>BEGIN; EXPLAIN ANALYZE DELETE ...; ROLLBACK;</code>
+        </div>
+    </section>
+
+    <!-- 7.1.4 Общие элементы плана выполнения -->
+    <section>
+        <h2>Элементы плана выполнения</h2>
+        <pre><code class="language-sql">EXPLAIN ANALYZE
+SELECT * FROM fact_production WHERE equipment_id = 5;</code></pre>
+        <div class="plan-node">
+Index Scan using idx_fact_production_equip on fact_production<br>
+&nbsp;&nbsp;Index Cond: (equipment_id = 5)<br>
+&nbsp;&nbsp;cost=<span style="color: var(--accent2);">0.29..42.76</span>
+&nbsp;&nbsp;rows=<span style="color: var(--accent1);">730</span>
+&nbsp;&nbsp;width=76<br>
+&nbsp;&nbsp;actual time=<span style="color: var(--accent6);">0.028..0.356</span>
+&nbsp;&nbsp;actual rows=<span style="color: var(--accent6);">720</span>
+&nbsp;&nbsp;loops=1<br>
+Planning Time: 0.085 ms<br>
+Execution Time: 0.512 ms
+        </div>
+        <table style="margin-top: 8px;">
+            <tr><th>Элемент</th><th>Описание</th></tr>
+            <tr><td><code>cost=0.29..42.76</code></td><td>Стоимость: startup..total (в условных единицах)</td></tr>
+            <tr><td><code>rows=730</code></td><td>Оценка количества строк планировщиком</td></tr>
+            <tr><td><code>actual time</code></td><td>Реальное время выполнения (мс)</td></tr>
+            <tr><td><code>actual rows</code></td><td>Реальное количество строк</td></tr>
+            <tr><td><code>loops</code></td><td>Сколько раз выполнялся узел</td></tr>
+            <tr><td><code>width</code></td><td>Средний размер строки (байт)</td></tr>
+        </table>
+    </section>
+
+    <!-- Элементы плана: BUFFERS -->
+    <section>
+        <h2>EXPLAIN (ANALYZE, BUFFERS)</h2>
+        <pre><code class="language-sql">EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM fact_production WHERE date_id = 20240315;</code></pre>
+        <div class="plan-node good">
+Index Scan using idx_fact_production_date on fact_production<br>
+&nbsp;&nbsp;Index Cond: (date_id = 20240315)<br>
+&nbsp;&nbsp;Buffers: shared <span style="color: var(--accent6);">hit=12</span> <span style="color: var(--accent2);">read=3</span><br>
+Planning Time: 0.085 ms<br>
+Execution Time: 0.198 ms
+        </div>
+        <table style="margin-top: 8px;">
+            <tr><th>Параметр</th><th>Описание</th></tr>
+            <tr><td><code>shared hit</code></td><td>Страницы, прочитанные <span class="highlight-green">из кэша</span> (быстро)</td></tr>
+            <tr><td><code>shared read</code></td><td>Страницы, прочитанные <span class="highlight-orange">с диска</span> (медленно)</td></tr>
+            <tr><td><code>shared dirtied</code></td><td>Страницы, изменённые в кэше</td></tr>
+            <tr><td><code>shared written</code></td><td>Страницы, записанные на диск</td></tr>
+        </table>
+        <div class="card" style="margin-top: 8px;">
+            <strong>Цель оптимизации:</strong> максимизировать <code>shared hit</code>, минимизировать <code>shared read</code>.
+        </div>
+    </section>
+
+    <!-- 7.1.5 Методы просмотра планов -->
+    <section>
+        <h2>Методы просмотра планов</h2>
+        <table>
+            <tr><th>Команда</th><th>Описание</th><th>Когда использовать</th></tr>
+            <tr>
+                <td><code>EXPLAIN</code></td>
+                <td>Оценочный план, запрос не выполняется</td>
+                <td>Быстрый взгляд на стратегию</td>
+            </tr>
+            <tr>
+                <td><code>EXPLAIN ANALYZE</code></td>
+                <td>Реальный план с фактическим временем</td>
+                <td>Точный анализ производительности</td>
+            </tr>
+            <tr>
+                <td><code>EXPLAIN (ANALYZE, BUFFERS)</code></td>
+                <td>+ информация о чтении страниц</td>
+                <td>Анализ работы с памятью и диском</td>
+            </tr>
+            <tr>
+                <td><code>EXPLAIN (FORMAT JSON)</code></td>
+                <td>Вывод в формате JSON</td>
+                <td>Программная обработка, визуализаторы</td>
+            </tr>
+            <tr>
+                <td><code>EXPLAIN (FORMAT YAML)</code></td>
+                <td>Вывод в формате YAML</td>
+                <td>Удобочитаемый структурированный вывод</td>
+            </tr>
+        </table>
+        <pre><code class="language-sql">-- Пример: JSON-формат для визуализаторов
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+SELECT * FROM fact_production WHERE equipment_id = 5;</code></pre>
+    </section>
+
+    <!-- Инструменты визуализации планов -->
+    <section>
+        <h2>Инструменты визуализации планов</h2>
+        <table>
+            <tr><th>Инструмент</th><th>Тип</th><th>Особенности</th></tr>
+            <tr>
+                <td><strong>explain.dalibo.com</strong></td>
+                <td>Веб-сервис</td>
+                <td>Интерактивное дерево, подсветка узких мест. Принимает TEXT и JSON</td>
+            </tr>
+            <tr>
+                <td><strong>explain.depesz.com</strong></td>
+                <td>Веб-сервис</td>
+                <td>Табличное представление, цветовая кодировка по стоимости</td>
+            </tr>
+            <tr>
+                <td><strong>explain.tensor.ru</strong></td>
+                <td>Веб-сервис</td>
+                <td>Диаграммы потоков данных, хорошо работает с большими планами</td>
+            </tr>
+            <tr>
+                <td><strong>pgAdmin 4</strong></td>
+                <td>Встроенный</td>
+                <td>Графический визуализатор во вкладке «Explain»</td>
+            </tr>
+            <tr>
+                <td><strong>DBeaver</strong></td>
+                <td>Встроенный</td>
+                <td>Дерево плана с метриками (кнопка «Explain Execution Plan»)</td>
+            </tr>
+            <tr>
+                <td><strong>DataGrip / IntelliJ</strong></td>
+                <td>Встроенный</td>
+                <td>Визуальное дерево с подсветкой дорогих узлов</td>
+            </tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Рекомендация:</strong> Скопируйте вывод <code>EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)</code> и вставьте на <strong>explain.dalibo.com</strong> — вы получите наглядное дерево с процентами стоимости каждого узла.
+        </div>
+    </section>
+
+    <!-- Типы узлов сканирования -->
+    <section>
+        <h2>Основные узлы плана</h2>
+        <table>
+            <tr><th>Узел</th><th>Описание</th><th>Когда возникает</th></tr>
+            <tr><td><strong>Seq Scan</strong></td><td>Последовательное чтение всех страниц таблицы</td><td>Нет индекса / нужно &gt;15% строк</td></tr>
+            <tr><td><strong>Index Scan</strong></td><td>Поиск по индексу + чтение строки из heap</td><td>Индекс есть, нужно мало строк</td></tr>
+            <tr><td><strong>Index Only Scan</strong></td><td>Все данные берутся из индекса</td><td>Покрывающий индекс</td></tr>
+            <tr><td><strong>Bitmap Index Scan</strong></td><td>Построение битовой карты по индексу</td><td>Средняя селективность</td></tr>
+            <tr><td><strong>Bitmap Heap Scan</strong></td><td>Чтение heap по битовой карте</td><td>После Bitmap Index Scan</td></tr>
+            <tr><td><strong>Nested Loop</strong></td><td>Вложенный цикл соединения</td><td>Малая внешняя таблица + индекс</td></tr>
+            <tr><td><strong>Hash Join</strong></td><td>Хеш-соединение</td><td>Средние таблицы, нет индекса</td></tr>
+            <tr><td><strong>Merge Join</strong></td><td>Слияние отсортированных данных</td><td>Обе таблицы отсортированы</td></tr>
+            <tr><td><strong>Sort</strong></td><td>Сортировка в памяти или на диске</td><td>ORDER BY без подходящего индекса</td></tr>
+            <tr><td><strong>Aggregate</strong></td><td>Агрегация (SUM, COUNT, AVG...)</td><td>GROUP BY, агрегатные функции</td></tr>
+        </table>
+    </section>
+
+    <!-- Вопрос для обсуждения -->
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="card-orange card">
+            <strong>Представьте:</strong> в таблице <code>fact_equipment_telemetry</code> базы «Руда+» <strong>10 миллионов</strong> строк. Запрос аварийных показаний за конкретную дату выполняется <strong>12 секунд</strong>. Что вы увидите в EXPLAIN?
+        </div>
+        <div class="fragment">
+            <div class="plan-node warn">
+Seq Scan on fact_equipment_telemetry<br>
+&nbsp;&nbsp;Filter: ((date_id = 20240315) AND (is_alarm = TRUE))<br>
+&nbsp;&nbsp;Rows Removed by Filter: 9 999 976<br>
+&nbsp;&nbsp;actual time=0.045..12340.000
+            </div>
+            <p style="margin-top: 10px;">Seq Scan + фильтрация 10 млн строк = медленно. <strong>Решение: создать индекс!</strong></p>
+        </div>
+    </section>
+</section>
+
+<!-- Практика: Часть 1 — EXPLAIN -->
+<section>
+    <h3>Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — Планы выполнения (шаги 1.1–1.5)</p>
+        <p><strong>Задание:</strong> Выполните EXPLAIN, EXPLAIN ANALYZE, EXPLAIN (ANALYZE, BUFFERS) и EXPLAIN FORMAT JSON для запросов к fact_production. Изучите планы выполнения.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>Время на выполнение: 12 минут</em></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7.2: ЗАЧЕМ НУЖНЫ ИНДЕКСЫ                                -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>7.2 Зачем нужны индексы?</h2>
+        <p>Аналогия с книгой</p>
+        <div style="margin-top: 20px;">
+            <span class="icon-box">?</span>
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="card-orange card">
+            <strong>Представьте:</strong> у вас учебник на 800 страниц. Вам нужно найти все упоминания слова «забой». Как вы будете искать?
+        </div>
+        <div class="fragment">
+            <div class="compare-container" style="margin-top: 20px;">
+                <div class="compare-col">
+                    <div class="key-concept">
+                        <h3 style="color: var(--accent2);">Без индекса</h3>
+                        <p>Читаем <strong>все 800 страниц</strong> подряд</p>
+                        <p class="small-text">= Sequential Scan в PostgreSQL</p>
+                    </div>
+                </div>
+                <div class="compare-col">
+                    <div class="key-concept">
+                        <h3 style="color: var(--accent6);">С индексом</h3>
+                        <p>Открываем <strong>предметный указатель</strong> в конце книги</p>
+                        <p class="small-text">= Index Scan в PostgreSQL</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Индекс в базе данных</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Определение</h3>
+            <p><strong>Индекс</strong> — это отдельная структура данных, которая хранит отсортированные значения одного или нескольких столбцов с указателями на соответствующие строки таблицы.</p>
+        </div>
+        <ul style="margin-top: 15px;">
+            <li><span class="highlight-green">Ускоряет</span> операции поиска (SELECT с WHERE)</li>
+            <li><span class="highlight-green">Ускоряет</span> сортировку (ORDER BY) и соединения (JOIN)</li>
+            <li><span class="highlight-orange">Замедляет</span> вставку, обновление и удаление (INSERT, UPDATE, DELETE)</li>
+            <li><span class="highlight-orange">Занимает</span> дополнительное дисковое пространство</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Когда индекс помогает?</h2>
+        <table>
+            <tr>
+                <th>Операция</th>
+                <th>Без индекса</th>
+                <th>С индексом</th>
+            </tr>
+            <tr>
+                <td>SELECT ... WHERE equipment_id = 5</td>
+                <td>Seq Scan: просмотр всех строк</td>
+                <td>Index Scan: переход к нужной строке</td>
+            </tr>
+            <tr>
+                <td>SELECT ... ORDER BY date_id</td>
+                <td>Чтение + сортировка в памяти</td>
+                <td>Данные уже отсортированы в индексе</td>
+            </tr>
+            <tr>
+                <td>JOIN fact_production ON equipment_id</td>
+                <td>Nested Loop с полным сканированием</td>
+                <td>Быстрый поиск по ключу</td>
+            </tr>
+            <tr>
+                <td>INSERT INTO fact_production ...</td>
+                <td>Просто добавить строку</td>
+                <td>Добавить строку + обновить все индексы</td>
+            </tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Вывод:</strong> индексы — это компромисс между скоростью чтения и стоимостью записи.
+        </div>
+    </section>
+
+    <!-- 7.2.1 Избирательность, плотность и глубина индекса -->
+    <section>
+        <h2>Избирательность (Selectivity)</h2>
+        <div class="key-concept">
+            <h3>Определение</h3>
+            <p><strong>Избирательность</strong> = количество уникальных значений / общее число строк</p>
+            <p>Чем <span class="highlight-green">ближе к 1</span> — тем лучше индекс работает</p>
+        </div>
+        <table>
+            <tr><th>Столбец (Руда+)</th><th>Уникальных</th><th>Всего строк</th><th>Избирательность</th><th>Индекс?</th></tr>
+            <tr><td>production_id (PK)</td><td>10 000</td><td>10 000</td><td>1.0</td><td class="highlight-green">Отлично</td></tr>
+            <tr><td>date_id</td><td>547</td><td>10 000</td><td>0.055</td><td class="highlight-green">Хорошо</td></tr>
+            <tr><td>equipment_id</td><td>8</td><td>10 000</td><td>0.0008</td><td class="highlight-orange">Средне</td></tr>
+            <tr><td>mine_id</td><td>2</td><td>10 000</td><td>0.0002</td><td class="highlight-orange">Плохо</td></tr>
+            <tr><td>shift_id</td><td>2</td><td>10 000</td><td>0.0002</td><td class="highlight-orange">Плохо</td></tr>
+        </table>
+        <div class="card-orange card fragment">
+            <strong>Правило:</strong> Индекс эффективен, если запрос возвращает &lt; 10-15% строк таблицы.
+        </div>
+    </section>
+
+    <section>
+        <h2>Плотность (Density) и кардинальность</h2>
+        <div class="two-col">
+            <div>
+                <div class="key-concept">
+                    <h3>Плотность</h3>
+                    <p><strong>Плотность</strong> = 1 / количество уникальных значений</p>
+                    <p>Показывает долю строк, приходящуюся на одно значение.</p>
+                </div>
+            </div>
+            <div>
+                <div class="key-concept">
+                    <h3>Кардинальность</h3>
+                    <p><strong>Высокая</strong> — много уникальных значений (date_id, telemetry_id)</p>
+                    <p><strong>Низкая</strong> — мало уникальных значений (mine_id, shift_id)</p>
+                </div>
+            </div>
+        </div>
+        <pre><code class="language-sql">-- Расчёт селективности в PostgreSQL
+SELECT
+    'equipment_id' AS column_name,
+    COUNT(DISTINCT equipment_id) AS unique_values,
+    COUNT(*) AS total_rows,
+    ROUND(COUNT(DISTINCT equipment_id)::numeric / COUNT(*)::numeric, 6) AS selectivity
+FROM fact_production;</code></pre>
+        <div class="card" style="margin-top: 8px;">
+            <strong>Вывод:</strong> для столбцов с низкой кардинальностью используйте <strong>частичные индексы</strong> или <strong>составные индексы</strong>.
+        </div>
+    </section>
+
+    <section>
+        <h2>Глубина индекса</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Что это?</h3>
+            <p><strong>Глубина B-tree</strong> — количество уровней от корня до листа. Определяет, сколько страниц индекса нужно прочитать для поиска одного значения.</p>
+        </div>
+        <table>
+            <tr><th>Количество строк</th><th>Глубина B-tree</th><th>Чтений страниц</th></tr>
+            <tr><td>до 400</td><td>1 (только корень)</td><td>1</td></tr>
+            <tr><td>до ~150 000</td><td>2</td><td>2</td></tr>
+            <tr><td>до ~60 000 000</td><td>3</td><td>3</td></tr>
+            <tr><td>до ~25 000 000 000</td><td>4</td><td>4</td></tr>
+        </table>
+        <div class="card-green card" style="margin-top: 10px;">
+            <strong>Вывод:</strong> Даже для таблицы с <strong>60 миллионами строк</strong> B-tree индекс требует всего 3 чтения! Это O(log N).
+        </div>
+        <pre><code class="language-sql">-- Посмотреть глубину индекса через расширение pageinspect
+-- SELECT * FROM bt_metap('idx_fact_production_date');
+-- level (количество уровней)</code></pre>
+    </section>
+
+    <section>
+        <h2>Контекст «Руда+»</h2>
+        <div class="card">
+            <strong>Проблема:</strong> В MES-системе «Руда+» таблица <code>fact_equipment_telemetry</code> содержит миллионы показаний датчиков. Запрос аварийных показаний за конкретную дату выполняется <span class="highlight-orange">несколько секунд</span>.
+        </div>
+        <pre><code class="language-sql">-- Без индекса: Seq Scan по всей таблице
+SELECT * FROM fact_equipment_telemetry
+WHERE date_id = 20240315
+  AND is_alarm = TRUE;
+
+-- Время: ~3200 мс на 1 000 000 строк</code></pre>
+        <div class="fragment">
+            <pre><code class="language-sql">-- С индексом: Index Scan — мгновенно
+CREATE INDEX idx_telemetry_date_alarm
+ON fact_equipment_telemetry(date_id)
+WHERE is_alarm = TRUE;
+
+-- Время: ~12 мс</code></pre>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7.3: КАК POSTGRESQL ХРАНИТ ДАННЫЕ                       -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>7.3 Как PostgreSQL хранит данные</h2>
+        <p>Heap-таблицы, страницы и кортежи</p>
+    </section>
+
+    <section>
+        <h2>Heap-таблица (куча)</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Что такое heap?</h3>
+            <p>В PostgreSQL все обычные таблицы хранятся как <strong>heap</strong> (куча) — <em>неупорядоченная</em> коллекция строк. Новые строки добавляются туда, где есть свободное место.</p>
+        </div>
+        <div style="margin-top: 15px;">
+            <div class="heap-page">
+                <div class="page-header">Страница 0</div>
+                <div class="heap-tuple">equip_id=3, ПДМ-03</div>
+                <div class="heap-tuple">equip_id=1, ПДМ-01</div>
+                <div class="heap-tuple">equip_id=7, Самосвал-02</div>
+            </div>
+            <div class="heap-page">
+                <div class="page-header">Страница 1</div>
+                <div class="heap-tuple">equip_id=12, Скип-01</div>
+                <div class="heap-tuple">equip_id=5, ПДМ-05</div>
+                <div class="heap-tuple">equip_id=2, ПДМ-02</div>
+            </div>
+            <div class="heap-page">
+                <div class="page-header">Страница 2</div>
+                <div class="heap-tuple highlight">equip_id=9, Вагон-03</div>
+                <div class="heap-tuple">equip_id=4, ПДМ-04</div>
+                <div class="heap-tuple">equip_id=15, Скип-03</div>
+            </div>
+        </div>
+        <p class="small-text" style="margin-top: 10px;">Строки расположены в произвольном порядке. Чтобы найти equip_id=9, нужно просмотреть все страницы.</p>
+    </section>
+
+    <section>
+        <h2>Структура страницы (8 КБ)</h2>
+        <div style="border: 2px solid var(--accent1); border-radius: 8px; padding: 5px; max-width: 600px; margin: 0 auto; font-size: 0.7em;">
+            <div style="background: var(--accent1); color: white; padding: 6px; text-align: center; border-radius: 4px;">Page Header (24 байта)</div>
+            <div style="background: #e8f0fe; padding: 4px; text-align: center; margin-top: 3px;">ItemId 1 | ItemId 2 | ItemId 3 | ... (массив указателей)</div>
+            <div style="background: #f8f9fa; padding: 15px; text-align: center; margin-top: 3px; color: #999;">Свободное пространство</div>
+            <div style="background: var(--accent6); color: white; padding: 4px; text-align: center; margin-top: 3px;">Tuple 3 (строка данных)</div>
+            <div style="background: #70AD47cc; color: white; padding: 4px; text-align: center; margin-top: 3px;">Tuple 2 (строка данных)</div>
+            <div style="background: #70AD47aa; color: white; padding: 4px; text-align: center; margin-top: 3px;">Tuple 1 (строка данных)</div>
+            <div style="background: var(--accent2); color: white; padding: 4px; text-align: center; margin-top: 3px; border-radius: 0 0 4px 4px;">Special Space</div>
+        </div>
+        <ul style="margin-top: 10px; font-size: 0.8em;">
+            <li>Размер страницы по умолчанию: <strong>8 КБ</strong></li>
+            <li>Кортежи растут с конца страницы, указатели — с начала</li>
+            <li>Адрес строки: <strong>ctid = (номер_страницы, номер_элемента)</strong></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>ctid — физический адрес строки</h2>
+        <pre><code class="language-sql">-- Посмотрим физический адрес строк в таблице оборудования
+SELECT ctid, equipment_id, equipment_name
+FROM dim_equipment
+ORDER BY ctid
+LIMIT 10;</code></pre>
+        <table style="margin-top: 10px;">
+            <tr><th>ctid</th><th>equipment_id</th><th>equipment_name</th></tr>
+            <tr><td>(0,1)</td><td>1</td><td>ПДМ-001</td></tr>
+            <tr><td>(0,2)</td><td>2</td><td>ПДМ-002</td></tr>
+            <tr><td>(0,3)</td><td>3</td><td>ПДМ-003</td></tr>
+            <tr><td>(0,4)</td><td>4</td><td>ПДМ-004</td></tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>ctid = (0, 1)</strong> означает: страница 0, элемент 1. Это внутренний указатель, который используют индексы для быстрого доступа к строке.
+        </div>
+    </section>
+
+    <section>
+        <h2>Вопрос для обсуждения</h2>
+        <div class="card-orange card">
+            <strong>Подумайте:</strong> Почему PostgreSQL не хранит данные в отсортированном виде, как словарь? Какие были бы преимущества и недостатки?
+        </div>
+        <div class="fragment">
+            <ul style="margin-top: 15px;">
+                <li><span class="highlight-green">Heap быстрее на вставку</span> — строка добавляется в первое свободное место</li>
+                <li><span class="highlight-orange">Сортированное хранение</span> потребовало бы перемещения строк при каждом INSERT</li>
+                <li>PostgreSQL использует <strong>MVCC</strong> (многоверсионность) — старые версии строк остаются на месте</li>
+                <li>Для упорядоченного доступа есть <strong>индексы</strong> — отдельные структуры</li>
+            </ul>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7.4: ТИПЫ ИНДЕКСОВ В POSTGRESQL                          -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>7.4 Типы индексов в PostgreSQL</h2>
+        <p>B-tree, Hash, GiST, SP-GiST, GIN, BRIN</p>
+    </section>
+
+    <section>
+        <h2>Обзор всех типов индексов</h2>
+        <table>
+            <tr>
+                <th>Тип</th>
+                <th>Когда использовать</th>
+                <th>Операции</th>
+                <th>Пример (Руда+)</th>
+            </tr>
+            <tr>
+                <td><strong>B-tree</strong></td>
+                <td>Универсальный (по умолчанию)</td>
+                <td>=, &lt;, &gt;, BETWEEN, LIKE 'x%'</td>
+                <td>equipment_id, date_id</td>
+            </tr>
+            <tr>
+                <td><strong>Hash</strong></td>
+                <td>Только точное равенство</td>
+                <td>= (только)</td>
+                <td>sensor_code (если всегда =)</td>
+            </tr>
+            <tr>
+                <td><strong>GiST</strong></td>
+                <td>Геометрия, полнотекст, диапазоны</td>
+                <td>@&gt;, &lt;@, &&, расстояние</td>
+                <td>Координаты навигации (x, y, z)</td>
+            </tr>
+            <tr>
+                <td><strong>SP-GiST</strong></td>
+                <td>Несбалансированные деревья, квадродеревья</td>
+                <td>&lt;&lt;, &gt;&gt;, ~=</td>
+                <td>IP-адреса, телефонные номера</td>
+            </tr>
+            <tr>
+                <td><strong>GIN</strong></td>
+                <td>Массивы, JSONB, полнотекст</td>
+                <td>@&gt;, ?, ?|, @@</td>
+                <td>JSONB-метаданные, теги оборудования</td>
+            </tr>
+            <tr>
+                <td><strong>BRIN</strong></td>
+                <td>Очень большие упорядоченные таблицы</td>
+                <td>=, &lt;, &gt;, BETWEEN</td>
+                <td>date_id в fact_telemetry</td>
+            </tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>В 90% случаев</strong> используется <strong>B-tree</strong>. Остальные типы — для специализированных задач.
+        </div>
+    </section>
+
+    <section>
+        <h2>Hash-индекс</h2>
+        <pre><code class="language-sql">CREATE INDEX idx_sensor_code_hash
+ON dim_sensor USING hash (sensor_code);</code></pre>
+        <div class="compare-container" style="margin-top: 15px;">
+            <div class="compare-col">
+                <div class="card-green card">
+                    <strong>Плюсы:</strong>
+                    <ul style="font-size: 0.85em;">
+                        <li>Компактнее B-tree для длинных ключей</li>
+                        <li>O(1) для точного поиска</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="card-orange card">
+                    <strong>Минусы:</strong>
+                    <ul style="font-size: 0.85em;">
+                        <li>Не поддерживает диапазоны (&lt;, &gt;)</li>
+                        <li>Не поддерживает сортировку</li>
+                        <li>Не поддерживает UNIQUE</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Вывод:</strong> Hash-индекс редко оправдан. B-tree в большинстве случаев не менее эффективен для операции <code>=</code>.
+        </div>
+    </section>
+
+    <!-- GiST подробно -->
+    <section>
+        <h2>GiST — обобщённое поисковое дерево</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Generalized Search Tree</h3>
+            <p>Сбалансированное дерево поиска, поддерживающее произвольные схемы разбиения пространства. Каждый внутренний узел содержит «ограничивающий прямоугольник» (или предикат), который описывает все данные в поддереве.</p>
+        </div>
+        <table>
+            <tr><th>Применение</th><th>Тип данных</th><th>Операторы</th></tr>
+            <tr><td>Геометрия / PostGIS</td><td>geometry, point, box, circle</td><td>@&gt;, &lt;@, &&, &lt;-&gt; (расстояние)</td></tr>
+            <tr><td>Диапазоны</td><td>int4range, tsrange, daterange</td><td>@&gt;, &lt;@, &&, -|-</td></tr>
+            <tr><td>Полнотекстовый поиск</td><td>tsvector</td><td>@@</td></tr>
+            <tr><td>Сетевые адреса</td><td>inet, cidr</td><td>&gt;&gt;, &lt;&lt;, &&</td></tr>
+            <tr><td>Исключающие ограничения</td><td>любые с оператором &&</td><td>EXCLUDE USING gist</td></tr>
+        </table>
+        <pre><code class="language-sql">-- Пространственные данные навигации «Руда+» (PostGIS)
+CREATE INDEX idx_location_geom
+ON dim_location USING gist (geom);
+
+-- Поиск всех локаций в радиусе 100 м от ПДМ
+SELECT * FROM dim_location
+WHERE ST_DWithin(geom, ST_MakePoint(45.12, 67.34)::geography, 100);
+
+-- Диапазонный тип: смены как интервалы времени
+CREATE INDEX idx_shift_range
+ON dim_shift USING gist (tsrange(start_time, end_time));</code></pre>
+        <div class="card" style="margin-top: 8px;">
+            <strong>Руда+:</strong> Подземная навигация ПДМ — поиск ближайших зон, определение участка по координатам.
+        </div>
+    </section>
+
+    <!-- SP-GiST подробно -->
+    <section>
+        <h2>SP-GiST — разделённое пространственное дерево</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Space-Partitioned GiST</h3>
+            <p>В отличие от GiST строит <strong>несбалансированные</strong> деревья: квадродеревья (quad-tree), k-d деревья, префиксные деревья (radix tree). Эффективен, когда данные имеют естественную иерархическую структуру разбиения.</p>
+        </div>
+        <table>
+            <tr><th>Структура</th><th>Тип данных</th><th>Когда лучше GiST</th></tr>
+            <tr><td>Quad-tree</td><td>point, box</td><td>Равномерно распределённые 2D-точки</td></tr>
+            <tr><td>k-d tree</td><td>point</td><td>Поиск ближайших соседей в k измерениях</td></tr>
+            <tr><td>Radix tree</td><td>text</td><td>Строки с общими префиксами (коды, URL)</td></tr>
+            <tr><td>Prefix tree</td><td>inet, cidr</td><td>IP-адреса, сетевые подсети</td></tr>
+        </table>
+        <pre><code class="language-sql">-- SP-GiST для текстового поиска по префиксу
+-- (инвентарные номера оборудования: INV-LHD-001, INV-TRK-002...)
+CREATE INDEX idx_equip_inventory_spgist
+ON dim_equipment USING spgist (inventory_number);
+
+-- SP-GiST для IP-адресов бортовых компьютеров
+CREATE INDEX idx_sensor_ip_spgist
+ON dim_sensor USING spgist (ip_address inet_ops);</code></pre>
+        <div class="card" style="margin-top: 8px;">
+            <strong>Когда выбирать SP-GiST вместо GiST:</strong> данные с естественной иерархией (префиксы, координатные квадранты). SP-GiST компактнее и быстрее, но поддерживает меньше операторов.
+        </div>
+    </section>
+
+    <!-- GIN подробно -->
+    <section>
+        <h2>GIN — обобщённый инвертированный индекс</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Generalized Inverted Index</h3>
+            <p>Хранит <strong>инвертированный список</strong>: для каждого элемента (слово, ключ, тег) — список строк, в которых он встречается. Идеален для составных значений, где одна строка содержит <strong>много элементов</strong>.</p>
+        </div>
+        <table>
+            <tr><th>Применение</th><th>Тип данных</th><th>Операторы</th></tr>
+            <tr><td>Полнотекстовый поиск</td><td>tsvector</td><td>@@ (совпадение tsquery)</td></tr>
+            <tr><td>JSONB</td><td>jsonb</td><td>@&gt;, ?, ?|, ?&</td></tr>
+            <tr><td>Массивы</td><td>anyarray</td><td>@&gt;, &lt;@, &&, =</td></tr>
+            <tr><td>Триграммы</td><td>text (pg_trgm)</td><td>%, &lt;-&gt;, LIKE '%abc%'</td></tr>
+        </table>
+        <pre><code class="language-sql">-- 1. Полнотекстовый поиск по комментариям к простоям
+CREATE INDEX idx_downtime_comment_gin
+ON fact_equipment_downtime
+USING gin (to_tsvector('russian', comment));
+
+SELECT * FROM fact_equipment_downtime
+WHERE to_tsvector('russian', comment)
+      @@ to_tsquery('russian', 'гидравлик* | насос*');
+
+-- 2. JSONB-метаданные датчиков (параметры калибровки и т.д.)
+-- ALTER TABLE dim_sensor ADD COLUMN metadata jsonb;
+CREATE INDEX idx_sensor_metadata_gin
+ON dim_sensor USING gin (metadata);
+
+SELECT * FROM dim_sensor
+WHERE metadata @> '{"calibrated": true}';
+
+-- 3. Нечёткий поиск по LIKE '%текст%' (расширение pg_trgm)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX idx_equip_name_trgm
+ON dim_equipment USING gin (equipment_name gin_trgm_ops);
+
+SELECT * FROM dim_equipment
+WHERE equipment_name LIKE '%самосвал%';</code></pre>
+    </section>
+
+    <section>
+        <h2>GIN: варианты классов операторов</h2>
+        <div class="two-col">
+            <div>
+                <div class="card">
+                    <h3>jsonb_ops (по умолчанию)</h3>
+                    <ul style="font-size: 0.8em;">
+                        <li>Поддерживает <code>@&gt;</code>, <code>?</code>, <code>?|</code>, <code>?&</code></li>
+                        <li>Индексирует все ключи и значения</li>
+                        <li>Больше по размеру</li>
+                    </ul>
+                    <pre><code class="language-sql">CREATE INDEX ON t
+USING gin (data);</code></pre>
+                </div>
+            </div>
+            <div>
+                <div class="card-green card">
+                    <h3>jsonb_path_ops</h3>
+                    <ul style="font-size: 0.8em;">
+                        <li>Поддерживает только <code>@&gt;</code></li>
+                        <li>Индексирует хеш пути + значение</li>
+                        <li>Компактнее в 2-3 раза</li>
+                    </ul>
+                    <pre><code class="language-sql">CREATE INDEX ON t
+USING gin (data jsonb_path_ops);</code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="card-orange card" style="margin-top: 10px;">
+            <strong>Важно:</strong> Тип <code>json</code> (не <code>jsonb</code>) <strong>не поддерживает</strong> GIN-индексы напрямую. Для индексирования JSON-полей используйте тип <code>jsonb</code> или индексы по выражениям.
+        </div>
+        <div class="card" style="margin-top: 8px;">
+            <strong>XML:</strong> Нативных GIN/GiST индексов для типа <code>xml</code> в PostgreSQL нет. Используйте индексы по выражениям (<code>xpath()</code>) или конвертируйте в <code>jsonb</code>.
+        </div>
+    </section>
+
+    <section>
+        <h2>BRIN — блочный диапазонный индекс</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">Идея BRIN</h3>
+            <p>Хранит <strong>минимум и максимум</strong> значений для каждого блока из N страниц. Очень компактный, но эффективен только для <strong>физически упорядоченных</strong> данных.</p>
+        </div>
+        <pre><code class="language-sql">-- BRIN идеален для телеметрии: данные вставляются по порядку дат
+CREATE INDEX idx_telemetry_date_brin
+ON fact_equipment_telemetry USING brin (date_id)
+WITH (pages_per_range = 128);
+
+-- Размер: ~48 КБ vs ~21 МБ для B-tree (на 10М строк)</code></pre>
+        <div class="compare-container" style="margin-top: 10px;">
+            <div class="compare-col">
+                <div class="card card-green">
+                    <strong>B-tree:</strong> 21 МБ, Index Scan: 0.5 мс
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="card card-green">
+                    <strong>BRIN:</strong> 48 КБ, Bitmap Scan: 3 мс
+                </div>
+            </div>
+        </div>
+        <p class="small-text">BRIN в 400 раз меньше, но в 6 раз медленнее. Идеален для огромных таблиц, где размер критичен.</p>
+    </section>
+
+    <!-- Колоночное хранение -->
+    <section>
+        <h2>А где Columnstore? Колоночное хранение в PostgreSQL</h2>
+        <div class="card-orange card">
+            <strong>Вопрос от студентов:</strong> В SQL Server есть <em>Columnstore Index</em>, в Oracle — <em>In-Memory Column Store</em>. Есть ли аналог в PostgreSQL?
+        </div>
+        <div class="key-concept" style="margin-top: 12px;">
+            <h3 style="color: var(--accent2);">Ответ: нативных колоночных индексов в PostgreSQL нет</h3>
+            <p>PostgreSQL хранит данные <strong>построчно</strong> (row-oriented). Но есть альтернативы:</p>
+        </div>
+        <table style="margin-top: 10px;">
+            <tr><th>Решение</th><th>Тип</th><th>Описание</th></tr>
+            <tr>
+                <td><strong>BRIN</strong></td>
+                <td>Встроенный индекс</td>
+                <td>Ближайший аналог zone maps — min/max по блокам. Для упорядоченных аналитических данных</td>
+            </tr>
+            <tr>
+                <td><strong>Citus Columnar</strong></td>
+                <td>Расширение</td>
+                <td>Колоночный формат хранения таблиц. Сжатие в 5-10x, быстрые агрегации</td>
+            </tr>
+            <tr>
+                <td><strong>TimescaleDB Hypercore</strong></td>
+                <td>Расширение</td>
+                <td>Гибридное row/columnar хранение для временных рядов</td>
+            </tr>
+        </table>
+        <pre><code class="language-sql">-- Citus Columnar: колоночная таблица для архива телеметрии
+CREATE TABLE telemetry_archive (LIKE fact_equipment_telemetry)
+USING columnar;
+
+-- Сжатие в 5-10 раз, быстрые SUM/AVG/COUNT
+-- Но: нет UPDATE/DELETE, медленные точечные запросы</code></pre>
+        <div class="card-green card" style="margin-top: 8px;">
+            <strong>Citus Columnar</strong> будет подробно рассмотрен в отдельном модуле курса.
+        </div>
+    </section>
+
+    <section>
+        <h2>Квиз: выбор типа индекса</h2>
+        <div class="card">
+            <strong>Ситуация:</strong> Таблица телеметрии — 50 млн строк, данные всегда вставляются последовательно по дате. Нужен индекс по <code>date_id</code>, но дисковое пространство ограничено.
+        </div>
+        <div class="quiz-option">A) B-tree</div>
+        <div class="quiz-option">B) Hash</div>
+        <div class="quiz-option">C) BRIN</div>
+        <div class="quiz-option">D) GiST</div>
+        <div class="fragment">
+            <div class="card-green card">
+                <strong>Ответ: C) BRIN</strong> — минимальный размер, данные физически упорядочены — идеальный случай для BRIN.
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7.5: B-TREE ИНДЕКС (ПОДРОБНО)                           -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>7.5 B-tree индекс</h2>
+        <p>Основной тип индекса в PostgreSQL</p>
+    </section>
+
+    <!-- 7.5.1 Структура B-tree -->
+    <section>
+        <h2>7.5.1 Структура B-tree</h2>
+        <div class="btree-diagram">
+            <div class="btree-level">
+                <span class="btree-node root">10 | 20 | 30</span>
+            </div>
+            <div class="btree-level" style="font-size: 0.8em; color: #999;">
+                &#8601; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#8595; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#8600;
+            </div>
+            <div class="btree-level">
+                <span class="btree-node">3 | 5 | 8</span>
+                <span class="btree-node">12 | 15 | 18</span>
+                <span class="btree-node">22 | 25 | 28</span>
+                <span class="btree-node">32 | 35 | 40</span>
+            </div>
+            <div class="btree-level" style="font-size: 0.8em; color: #999;">
+                &#8595; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#8595; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#8595; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#8595;
+            </div>
+            <div class="btree-level">
+                <span class="btree-node leaf">1,2,3 &#8594;</span>
+                <span class="btree-node leaf">5,6,8 &#8594;</span>
+                <span class="btree-node leaf">10,11,12 &#8594;</span>
+                <span class="btree-node leaf">... &#8594;</span>
+            </div>
+        </div>
+        <ul style="font-size: 0.8em;">
+            <li><span class="btree-node root" style="font-size: 0.8em;">Корень</span> — верхний уровень, один узел</li>
+            <li><span class="btree-node" style="font-size: 0.8em;">Внутренние узлы</span> — навигация по диапазонам</li>
+            <li><span class="btree-node leaf" style="font-size: 0.8em;">Листья</span> — значения ключей + ctid (указатели на heap)</li>
+            <li>Листья связаны между собой (двусвязный список) — для диапазонных запросов</li>
+        </ul>
+    </section>
+
+    <!-- 7.5.2 Поиск по B-tree: пример -->
+    <section>
+        <h2>7.5.2 Поиск по B-tree: пример</h2>
+        <div class="card">
+            <strong>Задача:</strong> найти <code>equipment_id = 15</code> в индексе <code>idx_fact_production_equip</code>
+        </div>
+        <div class="btree-diagram" style="margin-top: 10px;">
+            <div class="btree-level">
+                <span class="btree-node root">5 | 10 | 15</span>
+                <span style="font-size: 0.7em; color: var(--accent2);"> &larr; Шаг 1: 15 &ge; 10, идём вправо</span>
+            </div>
+            <div class="btree-level" style="margin-top: 10px;">
+                <span class="btree-node">11 | 13 | 14</span>
+                <span class="btree-node" style="border: 3px solid var(--accent2);">15 | 16 | 17</span>
+                <span style="font-size: 0.7em; color: var(--accent2);"> &larr; Шаг 2: нашли узел</span>
+            </div>
+            <div class="btree-level" style="margin-top: 10px;">
+                <span class="btree-node leaf" style="border: 3px solid var(--accent6);">15 &#8594; ctid(4,7)</span>
+                <span style="font-size: 0.7em; color: var(--accent6);"> &larr; Шаг 3: читаем heap по ctid</span>
+            </div>
+        </div>
+        <div class="card-green card" style="margin-top: 10px;">
+            <strong>Сложность:</strong> O(log N). Для таблицы в 1 000 000 строк — всего ~3 чтения страниц вместо тысяч.
+        </div>
+    </section>
+
+    <!-- 7.5.3 B-tree: поддерживаемые операции -->
+    <section>
+        <h2>7.5.3 B-tree: поддерживаемые операции</h2>
+        <table>
+            <tr>
+                <th>Операция</th>
+                <th>Поддержка</th>
+                <th>Пример (Руда+)</th>
+            </tr>
+            <tr><td><code>=</code></td><td><span class="highlight-green">Да</span></td><td><code>WHERE equipment_id = 5</code></td></tr>
+            <tr><td><code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></td><td><span class="highlight-green">Да</span></td><td><code>WHERE date_id >= 20240101</code></td></tr>
+            <tr><td><code>BETWEEN</code></td><td><span class="highlight-green">Да</span></td><td><code>WHERE date_id BETWEEN 20240301 AND 20240331</code></td></tr>
+            <tr><td><code>IN (...)</code></td><td><span class="highlight-green">Да</span></td><td><code>WHERE mine_id IN (1, 2)</code></td></tr>
+            <tr><td><code>IS NULL</code></td><td><span class="highlight-green">Да</span></td><td><code>WHERE end_time IS NULL</code></td></tr>
+            <tr><td><code>LIKE 'abc%'</code></td><td><span class="highlight-green">Да</span> (префикс)</td><td><code>WHERE mine_code LIKE 'MINE%'</code></td></tr>
+            <tr><td><code>LIKE '%abc'</code></td><td><span class="highlight-orange">Нет</span></td><td>Нужен pg_trgm / GIN</td></tr>
+            <tr><td><code>ORDER BY</code></td><td><span class="highlight-green">Да</span></td><td>Данные уже отсортированы</td></tr>
+        </table>
+    </section>
+
+    <!-- 7.5.4 Синтаксис CREATE INDEX -->
+    <section>
+        <h2>7.5.4 Синтаксис CREATE INDEX</h2>
+        <pre><code class="language-sql">CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ IF NOT EXISTS ]
+    имя_индекса
+ON имя_таблицы
+    [ USING метод ]  -- btree (по умолчанию), hash, gist, gin, brin
+    ( столбец1 [ ASC | DESC ] [ NULLS { FIRST | LAST } ]
+      [, столбец2 ... ] )
+    [ INCLUDE ( столбец, ... ) ]    -- покрывающий индекс (PG 11+)
+    [ WHERE условие ]               -- частичный индекс
+    [ WITH ( параметр = значение ) ] -- fillfactor, и др.
+    [ TABLESPACE имя ];             -- табличное пространство</code></pre>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Имя индекса:</strong> рекомендуемый шаблон — <code>idx_&lt;таблица&gt;_&lt;столбец(ы)&gt;</code>, например <code>idx_prod_date</code>.
+        </div>
+    </section>
+
+    <!-- 7.5.5 Обычный индекс -->
+    <section>
+        <h2>7.5.5 Обычный индекс</h2>
+        <pre><code class="language-sql">-- Индекс на один столбец
+CREATE INDEX idx_prod_tons_mined
+ON fact_production(tons_mined);
+
+-- Проверяем: теперь Index Scan вместо Seq Scan
+EXPLAIN ANALYZE
+SELECT * FROM fact_production
+WHERE tons_mined > 150;
+
+-- Индекс с направлением сортировки
+CREATE INDEX idx_prod_date_desc
+ON fact_production(date_id DESC NULLS LAST);
+
+-- Используется для ORDER BY DESC
+EXPLAIN ANALYZE
+SELECT date_id, equipment_id, tons_mined
+FROM fact_production
+ORDER BY date_id DESC
+LIMIT 20;</code></pre>
+    </section>
+
+    <!-- 7.5.6 UNIQUE индекс -->
+    <section>
+        <h2>7.5.6 UNIQUE индекс</h2>
+        <pre><code class="language-sql">-- Уникальный индекс: гарантирует уникальность значений
+CREATE UNIQUE INDEX idx_equip_inventory_unique
+ON dim_equipment(inventory_number);
+
+-- Попытка вставить дубликат:
+INSERT INTO dim_equipment (equipment_type_id, mine_id,
+    equipment_name, inventory_number, manufacturer)
+VALUES (1, 1, 'ПДМ-новый', 'INV-LHD-001', 'Caterpillar');
+
+-- Ошибка: duplicate key value violates
+-- unique constraint "idx_equip_inventory_unique"</code></pre>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Важно:</strong> Ограничения <code>PRIMARY KEY</code> и <code>UNIQUE</code> автоматически создают B-tree индекс. Не нужно создавать их отдельно!
+        </div>
+    </section>
+
+    <!-- 7.5.7 Частичный индекс -->
+    <section>
+        <h2>7.5.7 Частичный индекс (Partial Index)</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent2);">Идея</h3>
+            <p>Индексируем <strong>только подмножество строк</strong>, соответствующих условию WHERE. Индекс меньше, быстрее обновляется.</p>
+        </div>
+        <pre><code class="language-sql">-- Индекс только по аварийным показаниям телеметрии
+CREATE INDEX idx_telemetry_alarm
+ON fact_equipment_telemetry(date_id, equipment_id)
+WHERE is_alarm = TRUE;
+
+-- Используется при запросе:
+SELECT * FROM fact_equipment_telemetry
+WHERE date_id = 20240315
+  AND equipment_id = 3
+  AND is_alarm = TRUE;  -- условие совпадает с WHERE индекса</code></pre>
+        <div class="card-green card" style="margin-top: 10px;">
+            <strong>Руда+:</strong> Аварийные показания — менее 2% данных. Частичный индекс будет в 50 раз компактнее полного.
+        </div>
+    </section>
+
+    <!-- 7.5.8 Индекс по выражению -->
+    <section>
+        <h2>7.5.8 Индекс по выражению (Expression Index)</h2>
+        <pre><code class="language-sql">-- Индекс по вычисляемому выражению
+CREATE INDEX idx_prod_year_month
+ON fact_production ((date_id / 100));
+-- date_id = YYYYMMDD, date_id / 100 = YYYYMM
+
+-- Используется при запросе:
+SELECT * FROM fact_production
+WHERE date_id / 100 = 202403;
+
+-- Индекс по LOWER для регистронезависимого поиска
+CREATE INDEX idx_operator_lastname_lower
+ON dim_operator (LOWER(last_name));
+
+SELECT * FROM dim_operator
+WHERE LOWER(last_name) = 'петров';</code></pre>
+        <div class="card-orange card" style="margin-top: 10px;">
+            <strong>Важно:</strong> выражение в запросе должно <strong>точно совпадать</strong> с выражением в определении индекса.
+        </div>
+    </section>
+
+    <!-- 7.5.9 Покрывающий индекс -->
+    <section>
+        <h2>7.5.9 Покрывающий индекс (INCLUDE)</h2>
+        <pre><code class="language-sql">-- Покрывающий индекс: дополнительные столбцы хранятся в листьях
+CREATE INDEX idx_prod_date_covering
+ON fact_production(date_id)
+INCLUDE (equipment_id, tons_mined);
+
+-- Index Only Scan: не обращается к heap!
+EXPLAIN ANALYZE
+SELECT date_id, equipment_id, tons_mined
+FROM fact_production
+WHERE date_id = 20240315;</code></pre>
+        <div class="card" style="margin-top: 10px;">
+            <strong>INCLUDE vs ключевые столбцы:</strong> столбцы в INCLUDE <strong>не сортируются</strong> и не участвуют в поиске — они просто «приложены» к листьям для избежания обращения к heap.
+        </div>
+        <pre><code class="language-sql">-- Запрос с дополнительным столбцом — уже НЕ Index Only Scan
+SELECT date_id, equipment_id, tons_mined, fuel_consumed_l
+FROM fact_production
+WHERE date_id = 20240315;</code></pre>
+    </section>
+
+    <!-- 7.5.10 Index Scan vs Index Only Scan -->
+    <section>
+        <h2>7.5.10 Index Scan vs Index Only Scan</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">Index Scan</h3>
+                    <ol style="font-size: 0.8em;">
+                        <li>Найти ключ в B-tree</li>
+                        <li>Получить ctid</li>
+                        <li><strong>Обратиться к heap</strong> за остальными столбцами</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent6);">Index Only Scan</h3>
+                    <ol style="font-size: 0.8em;">
+                        <li>Найти ключ в B-tree</li>
+                        <li><strong>Все нужные данные уже в индексе!</strong></li>
+                        <li>Проверить Visibility Map</li>
+                    </ol>
+                    <p class="small-text">Heap Fetches: 0 = всё из индекса</p>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Visibility Map:</strong> PostgreSQL проверяет, «видимы» ли строки для текущей транзакции. Если <code>Heap Fetches &gt; 0</code> — нужен <code>VACUUM</code>.
+        </div>
+    </section>
+
+    <!-- 7.5.11 CONCURRENTLY -->
+    <section>
+        <h2>7.5.11 CONCURRENTLY — без блокировки</h2>
+        <pre><code class="language-sql">-- Стандартное создание: блокирует INSERT/UPDATE/DELETE
+CREATE INDEX idx_example ON big_table(column);
+
+-- CONCURRENTLY: не блокирует, но дольше создаётся
+CREATE INDEX CONCURRENTLY idx_example
+ON big_table(column);</code></pre>
+        <table style="margin-top: 10px;">
+            <tr>
+                <th>Параметр</th>
+                <th>Обычный</th>
+                <th>CONCURRENTLY</th>
+            </tr>
+            <tr><td>Блокировка таблицы</td><td>Да (ShareLock)</td><td>Нет</td></tr>
+            <tr><td>Скорость создания</td><td>Быстрее</td><td>Медленнее (2 прохода)</td></tr>
+            <tr><td>Можно в транзакции?</td><td>Да</td><td>Нет</td></tr>
+            <tr><td>Применение</td><td>Разработка, миграции</td><td>Продуктив</td></tr>
+        </table>
+        <div class="card-orange card" style="margin-top: 10px;">
+            <strong>Совет:</strong> На продуктивных базах всегда используйте <code>CONCURRENTLY</code>, чтобы не блокировать работу приложения.
+        </div>
+    </section>
+
+    <!-- 7.5.12 Одноколоночные и композитные индексы -->
+    <section>
+        <h2>7.5.12 Композитные индексы</h2>
+        <pre><code class="language-sql">-- Один индекс на несколько столбцов
+CREATE INDEX idx_prod_equip_date
+ON fact_production(equipment_id, date_id);</code></pre>
+        <div class="key-concept" style="margin-top: 15px;">
+            <h3 style="color: var(--accent2);">Правило «левого префикса»</h3>
+            <p>Композитный индекс <code>(A, B, C)</code> эффективно используется для запросов:</p>
+            <ul style="font-size: 0.85em;">
+                <li><span class="highlight-green">WHERE A = ?</span> — да</li>
+                <li><span class="highlight-green">WHERE A = ? AND B = ?</span> — да</li>
+                <li><span class="highlight-green">WHERE A = ? AND B = ? AND C = ?</span> — да</li>
+                <li><span class="highlight-orange">WHERE B = ?</span> — нет (A не указан)</li>
+                <li><span class="highlight-orange">WHERE B = ? AND C = ?</span> — нет</li>
+                <li><span class="highlight-green">WHERE A = ? AND C = ?</span> — частично (A используется)</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>Порядок столбцов: наглядно</h2>
+        <div class="card">
+            <strong>Аналогия с телефонной книгой:</strong> отсортирована по <em>Фамилии</em>, затем <em>Имени</em>.
+        </div>
+        <table style="margin-top: 10px;">
+            <tr><th>Запрос</th><th>Телефонная книга</th><th>Индекс (A, B)</th></tr>
+            <tr>
+                <td>Найти «Петров»</td>
+                <td>Перейти к букве «П»</td>
+                <td>WHERE A = 'Петров' — быстро</td>
+            </tr>
+            <tr>
+                <td>Найти «Петров Иван»</td>
+                <td>«П» &#8594; «Иван»</td>
+                <td>WHERE A = 'Петров' AND B = 'Иван' — ещё быстрее</td>
+            </tr>
+            <tr>
+                <td>Найти всех «Иван»</td>
+                <td>Просмотреть всю книгу!</td>
+                <td>WHERE B = 'Иван' — индекс бесполезен</td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h2>Как выбрать порядок столбцов?</h2>
+        <div class="card">
+            <strong>Правило:</strong> сначала <span class="highlight-blue">столбцы равенства</span>, затем — <span class="highlight-orange">столбцы диапазонов</span>, потом — <span class="highlight-green">столбцы сортировки</span>.
+        </div>
+        <pre><code class="language-sql">-- Частый запрос в «Руда+»:
+SELECT * FROM fact_production
+WHERE equipment_id = 5           -- равенство
+  AND date_id BETWEEN 20240301   -- диапазон
+                   AND 20240331;
+
+-- Правильный порядок: сначала равенство, потом диапазон
+CREATE INDEX idx_prod_equip_date
+ON fact_production(equipment_id, date_id);
+
+-- Неправильный порядок:
+CREATE INDEX idx_prod_date_equip
+ON fact_production(date_id, equipment_id);
+-- date_id в диапазоне — сканируется больше поддеревьев</code></pre>
+    </section>
+
+    <section>
+        <h2>Bitmap Index Scan — объединение индексов</h2>
+        <pre><code class="language-sql">-- Если есть два отдельных индекса: idx_equip и idx_shift
+EXPLAIN ANALYZE
+SELECT * FROM fact_production
+WHERE equipment_id = 5
+  AND shift_id = 2;</code></pre>
+        <div class="plan-node">
+Bitmap Heap Scan on fact_production<br>
+&nbsp;&nbsp;Recheck Cond: ((equipment_id = 5) AND (shift_id = 2))<br>
+&nbsp;&nbsp;-> BitmapAnd<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-> Bitmap Index Scan on idx_fact_production_equip<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-> Bitmap Index Scan on idx_fact_production_shift
+        </div>
+        <div class="card" style="margin-top: 10px;">
+            PostgreSQL может объединить несколько одноколоночных индексов через <strong>BitmapAnd/BitmapOr</strong>, но это <span class="highlight-orange">менее эффективно</span>, чем один композитный индекс.
+        </div>
+    </section>
+
+    <!-- 7.5.13 Команда CLUSTER -->
+    <section>
+        <h2>7.5.13 Команда CLUSTER</h2>
+        <div class="key-concept">
+            <h3 style="color: var(--accent1);">CLUSTER</h3>
+            <p>Перезаписывает таблицу, физически упорядочивая строки по указанному индексу. Аналог <em>кластеризованного индекса</em> в SQL Server, но <strong>однократная операция</strong>.</p>
+        </div>
+        <pre><code class="language-sql">-- Физически упорядочить добычу по date_id
+CLUSTER fact_production USING idx_fact_production_date;
+
+-- Проверить: ctid теперь отражает порядок date_id
+SELECT ctid, date_id, equipment_id, tons_mined
+FROM fact_production
+ORDER BY ctid
+LIMIT 10;
+
+-- Обновить статистику после CLUSTER
+ANALYZE fact_production;</code></pre>
+    </section>
+
+    <section>
+        <h2>CLUSTER: особенности</h2>
+        <table>
+            <tr>
+                <th>Характеристика</th>
+                <th>SQL Server (Clustered Index)</th>
+                <th>PostgreSQL (CLUSTER)</th>
+            </tr>
+            <tr><td>Автоматическое поддержание порядка</td><td><span class="highlight-green">Да</span></td><td><span class="highlight-orange">Нет</span></td></tr>
+            <tr><td>Новые строки в порядке</td><td><span class="highlight-green">Да</span></td><td><span class="highlight-orange">Нет (в свободное место)</span></td></tr>
+            <tr><td>Блокировка таблицы</td><td>При создании</td><td>ACCESS EXCLUSIVE lock</td></tr>
+            <tr><td>Повторный запуск</td><td>Не нужно</td><td>Периодически</td></tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>Когда полезен:</strong> аналитические таблицы «Руда+», которые загружаются пакетно (ETL) и редко обновляются. После загрузки данных — <code>CLUSTER</code>, затем <code>ANALYZE</code>.
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 7.6: ВЛИЯНИЕ ИНДЕКСОВ НА INSERT/UPDATE/DELETE            -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>7.6 Влияние индексов на INSERT/UPDATE/DELETE</h2>
+        <p>Цена, которую мы платим за скорость чтения</p>
+    </section>
+
+    <section>
+        <h2>Индексы замедляют запись</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 style="color: var(--accent6);">INSERT без индексов</h3>
+                <div class="perf-bar fast" style="width: 30%;">Быстро</div>
+                <p style="font-size: 0.75em;">Добавить строку в heap</p>
+            </div>
+            <div class="compare-col">
+                <h3 style="color: var(--accent2);">INSERT с 5 индексами</h3>
+                <div class="perf-bar medium" style="width: 70%;">Медленнее в 2-3 раза</div>
+                <p style="font-size: 0.75em;">Добавить в heap + обновить каждый из 5 индексов</p>
+            </div>
+        </div>
+        <table style="margin-top: 15px;">
+            <tr><th>Операция</th><th>Влияние индексов</th></tr>
+            <tr><td><strong>INSERT</strong></td><td>Каждый индекс обновляется при каждой вставке</td></tr>
+            <tr><td><strong>UPDATE</strong></td><td>В PostgreSQL UPDATE = DELETE + INSERT (из-за MVCC). Все индексы обновляются, даже если изменён неиндексированный столбец</td></tr>
+            <tr><td><strong>DELETE</strong></td><td>Строка помечается как удалённая, индексы обновляются при VACUUM</td></tr>
+        </table>
+        <div class="card-orange card" style="margin-top: 10px;">
+            <strong>HOT Update:</strong> Если изменённый столбец не входит ни в один индекс и на странице есть место — PostgreSQL может обновить строку без обновления индексов (Heap-Only Tuple).
+        </div>
+    </section>
+
+    <section>
+        <h2>Баланс: чтение vs запись</h2>
+        <table>
+            <tr>
+                <th>Сценарий</th>
+                <th>Рекомендация</th>
+            </tr>
+            <tr>
+                <td>OLAP (аналитика) — много чтения, мало записи</td>
+                <td><span class="highlight-green">Больше индексов</span> — ускорят аналитические запросы</td>
+            </tr>
+            <tr>
+                <td>OLTP (транзакции) — много записи</td>
+                <td><span class="highlight-orange">Минимум индексов</span> — только самые необходимые</td>
+            </tr>
+            <tr>
+                <td>ETL-загрузка (пакетная)</td>
+                <td>Удалить индексы &#8594; загрузить &#8594; пересоздать</td>
+            </tr>
+            <tr>
+                <td>Смешанная нагрузка</td>
+                <td>Мониторинг и оптимизация по метрикам</td>
+            </tr>
+        </table>
+        <div class="card" style="margin-top: 10px;">
+            <strong>MES «Руда+»:</strong> аналитическая БД (OLAP) — индексы на факт-таблицах оправданы, данные загружаются пакетно.
+        </div>
+    </section>
+</section>
+
+<!-- ==================== ПРАКТИКА ==================== -->
+<section>
+    <h3>Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Части 2–7 — Seq Scan vs Index Scan, создание различных типов индексов, композитные индексы, CLUSTER</p>
+        <p><strong>Задание:</strong> Создайте индексы, сравните планы выполнения до и после, создайте частичный, выражение-индекс и покрывающий индекс для таблиц «Руда+».</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>Время на выполнение: 25 минут</em></p>
+</section>
+
+<section>
+    <h3>Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на создание и анализ индексов на базе «Руда+»</p>
+        <p><strong>Формат:</strong> EXPLAIN ANALYZE до и после создания индексов, оценка эффективности</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <section>
+        <h2>Итоги модуля</h2>
+        <ul>
+            <li><strong>План выполнения</strong> — EXPLAIN / EXPLAIN ANALYZE показывает стратегию PostgreSQL</li>
+            <li><strong>Избирательность</strong> — чем ближе к 1, тем эффективнее индекс</li>
+            <li><strong>Heap-таблица</strong> — неупорядоченное хранение строк в страницах по 8 КБ</li>
+            <li><strong>B-tree</strong> — основной тип индекса (по умолчанию), O(log N)</li>
+            <li><strong>Hash, GiST, SP-GiST, GIN, BRIN</strong> — специализированные индексы</li>
+            <li><strong>Частичные и выражение-индексы</strong> — точная оптимизация</li>
+            <li><strong>Покрывающие индексы</strong> (INCLUDE) — Index Only Scan</li>
+            <li><strong>Композитные индексы</strong> — правило левого префикса, порядок важен!</li>
+            <li><strong>CLUSTER</strong> — однократное физическое упорядочение</li>
+            <li>Индексы ускоряют чтение, но <strong>замедляют запись</strong></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Финальный квиз</h2>
+        <div class="card">
+            <strong>Вопрос 1:</strong> Какой тип индекса создаётся по умолчанию в PostgreSQL?
+        </div>
+        <div class="quiz-option">A) Hash</div>
+        <div class="quiz-option">B) GiST</div>
+        <div class="quiz-option">C) B-tree</div>
+        <div class="quiz-option">D) BRIN</div>
+        <div class="fragment">
+            <div class="card-green card"><strong>Ответ: C) B-tree</strong></div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Финальный квиз (2)</h2>
+        <div class="card">
+            <strong>Вопрос 2:</strong> Чем отличается EXPLAIN от EXPLAIN ANALYZE?
+        </div>
+        <div class="quiz-option">A) EXPLAIN показывает индексы, EXPLAIN ANALYZE — нет</div>
+        <div class="quiz-option">B) EXPLAIN ANALYZE реально выполняет запрос и показывает фактическое время</div>
+        <div class="quiz-option">C) EXPLAIN ANALYZE работает только с SELECT</div>
+        <div class="quiz-option">D) Они идентичны</div>
+        <div class="fragment">
+            <div class="card-green card"><strong>Ответ: B)</strong> — EXPLAIN показывает оценочный план, EXPLAIN ANALYZE выполняет запрос и показывает реальные метрики.</div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Финальный квиз (3)</h2>
+        <div class="card">
+            <strong>Вопрос 3:</strong> Есть композитный индекс <code>(A, B, C)</code>. Какой запрос НЕ сможет его эффективно использовать?
+        </div>
+        <div class="quiz-option">A) WHERE A = 1 AND B = 2</div>
+        <div class="quiz-option">B) WHERE A = 1</div>
+        <div class="quiz-option">C) WHERE B = 2 AND C = 3</div>
+        <div class="quiz-option">D) WHERE A = 1 AND B = 2 AND C = 3</div>
+        <div class="fragment">
+            <div class="card-green card"><strong>Ответ: C)</strong> — без ведущего столбца A индекс не используется эффективно.</div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Финальный квиз (4)</h2>
+        <div class="card">
+            <strong>Вопрос 4:</strong> Что означает <code>Heap Fetches: 0</code> в плане выполнения?
+        </div>
+        <div class="quiz-option">A) Таблица пуста</div>
+        <div class="quiz-option">B) Все данные взяты из индекса (Index Only Scan)</div>
+        <div class="quiz-option">C) Запрос не вернул строк</div>
+        <div class="quiz-option">D) Индекс повреждён</div>
+        <div class="fragment">
+            <div class="card-green card"><strong>Ответ: B)</strong> — PostgreSQL получил все нужные данные из индекса, не обращаясь к heap-таблице.</div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Что дальше?</h2>
+        <ul>
+            <li><strong>Лабораторная работа:</strong> создание и анализ индексов на базе «Руда+»</li>
+            <li><strong>Следующий модуль:</strong> Проектирование стратегий оптимизированных индексов</li>
+        </ul>
+        <div class="card" style="margin-top: 20px;">
+            <strong>Домашнее задание:</strong> Проанализируйте индексы в схеме «Руда+» (скрипт <code>01_create_schema.sql</code>). Какие индексы уже созданы? Какие стоило бы добавить?
+        </div>
+    </section>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        width: 1200,
+        height: 700,
+        margin: 0.04,
+        plugins: [ RevealHighlight ]
+    });
+</script>
+</body>
+</html>

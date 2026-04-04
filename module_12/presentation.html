@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль 12 — Использование операторов набора (Set Operators)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --accent1: #4472C4;
+            --accent2: #ED7D31;
+            --accent6: #70AD47;
+            --dark-bg: #1e293b;
+            --code-bg: #f8f9fa;
+        }
+        .reveal { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; }
+        .reveal h1 { color: var(--accent1); font-size: 1.8em; }
+        .reveal h2 { color: var(--accent1); font-size: 1.4em; border-bottom: 3px solid var(--accent2); padding-bottom: 10px; }
+        .reveal h3 { color: var(--accent2); font-size: 1.15em; }
+        .reveal .subtitle { color: #666; font-size: 0.8em; margin-top: 10px; }
+        .reveal .highlight-orange { color: var(--accent2); font-weight: bold; }
+        .reveal .highlight-blue { color: var(--accent1); font-weight: bold; }
+        .reveal .highlight-green { color: var(--accent6); font-weight: bold; }
+
+        .compare-container { display: flex; gap: 16px; width: 100%; }
+        .compare-col { flex: 1; min-width: 0; }
+        .compare-col h3 { text-align: center; margin: 0 0 8px 0; padding: 6px; border-radius: 6px; font-size: 0.85em; }
+        .sql-header { background: var(--accent1); color: white; }
+        .dax-header { background: var(--accent2); color: white; }
+
+        .reveal pre { width: 100%; margin: 6px 0; box-shadow: none; font-size: 0.48em; }
+        .reveal pre code { padding: 12px; border-radius: 6px; max-height: 500px; line-height: 1.35; }
+
+        .card { background: #f0f4ff; border-left: 4px solid var(--accent1); padding: 14px 18px; margin: 10px 0; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.85em; }
+        .card-orange { background: #fff5ec; border-left-color: var(--accent2); }
+        .card-green { background: #f0fff0; border-left-color: var(--accent6); }
+
+        .reveal ul, .reveal ol { font-size: 0.88em; text-align: left; }
+        .reveal li { margin-bottom: 6px; }
+
+        .reveal table { font-size: 0.65em; border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .reveal table th { background: var(--accent1); color: white; padding: 8px 10px; }
+        .reveal table td { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+        .reveal table tr:nth-child(even) { background: #f7f9fc; }
+
+        .quiz-option { background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 8px 14px; margin: 6px 0; font-size: 0.8em; cursor: pointer; text-align: left; }
+        .quiz-option:hover { border-color: var(--accent1); background: #e8f0fe; }
+
+        .small-text { font-size: 0.7em; color: #888; }
+
+        .reveal .slide-number { color: var(--accent1); }
+
+        .fragment.current-visible.visible:not(.current-fragment) { display: none; }
+
+        .key-concept { background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border: 2px solid var(--accent1); border-radius: 12px; padding: 16px 20px; margin: 12px 0; }
+        .key-concept h3 { margin-top: 0; }
+
+        .icon-box { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; background: var(--accent1); color: white; font-weight: bold; text-align: center; font-size: 0.9em; margin: 0 8px; }
+        .icon-box.orange { background: var(--accent2); }
+        .icon-box.green { background: var(--accent6); }
+
+        .vs-badge { display: inline-block; background: var(--accent2); color: white; border-radius: 50%; width: 40px; height: 40px; line-height: 40px; text-align: center; font-weight: bold; font-size: 0.7em; }
+
+        /* Venn-диаграммы на CSS */
+        .venn-container { position: relative; width: 340px; height: 200px; margin: 10px auto; }
+        .venn-circle { position: absolute; width: 170px; height: 170px; border-radius: 50%; top: 15px; opacity: 0.55; }
+        .venn-left { left: 20px; background: var(--accent1); }
+        .venn-right { left: 150px; background: var(--accent2); }
+        .venn-label { position: absolute; font-size: 0.65em; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .venn-label-left { top: 85px; left: 50px; }
+        .venn-label-right { top: 85px; left: 230px; }
+        .venn-label-center { top: 85px; left: 148px; }
+
+        .venn-highlight-union .venn-left,
+        .venn-highlight-union .venn-right { opacity: 0.7; }
+
+        .venn-highlight-intersect .venn-left { opacity: 0.25; }
+        .venn-highlight-intersect .venn-right { opacity: 0.25; }
+        .venn-highlight-intersect::after {
+            content: ''; position: absolute;
+            width: 170px; height: 170px; border-radius: 50%;
+            top: 15px; left: 20px;
+            background: var(--accent6); opacity: 0.7;
+            clip-path: ellipse(40% 50% at 80% 50%);
+        }
+
+        .venn-highlight-except .venn-left { opacity: 0.7; }
+        .venn-highlight-except .venn-right { opacity: 0.2; }
+
+        .discussion-slide { background: linear-gradient(135deg, #fff5ec, #fef0e5); }
+        .discussion-slide h2 { border-bottom-color: var(--accent2); }
+
+        .lateral-diagram { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 15px 0; }
+        .lateral-box { background: var(--accent1); color: white; padding: 12px 18px; border-radius: 8px; font-size: 0.75em; font-weight: bold; }
+        .lateral-arrow { font-size: 1.8em; color: var(--accent2); }
+        .lateral-box-func { background: var(--accent2); color: white; padding: 12px 18px; border-radius: 8px; font-size: 0.75em; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ==================== ТИТУЛЬНЫЙ СЛАЙД ==================== -->
+<section>
+    <h1>Модуль 12</h1>
+    <h2 style="border: none;">Операторы набора (Set Operators)<br>и LATERAL JOIN</h2>
+    <p class="subtitle">Курс: Анализ данных на языке SQL. Уровень 2</p>
+    <p class="subtitle">Предприятие «Руда+» — добыча железной руды</p>
+    <div style="margin-top: 30px;">
+        <span class="icon-box">SQL</span>
+        <span style="font-size: 1.5em; vertical-align: middle;">&#8644;</span>
+        <span class="icon-box orange">DAX</span>
+    </div>
+    <p class="small-text" style="margin-top: 30px;">Продолжительность: 1 час</p>
+</section>
+
+<!-- ==================== ПЛАН МОДУЛЯ ==================== -->
+<section>
+    <h2>План занятия</h2>
+    <ol>
+        <li><strong>UNION и UNION ALL</strong> — объединение наборов <span class="small-text">(12 мин)</span></li>
+        <li><strong>INTERSECT</strong> — пересечение наборов <span class="small-text">(8 мин)</span></li>
+        <li><strong>EXCEPT</strong> — разность наборов <span class="small-text">(8 мин)</span></li>
+        <li><strong>Правила операторов набора</strong> <span class="small-text">(5 мин)</span></li>
+        <li><strong>LATERAL JOIN</strong> — аналог APPLY в PostgreSQL <span class="small-text">(15 мин)</span></li>
+        <li><strong>Сравнение с DAX</strong>: UNION, EXCEPT, INTERSECT <span class="small-text">(7 мин)</span></li>
+        <li><strong>Квиз и обсуждение</strong> <span class="small-text">(5 мин)</span></li>
+    </ol>
+    <div class="card" style="margin-top: 15px;">
+        <strong>Инструменты:</strong> Yandex Managed Service for PostgreSQL (SQL) | Power BI + DAX Studio (DAX)
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 1: UNION и UNION ALL                                     -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 1. UNION и UNION ALL</h2>
+        <p>Объединение результатов нескольких запросов в один набор</p>
+        <div class="venn-container venn-highlight-union">
+            <div class="venn-circle venn-left"></div>
+            <div class="venn-circle venn-right"></div>
+            <span class="venn-label venn-label-left">A</span>
+            <span class="venn-label venn-label-right">B</span>
+        </div>
+        <p style="font-size: 0.75em;"><strong>UNION</strong> = A + B (все строки из обоих наборов)</p>
+    </section>
+
+    <section>
+        <h2>UNION vs UNION ALL</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">UNION</h3>
+                    <ul style="font-size: 0.8em;">
+                        <li>Объединяет результаты</li>
+                        <li><strong>Удаляет дубликаты</strong></li>
+                        <li>Выполняет неявную сортировку</li>
+                        <li>Медленнее (из-за DISTINCT)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept" style="border-color: var(--accent2);">
+                    <h3 style="color: var(--accent2);">UNION ALL</h3>
+                    <ul style="font-size: 0.8em;">
+                        <li>Объединяет результаты</li>
+                        <li><strong>Сохраняет все строки</strong></li>
+                        <li>Не сортирует</li>
+                        <li>Быстрее (простая конкатенация)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card-orange card" style="margin-top: 12px;">
+            <strong>Правило:</strong> если дубликаты допустимы или невозможны — всегда используйте UNION ALL!
+        </div>
+    </section>
+
+    <section>
+        <h2>Синтаксис UNION</h2>
+<pre><code class="language-sql">-- UNION — без дубликатов
+SELECT столбец1, столбец2 FROM таблица_A
+UNION
+SELECT столбец1, столбец2 FROM таблица_B;
+
+-- UNION ALL — с дубликатами
+SELECT столбец1, столбец2 FROM таблица_A
+UNION ALL
+SELECT столбец1, столбец2 FROM таблица_B;</code></pre>
+        <div class="card">
+            <strong>Требования:</strong>
+            <ul style="font-size: 0.85em;">
+                <li>Одинаковое количество столбцов в каждом SELECT</li>
+                <li>Совместимые типы данных в соответствующих позициях</li>
+                <li>Имена столбцов берутся из первого SELECT</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>Пример «Руда+»: объединение данных шахт</h2>
+        <p style="font-size: 0.8em;">Собрать единый отчёт по добыче из всех шахт</p>
+<pre><code class="language-sql">-- Добыча шахты «Северная» за январь 2025
+SELECT e.equipment_name, SUM(p.tons_mined) AS total_tons,
+       'Северная' AS mine_source
+FROM fact_production p
+JOIN dim_equipment e ON p.equipment_id = e.equipment_id
+JOIN dim_mine m ON p.mine_id = m.mine_id
+WHERE m.mine_code = 'MINE-N' AND p.date_id BETWEEN 20250101 AND 20250131
+GROUP BY e.equipment_name
+
+UNION ALL
+
+-- Добыча шахты «Южная» за январь 2025
+SELECT e.equipment_name, SUM(p.tons_mined), 'Южная'
+FROM fact_production p
+JOIN dim_equipment e ON p.equipment_id = e.equipment_id
+JOIN dim_mine m ON p.mine_id = m.mine_id
+WHERE m.mine_code = 'MINE-S' AND p.date_id BETWEEN 20250101 AND 20250131
+GROUP BY e.equipment_name
+ORDER BY total_tons DESC;</code></pre>
+    </section>
+
+    <section>
+        <h2>UNION ALL: сводные строки</h2>
+        <p style="font-size: 0.8em;">Часто UNION ALL используется для добавления итоговых строк</p>
+<pre><code class="language-sql">-- Добыча по сменам + итого
+SELECT s.shift_name, SUM(p.tons_mined) AS tons
+FROM fact_production p
+JOIN dim_shift s ON p.shift_id = s.shift_id
+WHERE p.date_id = 20250115
+GROUP BY s.shift_name
+
+UNION ALL
+
+SELECT 'ИТОГО', SUM(tons_mined)
+FROM fact_production
+WHERE date_id = 20250115
+ORDER BY CASE WHEN shift_name = 'ИТОГО' THEN 1 ELSE 0 END,
+         shift_name;</code></pre>
+        <div class="card-green card">
+            <strong>Совет:</strong> UNION ALL для итоговых строк — классический приём в отчётах
+        </div>
+    </section>
+
+    <section>
+        <h2>Когда UNION, а когда UNION ALL?</h2>
+        <table>
+            <thead>
+                <tr><th>Ситуация</th><th>Оператор</th><th>Почему</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Два разных источника, дубликаты невозможны</td><td class="highlight-green">UNION ALL</td><td>Быстрее, дубликатов нет</td></tr>
+                <tr><td>Добавление итоговой строки</td><td class="highlight-green">UNION ALL</td><td>Нужна каждая строка</td></tr>
+                <tr><td>Объединение с возможными пересечениями</td><td class="highlight-blue">UNION</td><td>Нужны уникальные строки</td></tr>
+                <tr><td>Список уникальных значений из разных таблиц</td><td class="highlight-blue">UNION</td><td>Автоматический DISTINCT</td></tr>
+            </tbody>
+        </table>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 2: INTERSECT                                             -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 2. INTERSECT — пересечение</h2>
+        <p>Возвращает только строки, присутствующие в <strong>обоих</strong> наборах</p>
+        <div class="venn-container venn-highlight-intersect">
+            <div class="venn-circle venn-left"></div>
+            <div class="venn-circle venn-right"></div>
+            <span class="venn-label venn-label-left">A</span>
+            <span class="venn-label venn-label-right">B</span>
+            <span class="venn-label venn-label-center" style="color: #fff;">A &cap; B</span>
+        </div>
+<pre><code class="language-sql">SELECT столбцы FROM таблица_A
+INTERSECT
+SELECT столбцы FROM таблица_B;</code></pre>
+    </section>
+
+    <section>
+        <h2>Пример: оборудование, работавшее в обе смены</h2>
+        <p style="font-size: 0.8em;">Найти ПДМ, которые работали и в дневную, и в ночную смену</p>
+<pre><code class="language-sql">-- Оборудование дневной смены (shift_id = 1)
+SELECT p.equipment_id, e.equipment_name
+FROM fact_production p
+JOIN dim_equipment e ON p.equipment_id = e.equipment_id
+WHERE p.date_id = 20250115 AND p.shift_id = 1
+
+INTERSECT
+
+-- Оборудование ночной смены (shift_id = 2)
+SELECT p.equipment_id, e.equipment_name
+FROM fact_production p
+JOIN dim_equipment e ON p.equipment_id = e.equipment_id
+WHERE p.date_id = 20250115 AND p.shift_id = 2;</code></pre>
+        <div class="card">
+            <strong>Бизнес-смысл:</strong> оборудование, работавшее в обе смены — кандидат на плановое ТО
+        </div>
+    </section>
+
+    <section>
+        <h2>INTERSECT vs INNER JOIN</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <div class="key-concept">
+                    <h3 style="color: var(--accent1);">INTERSECT</h3>
+                    <ul style="font-size: 0.78em;">
+                        <li>Сравнивает <strong>все столбцы</strong></li>
+                        <li>Возвращает уникальные строки</li>
+                        <li>Простой синтаксис</li>
+                        <li>Нет доступа к столбцам обоих наборов</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="compare-col">
+                <div class="key-concept" style="border-color: var(--accent2);">
+                    <h3 style="color: var(--accent2);">INNER JOIN</h3>
+                    <ul style="font-size: 0.78em;">
+                        <li>Сравнивает <strong>указанные столбцы</strong></li>
+                        <li>Может возвращать дубликаты</li>
+                        <li>Гибкие условия соединения</li>
+                        <li>Доступ к столбцам обеих таблиц</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 3: EXCEPT                                                -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 3. EXCEPT — разность</h2>
+        <p>Возвращает строки из первого набора, <strong>отсутствующие</strong> во втором</p>
+        <div class="venn-container venn-highlight-except">
+            <div class="venn-circle venn-left"></div>
+            <div class="venn-circle venn-right"></div>
+            <span class="venn-label venn-label-left">A \ B</span>
+            <span class="venn-label venn-label-right">B</span>
+        </div>
+<pre><code class="language-sql">SELECT столбцы FROM таблица_A
+EXCEPT
+SELECT столбцы FROM таблица_B;</code></pre>
+        <div class="card-orange card">
+            <strong>В Oracle:</strong> аналог называется <code>MINUS</code>, в PostgreSQL используется <code>EXCEPT</code>
+        </div>
+    </section>
+
+    <section>
+        <h2>Пример: оборудование без простоев</h2>
+        <p style="font-size: 0.8em;">Найти оборудование, которое работало, но не имело простоев за день</p>
+<pre><code class="language-sql">-- Всё оборудование, работавшее 15.01.2025
+SELECT DISTINCT p.equipment_id
+FROM fact_production p
+WHERE p.date_id = 20250115
+
+EXCEPT
+
+-- Оборудование, имевшее простои в этот день
+SELECT DISTINCT d.equipment_id
+FROM fact_equipment_downtime d
+WHERE d.date_id = 20250115;</code></pre>
+        <div class="card-green card">
+            <strong>Результат:</strong> ID оборудования, работавшего без единого простоя
+        </div>
+    </section>
+
+    <section>
+        <h2>Пример: пропущенные анализы качества</h2>
+        <p style="font-size: 0.8em;">Какие смены за январь не имеют записей о качестве руды?</p>
+<pre><code class="language-sql">-- Все комбинации дата+смена, когда была добыча
+SELECT DISTINCT p.date_id, p.shift_id
+FROM fact_production p
+WHERE p.date_id BETWEEN 20250101 AND 20250131
+
+EXCEPT
+
+-- Комбинации дата+смена, где был анализ качества
+SELECT DISTINCT q.date_id, q.shift_id
+FROM fact_ore_quality q
+WHERE q.date_id BETWEEN 20250101 AND 20250131
+
+ORDER BY date_id, shift_id;</code></pre>
+        <div class="card">
+            <strong>Бизнес-смысл:</strong> контроль полноты данных MES — все смены должны иметь анализ качества
+        </div>
+    </section>
+
+    <section>
+        <h2>EXCEPT vs NOT EXISTS / NOT IN</h2>
+<pre><code class="language-sql">-- EXCEPT (просто и читаемо)
+SELECT DISTINCT equipment_id FROM fact_production WHERE date_id = 20250115
+EXCEPT
+SELECT DISTINCT equipment_id FROM fact_equipment_downtime WHERE date_id = 20250115;
+
+-- NOT EXISTS (более гибко)
+SELECT DISTINCT p.equipment_id
+FROM fact_production p
+WHERE p.date_id = 20250115
+  AND NOT EXISTS (
+      SELECT 1 FROM fact_equipment_downtime d
+      WHERE d.equipment_id = p.equipment_id
+        AND d.date_id = 20250115
+  );
+
+-- NOT IN (осторожно с NULL!)
+SELECT DISTINCT equipment_id
+FROM fact_production
+WHERE date_id = 20250115
+  AND equipment_id NOT IN (
+      SELECT equipment_id FROM fact_equipment_downtime
+      WHERE date_id = 20250115
+  );</code></pre>
+    </section>
+
+    <section>
+        <h2>Внимание: NOT IN и NULL</h2>
+        <div class="card-orange card">
+            <strong>Ловушка:</strong> если подзапрос в NOT IN возвращает хотя бы один NULL, результат всегда будет пустым!
+        </div>
+<pre><code class="language-sql">-- ОПАСНО: если в подзапросе есть NULL
+SELECT 1 WHERE 5 NOT IN (1, 2, NULL);
+-- Результат: пустой набор!
+
+-- БЕЗОПАСНО: используйте EXCEPT или NOT EXISTS
+SELECT DISTINCT equipment_id FROM fact_production
+EXCEPT
+SELECT equipment_id FROM fact_equipment_downtime;</code></pre>
+        <div class="card-green card">
+            <strong>Рекомендация:</strong> EXCEPT автоматически обрабатывает NULL корректно (сравнивая NULL = NULL)
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 4: ПРАВИЛА ОПЕРАТОРОВ НАБОРА                             -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 4. Правила операторов набора</h2>
+        <table>
+            <thead>
+                <tr><th>Правило</th><th>Описание</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Количество столбцов</td><td>Должно быть <strong>одинаковым</strong> во всех SELECT</td></tr>
+                <tr><td>Типы данных</td><td>Должны быть <strong>совместимы</strong> (неявное приведение)</td></tr>
+                <tr><td>Имена столбцов</td><td>Берутся из <strong>первого</strong> SELECT</td></tr>
+                <tr><td>ORDER BY</td><td>Допустим только в <strong>самом конце</strong> (после последнего оператора)</td></tr>
+                <tr><td>Приоритет</td><td>INTERSECT имеет <strong>более высокий</strong> приоритет, чем UNION/EXCEPT</td></tr>
+                <tr><td>NULL</td><td>Два NULL считаются <strong>равными</strong> при сравнении</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>ORDER BY — только в конце!</h2>
+<pre><code class="language-sql">-- ПРАВИЛЬНО: ORDER BY в конце
+SELECT equipment_name, tons_mined FROM view_mine_north
+UNION ALL
+SELECT equipment_name, tons_mined FROM view_mine_south
+ORDER BY tons_mined DESC;
+
+-- НЕПРАВИЛЬНО: ORDER BY посередине
+SELECT equipment_name, tons_mined FROM view_mine_north
+ORDER BY tons_mined DESC    -- ОШИБКА!
+UNION ALL
+SELECT equipment_name, tons_mined FROM view_mine_south;
+
+-- Если нужна сортировка до объединения — используйте подзапрос:
+SELECT * FROM (
+    SELECT equipment_name, tons_mined FROM view_mine_north
+    ORDER BY tons_mined DESC LIMIT 5
+) top_north
+UNION ALL
+SELECT * FROM (
+    SELECT equipment_name, tons_mined FROM view_mine_south
+    ORDER BY tons_mined DESC LIMIT 5
+) top_south;</code></pre>
+    </section>
+
+    <section>
+        <h2>Приоритет операторов</h2>
+<pre><code class="language-sql">-- INTERSECT имеет приоритет выше, чем UNION
+-- Следующий запрос:
+SELECT * FROM A
+UNION
+SELECT * FROM B
+INTERSECT
+SELECT * FROM C;
+
+-- Эквивалентен:
+SELECT * FROM A
+UNION
+(SELECT * FROM B INTERSECT SELECT * FROM C);
+
+-- Если нужен другой порядок — используйте скобки:
+(SELECT * FROM A UNION SELECT * FROM B)
+INTERSECT
+SELECT * FROM C;</code></pre>
+        <div class="card">
+            <strong>Совет:</strong> всегда используйте скобки для явного указания порядка выполнения
+        </div>
+    </section>
+
+    <section>
+        <h2>Комбинирование операторов: пример</h2>
+        <p style="font-size: 0.8em;">Оборудование шахты «Северная», которое работало в январе, но <strong>не</strong> имело внеплановых простоев</p>
+<pre><code class="language-sql">-- Шаг 1: оборудование, которое работало
+SELECT DISTINCT p.equipment_id
+FROM fact_production p
+JOIN dim_mine m ON p.mine_id = m.mine_id
+WHERE m.mine_code = 'MINE-N'
+  AND p.date_id BETWEEN 20250101 AND 20250131
+
+EXCEPT
+
+-- Шаг 2: оборудование с внеплановыми простоями
+SELECT DISTINCT d.equipment_id
+FROM fact_equipment_downtime d
+JOIN dim_mine m ON m.mine_id = (
+    SELECT mine_id FROM dim_equipment
+    WHERE equipment_id = d.equipment_id
+)
+WHERE d.date_id BETWEEN 20250101 AND 20250131
+  AND d.is_planned = FALSE;</code></pre>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ВОПРОС ДЛЯ ОБСУЖДЕНИЯ                                        -->
+<!-- ============================================================ -->
+<section data-background-color="#fff5ec">
+    <h2 style="border-bottom-color: var(--accent2);">Вопрос для обсуждения</h2>
+    <div class="card-orange card" style="font-size: 1em;">
+        <p><strong>Ситуация:</strong> начальник участка шахты просит аналитика подготовить отчёт: «Покажи мне список оборудования, которое работало хотя бы в одной из трёх шахт за месяц».</p>
+    </div>
+    <ul>
+        <li>Какой оператор набора здесь подойдёт: UNION или UNION ALL?</li>
+        <li>Нужен ли здесь DISTINCT внутри каждого SELECT?</li>
+        <li>Как изменится запрос, если нужно оборудование, работавшее <strong>во всех трёх</strong> шахтах?</li>
+    </ul>
+    <p class="small-text">Время на обсуждение: 2-3 минуты</p>
+</section>
+
+<!-- Практика: Части 1–3 -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 1 — UNION и UNION ALL, Часть 2 — EXCEPT, Часть 3 — INTERSECT</p>
+        <p><strong>Задание:</strong> Объедините данные с UNION ALL, найдите различия с EXCEPT, определите пересечения с INTERSECT на данных «Руда+».</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10–12 минут</em></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 5: LATERAL JOIN                                          -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 5. LATERAL JOIN</h2>
+        <p>Аналог <code>APPLY</code> в SQL Server — для PostgreSQL</p>
+        <div class="lateral-diagram">
+            <div class="lateral-box">Основная таблица</div>
+            <div class="lateral-arrow">&#8594;</div>
+            <div class="lateral-box-func">Подзапрос / Функция<br><small>(ссылается на каждую строку)</small></div>
+        </div>
+        <div class="card">
+            <strong>LATERAL</strong> позволяет подзапросу ссылаться на столбцы из <em>предыдущих</em> элементов FROM.
+            Подзапрос выполняется <strong>для каждой строки</strong> основной таблицы.
+        </div>
+    </section>
+
+    <section>
+        <h2>SQL Server APPLY vs PostgreSQL LATERAL</h2>
+        <table>
+            <thead>
+                <tr><th>SQL Server</th><th>PostgreSQL</th><th>Описание</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>CROSS APPLY</code></td><td><code>CROSS JOIN LATERAL</code><br>или <code>JOIN LATERAL ... ON TRUE</code></td><td>Только строки, где подзапрос вернул результат</td></tr>
+                <tr><td><code>OUTER APPLY</code></td><td><code>LEFT JOIN LATERAL ... ON TRUE</code></td><td>Все строки + NULL, если подзапрос пуст</td></tr>
+            </tbody>
+        </table>
+        <div class="card-orange card">
+            <strong>Важно:</strong> в PostgreSQL нет ключевых слов CROSS APPLY / OUTER APPLY — используйте LATERAL
+        </div>
+    </section>
+
+    <section>
+        <h2>Синтаксис LATERAL JOIN</h2>
+<pre><code class="language-sql">-- CROSS JOIN LATERAL (аналог CROSS APPLY)
+SELECT o.*, sub.*
+FROM основная_таблица o
+CROSS JOIN LATERAL (
+    SELECT столбцы
+    FROM подчинённая_таблица s
+    WHERE s.ключ = o.ключ     -- ссылка на внешнюю таблицу!
+    ORDER BY ... LIMIT N
+) sub;
+
+-- LEFT JOIN LATERAL (аналог OUTER APPLY)
+SELECT o.*, sub.*
+FROM основная_таблица o
+LEFT JOIN LATERAL (
+    SELECT столбцы
+    FROM подчинённая_таблица s
+    WHERE s.ключ = o.ключ
+    ORDER BY ... LIMIT N
+) sub ON TRUE;  -- условие ON TRUE обязательно!</code></pre>
+    </section>
+
+    <section>
+        <h2>Top-N per group с LATERAL</h2>
+        <p style="font-size: 0.8em;">Классическая задача: для каждой шахты найти 3 самые продуктивные единицы оборудования</p>
+<pre><code class="language-sql">SELECT m.mine_name,
+       top3.equipment_name,
+       top3.total_tons
+FROM dim_mine m
+CROSS JOIN LATERAL (
+    SELECT e.equipment_name,
+           SUM(p.tons_mined) AS total_tons
+    FROM fact_production p
+    JOIN dim_equipment e ON p.equipment_id = e.equipment_id
+    WHERE p.mine_id = m.mine_id                -- ссылка на внешний запрос
+      AND p.date_id BETWEEN 20250101 AND 20250131
+    GROUP BY e.equipment_name
+    ORDER BY total_tons DESC
+    LIMIT 3
+) top3
+ORDER BY m.mine_name, top3.total_tons DESC;</code></pre>
+        <div class="card-green card">
+            <strong>Преимущество:</strong> LATERAL + LIMIT эффективнее, чем ROW_NUMBER() OVER, особенно при больших объёмах
+        </div>
+    </section>
+
+    <section>
+        <h2>LATERAL vs оконные функции</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+<pre><code class="language-sql">-- LATERAL: Top-3 за шахту
+SELECT m.mine_name, t.*
+FROM dim_mine m
+CROSS JOIN LATERAL (
+    SELECT e.equipment_name,
+           SUM(p.tons_mined) AS tons
+    FROM fact_production p
+    JOIN dim_equipment e
+      ON p.equipment_id = e.equipment_id
+    WHERE p.mine_id = m.mine_id
+    GROUP BY e.equipment_name
+    ORDER BY tons DESC
+    LIMIT 3
+) t;</code></pre>
+            </div>
+            <div class="compare-col">
+<pre><code class="language-sql">-- ROW_NUMBER: Top-3 за шахту
+SELECT mine_name, equipment_name, tons
+FROM (
+    SELECT m.mine_name,
+           e.equipment_name,
+           SUM(p.tons_mined) AS tons,
+           ROW_NUMBER() OVER (
+               PARTITION BY m.mine_id
+               ORDER BY SUM(p.tons_mined) DESC
+           ) AS rn
+    FROM fact_production p
+    JOIN dim_equipment e
+      ON p.equipment_id = e.equipment_id
+    JOIN dim_mine m
+      ON p.mine_id = m.mine_id
+    GROUP BY m.mine_id, m.mine_name,
+             e.equipment_name
+) ranked
+WHERE rn <= 3;</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>LEFT JOIN LATERAL: последний простой</h2>
+        <p style="font-size: 0.8em;">Для каждого оборудования — информация о последнем простое (даже если простоев не было)</p>
+<pre><code class="language-sql">SELECT e.equipment_name,
+       et.type_name AS equipment_type,
+       last_dt.start_time AS last_downtime_start,
+       last_dt.duration_min,
+       dr.reason_name
+FROM dim_equipment e
+JOIN dim_equipment_type et ON e.equipment_type_id = et.equipment_type_id
+LEFT JOIN LATERAL (
+    SELECT d.start_time, d.duration_min, d.reason_id
+    FROM fact_equipment_downtime d
+    WHERE d.equipment_id = e.equipment_id
+    ORDER BY d.start_time DESC
+    LIMIT 1
+) last_dt ON TRUE
+LEFT JOIN dim_downtime_reason dr ON last_dt.reason_id = dr.reason_id
+WHERE e.status = 'active'
+ORDER BY last_dt.start_time DESC NULLS LAST;</code></pre>
+    </section>
+
+    <section>
+        <h2>LATERAL с функциями</h2>
+        <p style="font-size: 0.8em;">LATERAL также работает с табличными функциями (SRF)</p>
+<pre><code class="language-sql">-- Пример: разбить диапазон смены на часовые интервалы
+SELECT s.shift_name, intervals.hour_start
+FROM dim_shift s
+CROSS JOIN LATERAL generate_series(
+    s.start_time::timestamp,
+    (s.end_time - interval '1 hour')::timestamp,
+    interval '1 hour'
+) AS intervals(hour_start);
+
+-- Пример: unnest массива с сохранением связи
+SELECT e.equipment_name, tag.value AS tag
+FROM dim_equipment e
+CROSS JOIN LATERAL unnest(
+    ARRAY['GPS', 'video', 'telemetry']
+) AS tag(value)
+WHERE e.has_navigation = TRUE;</code></pre>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ТЕМА 6: DAX ЭКВИВАЛЕНТЫ                                      -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Тема 6. Операторы набора в DAX</h2>
+        <p>Power BI / DAX Studio — аналогичные функции</p>
+        <table>
+            <thead>
+                <tr><th>SQL</th><th>DAX</th><th>Отличия</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>UNION / UNION ALL</td><td>UNION()</td><td>DAX UNION всегда сохраняет дубликаты (= UNION ALL)</td></tr>
+                <tr><td>INTERSECT</td><td>INTERSECT()</td><td>Сравнивает по всем столбцам</td></tr>
+                <tr><td>EXCEPT</td><td>EXCEPT()</td><td>Аналогичен SQL EXCEPT</td></tr>
+                <tr><td>LATERAL JOIN</td><td>Нет прямого аналога</td><td>Используются GENERATE, ADDCOLUMNS</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>SQL vs DAX: UNION</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Объединение данных двух шахт
+SELECT equipment_name,
+       SUM(tons_mined) AS tons
+FROM fact_production p
+JOIN dim_equipment e
+  ON p.equipment_id = e.equipment_id
+JOIN dim_mine m
+  ON p.mine_id = m.mine_id
+WHERE m.mine_code = 'MINE-N'
+GROUP BY equipment_name
+
+UNION ALL
+
+SELECT equipment_name,
+       SUM(tons_mined)
+FROM fact_production p
+JOIN dim_equipment e
+  ON p.equipment_id = e.equipment_id
+JOIN dim_mine m
+  ON p.mine_id = m.mine_id
+WHERE m.mine_code = 'MINE-S'
+GROUP BY equipment_name;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+UNION(
+    SUMMARIZE(
+        FILTER(
+            fact_production,
+            RELATED(dim_mine[mine_code])
+                = "MINE-N"
+        ),
+        dim_equipment[equipment_name],
+        "Tons",
+        SUM(fact_production[tons_mined])
+    ),
+    SUMMARIZE(
+        FILTER(
+            fact_production,
+            RELATED(dim_mine[mine_code])
+                = "MINE-S"
+        ),
+        dim_equipment[equipment_name],
+        "Tons",
+        SUM(fact_production[tons_mined])
+    )
+)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>SQL vs DAX: EXCEPT</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Оборудование без простоев
+SELECT DISTINCT equipment_id
+FROM fact_production
+WHERE date_id = 20250115
+
+EXCEPT
+
+SELECT DISTINCT equipment_id
+FROM fact_equipment_downtime
+WHERE date_id = 20250115;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+EXCEPT(
+    SUMMARIZE(
+        FILTER(
+            fact_production,
+            fact_production[date_id]
+                = 20250115
+        ),
+        fact_production[equipment_id]
+    ),
+    SUMMARIZE(
+        FILTER(
+            fact_equipment_downtime,
+            fact_equipment_downtime[date_id]
+                = 20250115
+        ),
+        fact_equipment_downtime[equipment_id]
+    )
+)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>SQL vs DAX: INTERSECT</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Оборудование обеих смен
+SELECT DISTINCT equipment_id
+FROM fact_production
+WHERE date_id = 20250115
+  AND shift_id = 1
+
+INTERSECT
+
+SELECT DISTINCT equipment_id
+FROM fact_production
+WHERE date_id = 20250115
+  AND shift_id = 2;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+INTERSECT(
+    SUMMARIZE(
+        FILTER(
+            fact_production,
+            fact_production[date_id]
+                = 20250115
+                && fact_production[shift_id]
+                    = 1
+        ),
+        fact_production[equipment_id]
+    ),
+    SUMMARIZE(
+        FILTER(
+            fact_production,
+            fact_production[date_id]
+                = 20250115
+                && fact_production[shift_id]
+                    = 2
+        ),
+        fact_production[equipment_id]
+    )
+)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>SQL LATERAL vs DAX GENERATE</h2>
+        <div class="compare-container">
+            <div class="compare-col">
+                <h3 class="sql-header">SQL (PostgreSQL)</h3>
+<pre><code class="language-sql">-- Top-2 оборудования по шахте
+SELECT m.mine_name, t.*
+FROM dim_mine m
+CROSS JOIN LATERAL (
+    SELECT e.equipment_name,
+           SUM(p.tons_mined) AS tons
+    FROM fact_production p
+    JOIN dim_equipment e
+      ON p.equipment_id
+         = e.equipment_id
+    WHERE p.mine_id = m.mine_id
+    GROUP BY e.equipment_name
+    ORDER BY tons DESC
+    LIMIT 2
+) t;</code></pre>
+            </div>
+            <div class="compare-col">
+                <h3 class="dax-header">DAX</h3>
+<pre><code class="language-dax">EVALUATE
+GENERATE(
+    VALUES(dim_mine[mine_name]),
+    TOPN(
+        2,
+        ADDCOLUMNS(
+            VALUES(
+              dim_equipment[equipment_name]
+            ),
+            "Tons",
+            CALCULATE(
+              SUM(
+                fact_production[tons_mined]
+              )
+            )
+        ),
+        [Tons], DESC
+    )
+)</code></pre>
+            </div>
+        </div>
+        <div class="card-orange card">
+            <strong>DAX GENERATE</strong> = аналог CROSS APPLY: для каждой строки первой таблицы вычисляет выражение
+        </div>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- КВИЗ                                                          -->
+<!-- ============================================================ -->
+<section>
+    <section>
+        <h2>Квиз: проверьте себя</h2>
+        <h3>Вопрос 1</h3>
+        <p>Чем UNION отличается от UNION ALL?</p>
+        <div class="quiz-option">A) UNION объединяет таблицы, UNION ALL объединяет столбцы</div>
+        <div class="quiz-option">B) UNION удаляет дубликаты, UNION ALL сохраняет все строки</div>
+        <div class="quiz-option">C) UNION ALL быстрее, но не поддерживает ORDER BY</div>
+        <div class="quiz-option">D) Разницы нет — это синонимы</div>
+        <p class="fragment" style="color: var(--accent6); font-weight: bold; margin-top: 12px;">Ответ: B — UNION выполняет неявный DISTINCT</p>
+    </section>
+
+    <section>
+        <h2>Квиз: проверьте себя</h2>
+        <h3>Вопрос 2</h3>
+        <p>Что вернёт запрос?</p>
+<pre><code class="language-sql">SELECT 1 AS x  UNION ALL
+SELECT 1        UNION ALL
+SELECT 2;</code></pre>
+        <div class="quiz-option">A) 1, 2 (две строки)</div>
+        <div class="quiz-option">B) 1, 1, 2 (три строки)</div>
+        <div class="quiz-option">C) Ошибка синтаксиса</div>
+        <div class="quiz-option">D) 1, 2, 1 (три строки)</div>
+        <p class="fragment" style="color: var(--accent6); font-weight: bold; margin-top: 12px;">Ответ: B — UNION ALL сохраняет дубликаты, порядок сохраняется</p>
+    </section>
+
+    <section>
+        <h2>Квиз: проверьте себя</h2>
+        <h3>Вопрос 3</h3>
+        <p>Какой аналог CROSS APPLY в PostgreSQL?</p>
+        <div class="quiz-option">A) INNER JOIN ... ON TRUE</div>
+        <div class="quiz-option">B) CROSS JOIN LATERAL</div>
+        <div class="quiz-option">C) NATURAL JOIN</div>
+        <div class="quiz-option">D) FULL OUTER JOIN</div>
+        <p class="fragment" style="color: var(--accent6); font-weight: bold; margin-top: 12px;">Ответ: B — CROSS JOIN LATERAL (или JOIN LATERAL ... ON TRUE)</p>
+    </section>
+
+    <section>
+        <h2>Квиз: проверьте себя</h2>
+        <h3>Вопрос 4</h3>
+        <p>Где допустимо разместить ORDER BY при использовании UNION?</p>
+        <div class="quiz-option">A) После каждого SELECT</div>
+        <div class="quiz-option">B) Только после последнего SELECT</div>
+        <div class="quiz-option">C) В любом месте запроса</div>
+        <div class="quiz-option">D) ORDER BY нельзя использовать с UNION</div>
+        <p class="fragment" style="color: var(--accent6); font-weight: bold; margin-top: 12px;">Ответ: B — ORDER BY разрешён только в самом конце составного запроса</p>
+    </section>
+
+    <section>
+        <h2>Квиз: проверьте себя</h2>
+        <h3>Вопрос 5</h3>
+        <p>Что делает DAX-функция UNION()?</p>
+        <div class="quiz-option">A) Работает как SQL UNION (удаляет дубликаты)</div>
+        <div class="quiz-option">B) Работает как SQL UNION ALL (сохраняет дубликаты)</div>
+        <div class="quiz-option">C) Объединяет столбцы таблиц</div>
+        <div class="quiz-option">D) Создаёт связь между таблицами</div>
+        <p class="fragment" style="color: var(--accent6); font-weight: bold; margin-top: 12px;">Ответ: B — DAX UNION всегда сохраняет дубликаты (аналог UNION ALL)</p>
+    </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- ГРУППОВОЕ ЗАДАНИЕ                                             -->
+<!-- ============================================================ -->
+<section data-background-color="#f0fff0">
+    <h2 style="border-bottom-color: var(--accent6);">Групповое задание</h2>
+    <div class="card-green card" style="font-size: 0.95em;">
+        <p><strong>Контекст:</strong> Руководство «Руда+» планирует внеплановую проверку оборудования. Нужно найти:</p>
+    </div>
+    <ol style="font-size: 0.85em;">
+        <li><strong>Группа 1:</strong> составьте запрос с UNION ALL для объединения данных о добыче и простоях в единый журнал событий (дата, оборудование, тип события, значение)</li>
+        <li><strong>Группа 2:</strong> с помощью EXCEPT найдите оборудование, которое числится в справочнике, но <strong>не имеет ни одной записи</strong> о добыче за январь 2025</li>
+        <li><strong>Группа 3:</strong> используя LATERAL JOIN, для каждой шахты получите 5 последних внеплановых простоев с причинами</li>
+    </ol>
+    <p class="small-text">Время: 7-10 минут. Обсуждение решений вместе.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- КЕЙС ДЛЯ АНАЛИЗА                                             -->
+<!-- ============================================================ -->
+<section data-background-color="#fff5ec">
+    <h2 style="border-bottom-color: var(--accent2);">Кейс для анализа</h2>
+    <div class="card-orange card" style="font-size: 0.9em;">
+        <p><strong>Ситуация:</strong> MES-система «Руда+» получает данные телеметрии от двух подсистем: навигационной системы (координаты) и системы датчиков (температура, вибрация). Данные хранятся в разных таблицах с одинаковой структурой. Аналитику нужно:</p>
+    </div>
+    <ol style="font-size: 0.82em;">
+        <li>Объединить данные в единый поток для мониторинга</li>
+        <li>Найти моменты времени, когда навигация была, а датчик — нет (пропуски)</li>
+        <li>Для каждого оборудования показать последние 3 записи из каждой подсистемы</li>
+    </ol>
+    <p style="font-size: 0.8em;"><strong>Вопросы для обсуждения:</strong></p>
+    <ul style="font-size: 0.78em;">
+        <li>Какие операторы набора нужны для каждого пункта?</li>
+        <li>Где LATERAL будет эффективнее оконных функций?</li>
+        <li>Как обеспечить полноту данных в реальном времени?</li>
+    </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- СВОДНАЯ ТАБЛИЦА                                               -->
+<!-- ============================================================ -->
+<section>
+    <h2>Сводная таблица операторов набора</h2>
+    <table>
+        <thead>
+            <tr><th>Оператор</th><th>Что делает</th><th>Дубликаты</th><th>DAX</th></tr>
+        </thead>
+        <tbody>
+            <tr><td class="highlight-blue">UNION</td><td>A + B (всё)</td><td>Удаляет</td><td>DISTINCT(UNION(...))</td></tr>
+            <tr><td class="highlight-blue">UNION ALL</td><td>A + B (всё)</td><td>Сохраняет</td><td>UNION()</td></tr>
+            <tr><td class="highlight-green">INTERSECT</td><td>A &cap; B (общее)</td><td>Удаляет</td><td>INTERSECT()</td></tr>
+            <tr><td class="highlight-orange">EXCEPT</td><td>A \ B (разность)</td><td>Удаляет</td><td>EXCEPT()</td></tr>
+            <tr><td class="highlight-blue">LATERAL JOIN</td><td>Подзапрос для каждой строки</td><td>Зависит от подзапроса</td><td>GENERATE()</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- Практика: Части 4–5 + Лабораторная -->
+<section>
+    <h3>📋 Практический пример</h3>
+    <div style="background: #E8F4FD; border-left: 4px solid #4472C4; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> practice.md</p>
+        <p><strong>Раздел:</strong> Часть 4 — LATERAL JOIN (CROSS APPLY), Часть 5 — Комбинирование операторов набора</p>
+        <p><strong>Задание:</strong> Используйте LATERAL JOIN для top-N по группам, комбинируйте UNION + EXCEPT для сложных аналитических запросов.</p>
+    </div>
+    <p style="margin-top: 15px; color: #ED7D31;"><em>⏱ Время на выполнение: 10–12 минут</em></p>
+</section>
+
+<section>
+    <h3>📋 Лабораторная работа</h3>
+    <div style="background: #F0FFF0; border-left: 4px solid #70AD47; padding: 15px; border-radius: 5px; text-align: left;">
+        <p><strong>Файл:</strong> lab.md</p>
+        <p><strong>Содержание:</strong> 10 заданий на операторы набора и LATERAL JOIN</p>
+        <p><strong>Формат:</strong> SQL и DAX запросы для объединения, пересечения и сравнения данных «Руда+»</p>
+    </div>
+    <p style="margin-top: 15px; color: #70AD47;"><em>⏱ Время на выполнение: 30–40 минут (самостоятельная работа)</em></p>
+</section>
+
+<!-- ==================== ИТОГИ ==================== -->
+<section>
+    <h2>Итоги модуля 12</h2>
+    <div class="key-concept">
+        <ul>
+            <li><strong>UNION / UNION ALL</strong> — объединение наборов; UNION ALL быстрее, если дубликаты не важны</li>
+            <li><strong>INTERSECT</strong> — пересечение; аналог INNER JOIN по всем столбцам</li>
+            <li><strong>EXCEPT</strong> — разность; безопаснее, чем NOT IN при наличии NULL</li>
+            <li><strong>ORDER BY</strong> — только в конце составного запроса</li>
+            <li><strong>LATERAL JOIN</strong> — мощный инструмент для Top-N per group и коррелированных подзапросов</li>
+            <li><strong>DAX:</strong> UNION (= UNION ALL), EXCEPT, INTERSECT, GENERATE (= LATERAL)</li>
+        </ul>
+    </div>
+    <div class="card-green card" style="margin-top: 12px;">
+        <strong>Следующий модуль:</strong> продолжим изучение продвинутых конструкций SQL
+    </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        plugins: [ RevealHighlight ],
+        width: 1200,
+        height: 700,
+        margin: 0.06,
+        transition: 'slide'
+    });
+</script>
+</body>
+</html>
